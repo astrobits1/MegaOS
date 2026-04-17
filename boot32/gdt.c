@@ -16,7 +16,7 @@ void gdt_write_entry(uint16_t index, uint32_t base, uint32_t limit, uint8_t acce
     GDT[offset+3] = base>>8 & 0xFF;
     GDT[offset+4] = base>>16 & 0xFF;
     GDT[offset+5] = access;
-    GDT[offset+6] = (limit>>16 & 0xF) | (flags&0xF << 4);
+    GDT[offset+6] = (limit>>16 & 0xF) | ((flags&0xF) << 4);
     GDT[offset+7] = base>>24 & 0xFF;
 }
 
@@ -33,5 +33,11 @@ void gdt_initialise() {
     gdt_add_entry(0, 0xFFFFF, 0x92, 0xC);
     /* Load our GDT to the GDTR using assembly routine */ 
     gdtr_load(&GDT, seg_descriptor_count*8-1);
+
+    /* Reloads code segment located at index 1 to CS 
+     * and data segment at index 2 to DS and the rest
+     * This has to be hardcoded because CS cannot be written to from
+     * registers */
+    reload_seg_regs();
 }
 
