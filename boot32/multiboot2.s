@@ -42,15 +42,19 @@ stack_top:
 
 /* ----------------------------------- */
 
-.code32
 .section .text
+.code32
 .global _start
 .type _start, @function
 _start:
     /* Set stack to the allocated region at runtime */
     mov $stack_top, %esp
 
+    /* Pass pointer to multiboot info structure as argument */
+    push %ebx
     call boot_main
+    /* Clean argument push */
+    add $4, %esp
 
     /* Interrupts are already disabled by bootloader,
        HALT locks up the computer */
