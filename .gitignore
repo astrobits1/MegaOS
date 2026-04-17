@@ -1,3 +1,5 @@
 *.iso
 *.o
+build/boot32/.o
+build/*.elf
 iso/boot/*.elf
