@@ -2,6 +2,7 @@ CC=x86_64-elf-gcc
 AS=x86_64-elf-as
 LD=x86_64-elf-ld
 
+#LDFLAGS_BOOT32 = -m32 -nostdlib -Wl,-m,elf_i386
 LDFLAGS_BOOT32 = -m elf_i386
 ASFLAGS_BOOT32 = --32
 CFLAGS_BOOT32 = -m32 -Iinclude -O2 -ffreestanding -Wall -Wextra
@@ -10,6 +11,7 @@ BOOT32_BIN = $(addprefix build/boot32/, multiboot2.o boot.o vga.o)
 
 build/boot32.elf: $(BOOT32_BIN)
 	$(LD) $(LDFLAGS_BOOT32) -T boot32/linker.ld -o build/boot32.elf $(BOOT32_BIN)
+#$(CC) $(LDFLAGS_BOOT32) -T boot32/linker.ld -o build/boot32.elf $(BOOT32_BIN) -lgcc
 
 build/boot32/%.o: boot32/%.s
 	$(AS) $(ASFLAGS_BOOT32) $< -o $@

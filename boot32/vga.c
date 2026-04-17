@@ -1,10 +1,6 @@
 #include <boot32/vga.h> 
 
-static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg) {
-	return fg | bg << 4;
-}
-
-static inline uint16_t vga_entry(unsigned char uc, uint8_t color) {
+static inline uint16_t vga_entry(uint8_t uc, uint8_t color) {
 	return (uint16_t) uc | (uint16_t) color << 8;
 }
 
@@ -15,6 +11,66 @@ size_t strlen(const char* str) {
 	return len;
 }
 
+uint32_t ipow(uint32_t base, uint8_t pow) {
+    uint32_t res = 1;
+    for (int i=0; i<pow; i++) res *= base;
+    return res;
+}
+
+int u32_to_str(uint32_t u, uint8_t base, int pad, char* buf, size_t buf_length) {
+    /* Digits and letters have been exhausted */
+    if (base > 36) return 1;
+    if (pad == 0 || buf_length == 0) return 2;
+    if (pad > 0 && (size_t)pad > buf_length) return 3;
+
+    size_t i = 1;
+    uint32_t low = 0;
+    char sbuf[buf_length];
+
+    while (true) {
+        uint32_t p = ipow(base, i);
+        uint32_t p2 = ipow(base, i-1);
+        uint8_t d = ((p==0 ? u : u % p) - low)/p2;
+        low += d*p2;
+        
+
+        /* Use ascii code for base 10 numbers by default */
+        char c = d+48;
+        if (d > 9) {
+            /* Start using letters as digits, if base is higher than 10 */
+            c = (d-10)+97;
+        }
+
+        /* Not enough space to accomodate this string */
+        if (buf_length < i+1) return 4;
+
+        sbuf[i-1] = c;
+
+        /* End of number */
+        if (low == u) break;
+        i++;
+    }
+
+
+    /* i = length of number/string */
+    if (pad > 0 && (size_t)pad > i) {
+        for (size_t j=0; j<pad-i; j++) buf[j] = '0';
+        for (size_t j=0; j<i; j++) {
+            buf[j+pad-i] = sbuf[(i-1)-j];
+        }
+
+        buf[pad] = '\0';
+    } else {
+        for (size_t j=0; j<i; j++) {
+            buf[j] = sbuf[(i-1)-j];
+        }
+
+        buf[i] = '\0';
+    }
+    return 0; 
+}
+
+
 #define VGA_WIDTH   80
 #define VGA_HEIGHT  25
 #define VGA_MEMORY  0xB8000 
@@ -24,21 +80,23 @@ size_t vga_column;
 uint8_t vga_color;
 volatile uint16_t* vga_buffer = (uint16_t*)VGA_MEMORY;
 
+void vga_setcolor(enum VGA_COLOR fg, enum VGA_COLOR bg) {
+	vga_color = fg | bg << 4;
+}
+
 void vga_initialize() {
 	vga_row = 0;
 	vga_column = 0;
-	vga_color = vga_entry_color(VGA_COLOR_LIGHT_BROWN, VGA_COLOR_BROWN);
-	
-	for (size_t y = 0; y < VGA_HEIGHT; y++) {
+	vga_setcolor(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);	
+}
+
+void vga_clear() {
+    for (size_t y = 0; y < VGA_HEIGHT; y++) {
 		for (size_t x = 0; x < VGA_WIDTH; x++) {
 			const size_t index = y * VGA_WIDTH + x;
 			vga_buffer[index] = vga_entry(' ', vga_color);
 		}
 	}
-}
-
-void vga_setcolor(uint8_t color) {
-	vga_color = color;
 }
 
 void vga_putentryat(char c, uint8_t color, size_t x, size_t y) {
@@ -72,7 +130,19 @@ void vga_write(const char* data, size_t size) {
 		vga_putchar(data[i]);
 }
 
-void vga_writestring(const char* data) {
+void vga_print(const char* data) {
 	vga_write(data, strlen(data));
 }
 
+void vga_print_u32(uint32_t u, uint8_t base, int padding) {
+    char buf[24];
+    
+    int e = u32_to_str(u, base, padding, buf, 16);
+    if (e == 0) {
+        vga_print(buf);
+    } else {
+        vga_print("!#ERR");
+        u32_to_str(e, 10, -1, buf, 16);
+        vga_print(buf);
+    }
+}
