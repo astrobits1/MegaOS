@@ -5,7 +5,7 @@ LD=x86_64-elf-ld
 #LDFLAGS_BOOT32 = -m32 -nostdlib -Wl,-m,elf_i386
 LDFLAGS_BOOT32 = -m elf_i386
 ASFLAGS_BOOT32 = --32
-CFLAGS_BOOT32 = -m32 -Iinclude -ffreestanding -Wall -Wextra
+CFLAGS_BOOT32 = -m32 -Iinclude -O2 -ffreestanding -Wall -Wextra
 
 BOOT32_BIN = $(addprefix build/boot32/, multiboot2.o descriptor.o boot.o vga.o gdt.o idt.o isr.o isr_exceptions.o)
 

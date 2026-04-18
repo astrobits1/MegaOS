@@ -78,6 +78,7 @@ int u32_to_str(uint32_t u, uint8_t base, int pad, char* buf, size_t buf_length) 
 size_t vga_row;
 size_t vga_column;
 uint8_t vga_color;
+bool vga_scrolling = false;
 volatile uint16_t* vga_buffer = (uint16_t*)VGA_MEMORY;
 
 void vga_setcolor(enum VGA_COLOR fg, enum VGA_COLOR bg) {
@@ -107,28 +108,40 @@ void vga_clear() {
 	}
 }
 
+void vga_scrolldown() {
+    /* Copy every row to the row above it */
+    for (int y=1; y<VGA_HEIGHT; y++) {
+        for (int x = 0; x < VGA_WIDTH; x++) {
+			int indexFrom = y * VGA_WIDTH + x;
+            int indexTo = (y-1) * VGA_WIDTH + x;
+
+			vga_buffer[indexTo] = vga_buffer[indexFrom];
+		}
+    }
+
+    /* Clear newly row */
+    for (int x=0; x<VGA_WIDTH; x++) {
+        int index = (VGA_HEIGHT-1) * VGA_WIDTH + x;
+        vga_buffer[index] = vga_entry(' ', vga_color);
+    }
+}
+
 void vga_putentryat(char c, uint8_t color, size_t x, size_t y) {
 	const size_t index = y * VGA_WIDTH + x;
 	vga_buffer[index] = vga_entry(c, color);
 }
 
 void vga_putchar(char c) {
+    if (c != '\n') vga_putentryat(c, vga_color, vga_column, vga_row);
 
-    if (c == '\n') {
-        vga_row++;
-        vga_column = 0;
-        if (vga_row == VGA_HEIGHT) vga_row = 0;
-        return;
-    }
-
-	vga_putentryat(c, vga_color, vga_column, vga_row);
 
     vga_column++;
-	if (vga_column == VGA_WIDTH) {
+	if (vga_column == VGA_WIDTH || c == '\n') {
 		vga_column = 0;
-        vga_row++;
-        if (vga_row == VGA_HEIGHT) {
-            vga_row = 0;
+        if (vga_scrolling) vga_scrolldown();
+        else {
+            if (vga_row < VGA_HEIGHT-1) vga_row++;
+            else vga_scrolling = true;
         }
 	}
 }

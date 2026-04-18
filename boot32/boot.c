@@ -46,6 +46,7 @@ void boot_main(void* bootinfo) {
     vga_print("\n");
     idt_initialise();
 
+
     lock();
 }
 
