@@ -1,9 +1,14 @@
-/* Allocating space for gdtr (GDT Descriptor) pointer */
+/* Allocating space for gdtr (GDT Descriptor) and idtr (IDT Descriptor) pointer */
 .section .data
 .align 8
 gdtr:
     .short 0            /* Size (16 bit) */
     .long 0             /* Offset (32 bit) */
+
+idtr:
+    .short 0
+    .long 0
+
 
 
 .section .text
@@ -27,6 +32,29 @@ gdtr_load:
 
     /* Write to GDTR */ 
     lgdt gdtr
+
+    pop %eax
+    pop %ebp
+    ret
+
+/* void idtr_load(void* offset, uint16_t size) */
+.global idtr_load
+.type idtr_load, @function
+idtr_load:
+    push %ebp
+    mov %esp, %ebp
+    push %eax
+
+    /* Load size */
+    movw 12(%ebp),   %ax
+    movw %ax,        idtr
+
+    /* Load offset */
+    movl 8(%ebp),    %eax
+    movl %eax,       idtr+2
+
+    /* Write to GDTR */ 
+    lidt idtr
 
     pop %eax
     pop %ebp

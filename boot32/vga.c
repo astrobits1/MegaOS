@@ -135,7 +135,7 @@ void vga_print(const char* data) {
 }
 
 void vga_print_u32(uint32_t u, uint8_t base, int padding) {
-    char buf[24];
+    char buf[65];
     
     int e = u32_to_str(u, base, padding, buf, 16);
     if (e == 0) {
@@ -146,3 +146,23 @@ void vga_print_u32(uint32_t u, uint8_t base, int padding) {
         vga_print(buf);
     }
 }
+
+void vga_print_color(const char* data, enum VGA_COLOR fg) {
+    enum VGA_COLOR old = vga_color;
+    vga_setcolor(fg, vga_color >> 4 & 0xF);
+	vga_print(data);
+    vga_color = old;
+}
+
+void vga_print_u32_color(uint32_t u, uint8_t base, int padding, enum VGA_COLOR fg) {
+    enum VGA_COLOR old = vga_color;
+    vga_setcolor(fg, vga_color >> 4 & 0xF);
+	vga_print_u32(u, base, padding);
+    vga_color = old;
+}
+
+void vga_panic(const char* data) {
+    vga_print_color("[PANIC] ", VGA_COLOR_RED);
+    vga_print_color(data, VGA_COLOR_RED);
+}
+

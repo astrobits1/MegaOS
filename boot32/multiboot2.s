@@ -47,6 +47,8 @@ stack_top:
 .global _start
 .type _start, @function
 _start:
+    /* Disable interrupts */
+    cli
     /* Set stack to the allocated region at runtime */
     mov $stack_top, %esp
 

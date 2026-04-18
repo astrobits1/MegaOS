@@ -34,6 +34,11 @@ void vga_write(const char* data, size_t size);
 void vga_print(const char* data);
 void vga_print_u32(uint32_t u, uint8_t base, int padding);
 
+void vga_print_color(const char* data, enum VGA_COLOR fg);
+void vga_print_u32_color(uint32_t u, uint8_t base, int padding, enum VGA_COLOR fg);
+
+void vga_panic(const char* data);
+
 int u32_to_str(uint32_t u, uint8_t base, int pad, char* buf, size_t buf_length);
 size_t strlen(const char* str) ;
 
