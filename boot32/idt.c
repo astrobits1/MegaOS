@@ -1,7 +1,7 @@
 #include <boot32/idt.h>
 #include <boot32/gdt.h>
 #include <boot32/vga.h>
-#include <boot32/irq_routines.h>
+#include <boot32/isr.h>
 
 #define IDT_ENTRY_COUNT 256
 
@@ -37,23 +37,11 @@ void idt_initialise() {
         idt_write_entry(i, (uint32_t)&unimplemented_routine, GATE_INT_32);
     }
 
-    vga_print("Setting fault and abort handlers\n");
-    idt_write_entry(0, (uint32_t)&irq0_division_error_fault, GATE_INT_32);
-    idt_write_entry(5, (uint32_t)&irq5_bound_range_exceed_fault, GATE_INT_32);
-    idt_write_entry(6, (uint32_t)&irq6_invalid_opcode_fault, GATE_INT_32);
-    idt_write_entry(7, (uint32_t)&irq7_dev_not_available_fault, GATE_INT_32);
-    idt_write_entry(8, (uint32_t)&irq8_double_fault, GATE_INT_32);
-    idt_write_entry(9, (uint32_t)&irq9_coprocessor_segment_overrun_fault, GATE_INT_32);
-    idt_write_entry(10, (uint32_t)&irq10_invalid_tss_fault, GATE_INT_32);
-    idt_write_entry(11, (uint32_t)&irq11_segment_not_present_fault, GATE_INT_32);
-    idt_write_entry(12, (uint32_t)&irq12_stack_segment_fault, GATE_INT_32);
-    idt_write_entry(13, (uint32_t)&irq13_general_protection_fault, GATE_INT_32);
-    idt_write_entry(14, (uint32_t)&irq14_page_fault, GATE_INT_32);
-    idt_write_entry(16, (uint32_t)&irq16_floating_point_fault, GATE_INT_32);
-    idt_write_entry(17, (uint32_t)&irq17_alignment_check_fault, GATE_INT_32);
-   
-    /* Miscalleneous faults */
-    for (int i=18; i<22; i++) idt_write_entry(i, (uint32_t)&unimplemented_fault, GATE_INT_32);
+    vga_print("Setting exception handlers\n");
+
+    for (int i=0; i<32; i++) {
+        idt_write_entry(i, (uint32_t)isr_exception_table[i], GATE_INT_32);
+    } 
 
     vga_print("Loading IDT to IDTR\n");
     idtr_load((void*)IDT, IDT_ENTRY_COUNT*8-1);

@@ -1,10 +1,27 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <boot32/boot.h>
 #include <boot32/vga.h>
 #include <boot32/gdt.h>
 #include <boot32/idt.h>
 
+__attribute__((noreturn))
+void lock() {
+l:
+    __asm__ volatile ("cli; hlt");
+    goto l;
+}
+
+__attribute__((noreturn))
+void boot_panic() {
+    vga_setcolor(VGA_COLOR_WHITE, VGA_COLOR_RED);
+    vga_print("Boot Kernel Panic!\nHalting\n");
+
+    lock();
+}
+
+__attribute__((noreturn))
 void boot_main(void* bootinfo) {
 	/* Initialize vga interface */
 	vga_initialize();
@@ -28,5 +45,7 @@ void boot_main(void* bootinfo) {
      * unimplemented handler for now */
     vga_print("\n");
     idt_initialise();
+
+    lock();
 }
 
