@@ -2,4 +2,4 @@
 *.o
 build/boot32/*.o
 build/boot32.elf
-iso/boot/*.elf
+iso/boot/boot32.elf
