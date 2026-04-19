@@ -4,6 +4,7 @@ SECTIONS {
     /* Load ELF at or around physical address 2M 
      * A safe offset that will be available under BIOS and UEFI */
     . = 2M;
+    _BOOT_BEGIN = .;
 
     /* Multiboot2 header and code */
     .text ALIGN(4K) : {
@@ -28,4 +29,6 @@ SECTIONS {
         *(COMMON)
         *(.bss)
     }
+
+    _BOOT_END = .;
 }

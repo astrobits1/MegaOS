@@ -132,17 +132,18 @@ void vga_putentryat(char c, uint8_t color, size_t x, size_t y) {
 }
 
 void vga_putchar(char c) {
+    if (vga_scrolling) {
+        vga_scrolling = false;
+        vga_scrolldown();
+    }
     if (c != '\n') vga_putentryat(c, vga_color, vga_column, vga_row);
 
 
     vga_column++;
 	if (vga_column == VGA_WIDTH || c == '\n') {
 		vga_column = 0;
-        if (vga_scrolling) vga_scrolldown();
-        else {
-            if (vga_row < VGA_HEIGHT-1) vga_row++;
-            else vga_scrolling = true;
-        }
+        if (vga_row < VGA_HEIGHT-1) vga_row++;
+        else vga_scrolling = true;
 	}
 }
 

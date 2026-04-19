@@ -5,6 +5,10 @@
 #include <boot32/vga.h>
 #include <boot32/gdt.h>
 #include <boot32/idt.h>
+#include <boot32/paging.h>
+
+volatile const void* _bootstart = (void*)&_BOOT_BEGIN;
+volatile const void* _bootend = (void*)&_BOOT_END;
 
 __attribute__((noreturn))
 void lock() {
@@ -30,6 +34,15 @@ void boot_main(void* bootinfo) {
 
 	vga_print_color("Successfuly loaded boot32.efi in 32-bit protected mode\n", VGA_COLOR_LIGHT_GREEN);
     vga_print_color("Using VGA text buffer for logging\n", VGA_COLOR_LIGHT_GREEN);
+    
+    vga_print("\n");
+    vga_print("Kernel Start Physical: ");
+    vga_print_u32_color((uint32_t)_bootstart, 16, 8, VGA_COLOR_LIGHT_GREEN);
+    vga_print(", End Physical: ");
+    vga_print_u32_color((uint32_t)_bootend, 16, 8, VGA_COLOR_LIGHT_GREEN);
+    vga_print(", Size: ");
+    vga_print_u32_color((uint32_t)(_bootend)-(uint32_t)(_bootstart), 10, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print(" bytes\n");
 
     vga_print("\n");
     vga_print("Boot Information struct address: 0x");
@@ -46,6 +59,8 @@ void boot_main(void* bootinfo) {
     vga_print("\n");
     idt_initialise();
 
+    vga_print("\n");
+    paging_initialise();
 
     lock();
 }
