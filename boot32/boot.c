@@ -8,6 +8,7 @@
 #include <boot32/paging.h>
 #include <boot32/bootinfo.h>
 #include <boot32/allocator.h>
+#include <boot32/elf.h>
 
 const void* _bootstart = (void*)&_BOOT_BEGIN;
 const void* _bootend = (void*)&_BOOT_END;
@@ -69,13 +70,15 @@ void boot_main(void* mb2_bootinfo) {
     vga_print("Parsing multiboot2 bootinfo\n");
     struct bootinfo info = parse_multiboot2_info(mb2_bootinfo);
 
+    vga_print_color("Found kernel64.elf\n", VGA_COLOR_LIGHT_GREEN);
+    vga_print_color("Memory Map\n", VGA_COLOR_LIGHT_GREEN);
     for (uint32_t i=0; i<info.map_entry_count; i++) {
         struct memory_map_entry* entry = &info.map_entries[i];
         
-        vga_print("base: "); vga_print_u32(entry->addr_hi, 16, 8); 
-        vga_print_u32(entry->addr_lo, 16, 8);
-        vga_print(", size: "); vga_print_u32(entry->length_hi, 16, 8); 
-        vga_print_u32(entry->length_lo, 16, 8);
+        vga_print("base: "); vga_print_u32(entry->addr>>32, 16, 8); 
+        vga_print_u32(entry->addr&0xFFFFFFFF, 16, 8);
+        vga_print(", size: "); vga_print_u32(entry->length>>32, 16, 8); 
+        vga_print_u32(entry->length&0xFFFFFFFF, 16, 8);
         vga_print(", type: "); vga_print_u32(entry->type, 10, -1); vga_print("\n");
     }
 
@@ -87,7 +90,7 @@ void boot_main(void* mb2_bootinfo) {
     paging_initialise();
 
     /* Load kernel ELF64 */
-    
+    load(info.kernel_elf.start, info.kernel_elf.size);
     lock();
 }
 

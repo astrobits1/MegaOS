@@ -36,10 +36,8 @@ struct __attribute__((packed)) mbi_tag_memory_map {
 };
 
 struct __attribute__((packed)) mbi_memory_map_entry {
-    uint32_t addr_lo;
-    uint32_t addr_hi;
-    uint32_t length_lo;
-    uint32_t length_hi;
+    uint64_t addr;
+    uint64_t length;
     uint32_t type;
     uint32_t reserved;
 };
@@ -60,10 +58,8 @@ enum MEMORY_MAP_ENTRY_TYPE {
 };
 
 struct memory_map_entry {
-    uint32_t addr_lo;
-    uint32_t addr_hi;
-    uint32_t length_lo;
-    uint32_t length_hi;
+    uint64_t addr;
+    uint64_t length;
     enum MEMORY_MAP_ENTRY_TYPE type;
 };
 

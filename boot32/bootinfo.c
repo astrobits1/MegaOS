@@ -45,10 +45,8 @@ struct bootinfo parse_multiboot2_info(void* multiboot2_info) {
                     }
 
                     struct memory_map_entry* entry = &mapentries[memory_map_entry_count];
-                    entry->addr_hi = mbi_entry->addr_hi;
-                    entry->addr_lo = mbi_entry->addr_lo;
-                    entry->length_hi = mbi_entry->length_hi;
-                    entry->length_lo = mbi_entry->length_lo;
+                    entry->addr = mbi_entry->addr;
+                    entry->length = mbi_entry->length;
                     
                     switch (mbi_entry->type) {
                         case 1: entry->type = MEMORY_MAP_ENTRY_USABLE; break;
