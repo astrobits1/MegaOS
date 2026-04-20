@@ -68,7 +68,7 @@ size_t vga_row;
 size_t vga_column;
 uint8_t vga_color;
 bool vga_scrolling = false;
-volatile uint16_t* vga_buffer = (uint16_t*)VGA_MEMORY;
+uint16_t* vga_buffer = (uint16_t*)VGA_MEMORY;
 
 void vga_setcolor(enum VGA_COLOR fg, enum VGA_COLOR bg) {
 	vga_color = fg | bg << 4;

@@ -5,7 +5,7 @@
 
 #define IDT_ENTRY_COUNT 256
 
-volatile uint16_t IDT[IDT_ENTRY_COUNT*4];
+uint16_t IDT[IDT_ENTRY_COUNT*4];
 
 enum GATE_TYPE {
     GATE_TASK = 0x5,

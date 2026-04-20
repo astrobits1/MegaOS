@@ -7,6 +7,7 @@
 #include <boot32/idt.h>
 #include <boot32/paging.h>
 #include <boot32/bootinfo.h>
+#include <boot32/allocator.h>
 
 const void* _bootstart = (void*)&_BOOT_BEGIN;
 const void* _bootend = (void*)&_BOOT_END;
@@ -15,7 +16,7 @@ const void* _bootend = (void*)&_BOOT_END;
 __attribute__((noreturn))
 void lock() {
 l:
-    __asm__ volatile ("cli; hlt");
+    __asm__ volatile("cli; hlt");
     goto l;
 }
 
@@ -28,14 +29,13 @@ void boot_panic() {
 }
 
 __attribute__((noreturn))
-void boot_main(void* mb2_bootinfo) {
+void boot_main(void* mb2_bootinfo) { 
 	/* Initialize vga interface */
 	vga_initialize();
     vga_setcolor(VGA_COLOR_WHITE, VGA_COLOR_BLUE);
     vga_clear();
 
 	vga_print_color("Successfuly loaded boot32.efi in 32-bit protected mode\n", VGA_COLOR_LIGHT_GREEN);
-    vga_print_color("Using VGA text buffer for logging\n", VGA_COLOR_LIGHT_GREEN);
     
     vga_print("\n");
     vga_print("Kernel Start Physical: ");
@@ -46,34 +46,44 @@ void boot_main(void* mb2_bootinfo) {
     vga_print_u32_color((uint32_t)(_bootend)-(uint32_t)(_bootstart), 10, -1, VGA_COLOR_LIGHT_GREEN);
     vga_print(" bytes\n\n");
     
-    /*
-    vga_print("\n");
-    vga_print("Boot Information struct address: 0x");
-    vga_print_u32((uint32_t)bootinfo, 16, 8);
-    vga_print("\n");
-    */
     /* Initialise global descriptor table (flat) */
     gdt_initialise();
 
     /* Initialise interrupt descriptor table, handle all faults
-     * General Interrupt handlers are initialised later, and set to 
-     * unimplemented handler for now */
+     * General Interrupt handlers are set to 
+     * unimplemented handler for now, interrupts are disabled */
     idt_initialise();
+
+    /* Initialise linear page allocator to closest 4KB page aligned physical address 
+     * that doesnt overlap kernel
+     * After the kernel image 
+     *
+     * Identity map is set up until 4MB and we do not expect boot kernel to occupy 
+     * any more memory space beyond that point */
+    void* heap_bottom = (void*)((uint32_t)(_bootend)&(~(PAGE_4K-1)))+PAGE_4K;
+    void* heap_top = (void*)0x003FFFFF;
+    allocator_initialise(heap_bottom, heap_top);
 
     /* Parse boot info */
     vga_print("\n");
     vga_print("Parsing multiboot2 bootinfo\n");
     struct bootinfo info = parse_multiboot2_info(mb2_bootinfo);
 
-    if (info.kernel_elf.size == 0) {
-        vga_print("kernel64.elf not found\n");
-    } else {
-        vga_print("kernel64.elf found\n");
+    for (uint32_t i=0; i<info.map_entry_count; i++) {
+        struct memory_map_entry* entry = &info.map_entries[i];
+        
+        vga_print("base: "); vga_print_u32(entry->addr_hi, 16, 8); 
+        vga_print_u32(entry->addr_lo, 16, 8);
+        vga_print(", size: "); vga_print_u32(entry->length_hi, 16, 8); 
+        vga_print_u32(entry->length_lo, 16, 8);
+        vga_print(", type: "); vga_print_u32(entry->type, 10, -1); vga_print("\n");
     }
 
     vga_print("\n");
 
-    /* Initialise page maps, enable paging and enter x86_64 compatibility mode */
+    /* Initialise page maps, enable paging and enter x86_64 compatibility mode
+     * 0-4MB region is identity mapped, which includes IDT, GDT (data segments)
+     * as well all page allocations by the allocator */
     paging_initialise();
 
     /* Load kernel ELF64 */

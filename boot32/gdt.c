@@ -1,7 +1,7 @@
 #include <boot32/gdt.h>
 #include <boot32/vga.h>
 
-volatile uint8_t GDT[8*SEG_DESCRIPTOR_ALLOC_COUNT];
+uint8_t GDT[8*SEG_DESCRIPTOR_ALLOC_COUNT];
 uint16_t seg_descriptor_count = 0;
 
 void gdt_write_entry(uint16_t index, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags) {

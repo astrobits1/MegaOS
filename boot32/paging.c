@@ -1,32 +1,11 @@
 #include <boot32/boot.h>
 #include <boot32/paging.h>
 #include <boot32/vga.h>
-
-extern const void* _bootstart;
-extern const void* _bootend;
+#include <boot32/allocator.h>
 
 #define M 52
 /* 4KB */
-#define MAP_SIZE 0x1000
-
-/* Linear allocator for page structures */
-
-volatile void* allocation_pointer = NULL;
-
-volatile void* allocate_map() {
-    /* Allocate 4KB page map layer (table/directory/pdpt/pml4) and 
-     * return its address */
-    if (allocation_pointer == NULL) {
-        /* Initialise to closest 4KB page aligned physical address that doesnt overlap kernel
-         * After the kernel */
-        allocation_pointer = (void*)((uint32_t)(_bootend)&(~(MAP_SIZE-1)))+MAP_SIZE;
-    }
-
-    volatile void* object = allocation_pointer;
-    allocation_pointer = (void*)(((uint32_t)allocation_pointer)+MAP_SIZE);
-
-    return object;
-}
+#define MAP_SIZE PAGE_4K
 
 void initialise_map(volatile uint8_t* map) {
     /* Initialise map to unmapped by default, (P bit 0) */
@@ -63,7 +42,7 @@ void write_map_entry(volatile uint8_t* map, uint16_t index, uint32_t a_hi, uint3
 
     a_lo |= flag_data;
 
-    volatile uint32_t* ptr = (volatile uint32_t*)&map[index*8];
+    uint32_t* ptr = (uint32_t*)&map[index*8];
     ptr[0] = a_lo;
     ptr[1] = a_hi;
 }
@@ -80,10 +59,10 @@ void paging_initialise() {
      * All the page structures should be within identity mapped region
      * or modifying them will cause a page fault */
 
-    volatile void* pml4 = allocate_map();        /* Page map layer 4 */
-    volatile void* pdpt = allocate_map();        /* Page directory pointer table */
-    volatile void* pd   = allocate_map();        /* Page directory */
-    volatile void* pt   = allocate_map();        /* Page table (contains pointer to physical address) */
+    volatile void* pml4 = allocator_alloc_page();        /* Page map layer 4 */
+    volatile void* pdpt = allocator_alloc_page();        /* Page directory pointer table */
+    volatile void* pd   = allocator_alloc_page();        /* Page directory */
+    volatile void* pt   = allocator_alloc_page();        /* Page table (contains pointer to physical address) */
 
     initialise_map(pml4);
     initialise_map(pdpt);

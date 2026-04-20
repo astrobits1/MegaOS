@@ -7,9 +7,9 @@ LD=x86_64-elf-ld
 #LDFLAGS_BOOT32 = -m32 -nostdlib -Wl,-m,elf_i386
 LDFLAGS_BOOT32 = -m elf_i386
 ASFLAGS_BOOT32 = --32
-CFLAGS_BOOT32 = -m32 -Iinclude -O2 -ffreestanding -Wall -Wextra
+CFLAGS_BOOT32 = -m32 -Iinclude -O2 -mno-sse -mno-sse2 -mno-mmx -msoft-float -fno-builtin -ffreestanding -Wall -Wextra -Werror
 
-BOOT32_BIN = $(addprefix build/boot32/, multiboot2.o descriptor.o boot.o vga.o gdt.o idt.o isr.o isr_exceptions.o paging.o paging_as.o bootinfo.o) 
+BOOT32_BIN = $(addprefix build/boot32/, multiboot2.o descriptor.o boot.o vga.o gdt.o idt.o isr.o isr_exceptions.o paging.o paging_as.o bootinfo.o allocator.o) 
 
 
 build/boot32.elf: $(BOOT32_BIN)
@@ -26,7 +26,7 @@ build/boot32/%.o: boot32/%.c
 
 LDFLAGS_KERNEL64 = -nostdlib -lgcc
 ASFLAGS_KERNEL64 = --64
-CFLAGS_KERNEL64 = -Iinclude -O2 -ffreestanding -Wall -Wextra
+CFLAGS_KERNEL64 = -Iinclude -O2 -ffreestanding -Wall -Wextra -Werror
 
 KERNEL64_BIN = $(addprefix build/kernel64/, kernel_main.o entry.o)
 
