@@ -17,6 +17,7 @@ void gdt_write_entry(uint16_t index, uint32_t base, uint32_t limit, uint8_t acce
     GDT[offset+6] = (limit>>16 & 0xF) | ((flags&0xF) << 4);
     GDT[offset+7] = base>>24 & 0xFF;
 
+    /*
     vga_print("base: 0x");
     vga_print_u32(base, 16, 8);
     vga_print(", limit: 0x");
@@ -26,6 +27,7 @@ void gdt_write_entry(uint16_t index, uint32_t base, uint32_t limit, uint8_t acce
     vga_print(", flags: 0x");
     vga_print_u32(flags, 16, -1);
     vga_print("\n");
+    */
 }
 
 void gdt_add_entry(uint32_t base, uint32_t limit, uint8_t access, uint8_t flags) {
@@ -33,31 +35,31 @@ void gdt_add_entry(uint32_t base, uint32_t limit, uint8_t access, uint8_t flags)
 }
 
 void gdt_initialise() {
-    vga_print_color("Initializing Global Descriptor Table (32 bit)\n", VGA_COLOR_LIGHT_GREEN);
+    //vga_print_color("Initializing Global Descriptor Table (32 bit)\n", VGA_COLOR_LIGHT_GREEN);
 
     /* Null descriptor */
-    vga_print("Loading NULL Descriptor at GDT index 0:\n");
+    //vga_print("Loading NULL Descriptor at GDT index 0:\n");
     gdt_add_entry(0, 0, 0, 0);
 
     /* Kernel ring 0 code segment (flat) */
-    vga_print("Loading Kernel Ring 0 Code Segment at GDT index 1:\n");
+    //vga_print("Loading Kernel Ring 0 Code Segment at GDT index 1:\n");
     gdt_add_entry(0, 0xFFFFF, 0x9A, 0xC); 
 
     /* Kernel ring 0 data segment (flat) */
-    vga_print("Loading Kernel Ring 0 Data Segment at GDT index 2:\n");
+    //vga_print("Loading Kernel Ring 0 Data Segment at GDT index 2:\n");
     gdt_add_entry(0, 0xFFFFF, 0x92, 0xC);
 
     /* Load our GDT to the GDTR using assembly routine */
-    vga_print("Loading GDT to GDTR\n");
+    //vga_print("Loading GDT to GDTR\n");
     gdtr_load((void*)GDT, seg_descriptor_count*8-1);
 
     /* Reloads code segment located at index 1 to CS 
      * and data segment at index 2 to DS and the rest
      * This has to be hardcoded because CS cannot be written to from
      * registers */
-    vga_print("Reloading segment registers\n");
+    //vga_print("Reloading segment registers\n");
     reload_seg_regs();
 
-    vga_print_color("Initialized Global Descriptor Table\n", VGA_COLOR_LIGHT_GREEN);
+    vga_print_color("Initialized Global Descriptor Table (32 bit)\n", VGA_COLOR_LIGHT_GREEN);
 }
 

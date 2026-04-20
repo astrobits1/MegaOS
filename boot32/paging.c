@@ -2,8 +2,8 @@
 #include <boot32/paging.h>
 #include <boot32/vga.h>
 
-extern volatile const void* _bootstart;
-extern volatile const void* _bootend;
+extern const void* _bootstart;
+extern const void* _bootend;
 
 #define M 52
 /* 4KB */
@@ -70,7 +70,7 @@ void write_map_entry(volatile uint8_t* map, uint16_t index, uint32_t a_hi, uint3
 
 
 void paging_initialise() {
-    vga_print_color("Initializing 64 bit Paging\n", VGA_COLOR_LIGHT_GREEN);
+    //vga_print_color("Initializing 64 bit Paging\n", VGA_COLOR_LIGHT_GREEN);
 
     /* Allocate page maps in physical memory, in a region that is outside .data
      * right at the end of the kernel 
@@ -98,14 +98,16 @@ void paging_initialise() {
     write_map_entry(pdpt, 0, 0, (uint32_t)pd, NOSET_PAGESIZE, NO_PAGE_MASK);
     write_map_entry(pml4, 0, 0, (uint32_t)pdpt, NOSET_PAGESIZE, NO_PAGE_MASK);
 
+    /*
     vga_print("PML4*: "); vga_print_u32((uint32_t)pml4, 16, 8);
     vga_print(", PDPT*: "); vga_print_u32((uint32_t)pdpt, 16, 8);
     vga_print(", PD*: "); vga_print_u32((uint32_t)pd, 16, 8);
     vga_print("\n");
+    */
 
     /* Load pml4 to CR3 */
     load_pml4(pml4);
-    vga_print("Loaded PML4 to CR3\n");
+    //vga_print("Loaded PML4 to CR3\n");
     /* Enable 64 bit paging, and compatibility mode 
      * kernel and surrounding space should be identity mapped */
     enable_paging64();

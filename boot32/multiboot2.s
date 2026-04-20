@@ -1,7 +1,7 @@
 /* Multiboot2 header constants */
 .set MAGIC,    0xE85250D6
 .set ARCH,     0                                    /* 32 bit protected mode */
-.set LENGTH,   40                                   /* Header + Tag length */
+.set LENGTH,   44                                   /* Header + Tag length */
 .set CHECKSUM, -(MAGIC+ARCH+LENGTH)
 
 
@@ -20,10 +20,11 @@
 .align 8
 .short 1    /* Type Specifier */
 .short 0    /* Not optional (bit 0 != 1) */
-.long 16    /* Size in bytes of tag */
+.long 20    /* Size in bytes of tag */
 /* mbi_tag_types */
 .long 2     /* Bootloader name */
 .long 6     /* Memory Map */
+.long 3     /* Modules */
 
 /* 2. Terminating tag */
 .align 8

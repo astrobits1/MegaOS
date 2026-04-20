@@ -30,20 +30,20 @@ void idt_write_entry(uint8_t index, uint32_t vec, enum GATE_TYPE gate_type) {
 
 void idt_initialise() {
     /* Set all service routine handlers to null */
-    vga_print_color("Initializing Interrupt Descriptor Table\n", VGA_COLOR_LIGHT_GREEN);
+    //vga_print_color("Initializing Interrupt Descriptor Table\n", VGA_COLOR_LIGHT_GREEN);
 
-    vga_print("Initializing all entries to point to default unimplemented interrupt handler\n");
+    //vga_print("Initializing all entries to point to default unimplemented interrupt handler\n");
     for (int i=0; i<IDT_ENTRY_COUNT; i++) {
         idt_write_entry(i, (uint32_t)&unimplemented_routine, GATE_INT_32);
     }
 
-    vga_print("Setting exception handlers\n");
+    //vga_print("Setting exception handlers\n");
 
     for (int i=0; i<32; i++) {
         idt_write_entry(i, (uint32_t)isr_exception_table[i], GATE_INT_32);
     } 
 
-    vga_print("Loading IDT to IDTR\n");
+    //vga_print("Loading IDT to IDTR\n");
     idtr_load((void*)IDT, IDT_ENTRY_COUNT*8-1);
 
     vga_print_color("Initialized Interrupt Descriptor Table\n", VGA_COLOR_LIGHT_GREEN);

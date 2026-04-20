@@ -11,12 +11,6 @@ size_t strlen(const char* str) {
 	return len;
 }
 
-uint32_t ipow(uint32_t base, uint8_t pow) {
-    uint32_t res = 1;
-    for (int i=0; i<pow; i++) res *= base;
-    return res;
-}
-
 int u32_to_str(uint32_t u, uint8_t base, int pad, char* buf, size_t buf_length) {
     /* Digits and letters have been exhausted */
     if (base > 36) return 1;
@@ -24,30 +18,24 @@ int u32_to_str(uint32_t u, uint8_t base, int pad, char* buf, size_t buf_length) 
     if (pad > 0 && (size_t)pad > buf_length) return 3;
 
     size_t i = 1;
-    uint32_t low = 0;
     char sbuf[buf_length];
 
     while (true) {
-        uint32_t p = ipow(base, i);
-        uint32_t p2 = ipow(base, i-1);
-        uint8_t d = ((p==0 ? u : u % p) - low)/p2;
-        low += d*p2;
+        uint8_t d = u%base;
+        u /= base;
         
-
         /* Use ascii code for base 10 numbers by default */
         char c = d+48;
         if (d > 9) {
             /* Start using letters as digits, if base is higher than 10 */
             c = (d-10)+97;
         }
-
-        /* Not enough space to accomodate this string */
+        
         if (buf_length < i+1) return 4;
 
         sbuf[i-1] = c;
-
-        /* End of number */
-        if (low == u) break;
+        
+        if (u == 0) break;
         i++;
     }
 
@@ -69,6 +57,7 @@ int u32_to_str(uint32_t u, uint8_t base, int pad, char* buf, size_t buf_length) 
     }
     return 0; 
 }
+
 
 
 #define VGA_WIDTH   80
@@ -159,12 +148,12 @@ void vga_print(const char* data) {
 void vga_print_u32(uint32_t u, uint8_t base, int padding) {
     char buf[65];
     
-    int e = u32_to_str(u, base, padding, buf, 17);
+    int e = u32_to_str(u, base, padding, buf, 65);
     if (e == 0) {
         vga_print(buf);
     } else {
         vga_print("!#ERR");
-        u32_to_str(e, 10, -1, buf, 17);
+        u32_to_str(e, 10, -1, buf, 65);
         vga_print(buf);
     }
 }
