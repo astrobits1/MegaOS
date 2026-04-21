@@ -3,9 +3,12 @@
 #include <boot32/vga.h>
 #include <boot32/allocator.h>
 
-#define M 52
-/* 4KB */
-#define MAP_SIZE PAGE_4K
+
+/* Map references for initial 0-1GB */
+volatile void* PML4_0 = NULL;
+volatile void* PDPT_0 = NULL;
+volatile void* PD_0   = NULL;
+
 
 void initialise_map(volatile uint8_t* map) {
     /* Initialise map to unmapped by default, (P bit 0) */
@@ -15,11 +18,6 @@ void initialise_map(volatile uint8_t* map) {
     }
 }
 
-#define PDE_2M_PAGE_MASK ~0x1FFFFF
-#define PDPT_1G_PAGE_MASK ~0x3FFFFFFF
-#define NO_PAGE_MASK 0
-#define SET_PAGESIZE 1
-#define NOSET_PAGESIZE 0
 
 /* Generalised function used to write address to pt, pd, pdpt, pml4
  *
@@ -30,7 +28,10 @@ void initialise_map(volatile uint8_t* map) {
  * Flag configuration is minimal and default as the main aim of setting up paging here
  * is to identity map kernel zone and enter long mode */
 
-void write_map_entry(volatile uint8_t* map, uint16_t index, uint32_t a_hi, uint32_t a_lo, uint8_t pagesize, uint32_t pagesize_mask) {
+void write_map_entry(volatile uint8_t* map, uint16_t index, uint64_t addr, uint8_t pagesize, uint32_t pagesize_mask) {
+    uint32_t a_hi = addr >> 32;
+    uint32_t a_lo = addr & 0xFFFFFFFF;
+
     a_hi &= (1<<(M-32))-1;
 
     uint32_t flag_data = 0x003;
@@ -62,20 +63,18 @@ void paging_initialise() {
     volatile void* pml4 = allocator_alloc_page();        /* Page map layer 4 */
     volatile void* pdpt = allocator_alloc_page();        /* Page directory pointer table */
     volatile void* pd   = allocator_alloc_page();        /* Page directory */
-    volatile void* pt   = allocator_alloc_page();        /* Page table (contains pointer to physical address) */
 
     initialise_map(pml4);
     initialise_map(pdpt);
     initialise_map(pd);
-    initialise_map(pt);
 
     /* Identity map 0-4MB */
-    write_map_entry(pd, 0, 0, 0, SET_PAGESIZE, PDE_2M_PAGE_MASK);
-    write_map_entry(pd, 1, 0, 0x00200000, SET_PAGESIZE, PDE_2M_PAGE_MASK);
+    write_map_entry(pd, 0, 0, SET_PAGESIZE, PDE_2M_PAGE_MASK);
+    write_map_entry(pd, 1, 0x00200000, SET_PAGESIZE, PDE_2M_PAGE_MASK);
 
     /* Load page directory to ptpt and ptpt to pml4 */
-    write_map_entry(pdpt, 0, 0, (uint32_t)pd, NOSET_PAGESIZE, NO_PAGE_MASK);
-    write_map_entry(pml4, 0, 0, (uint32_t)pdpt, NOSET_PAGESIZE, NO_PAGE_MASK);
+    write_map_entry(pdpt, 0, (uint32_t)pd, NOSET_PAGESIZE, NO_PAGE_MASK);
+    write_map_entry(pml4, 0, (uint32_t)pdpt, NOSET_PAGESIZE, NO_PAGE_MASK);
 
     /*
     vga_print("PML4*: "); vga_print_u32((uint32_t)pml4, 16, 8);
@@ -86,7 +85,10 @@ void paging_initialise() {
 
     /* Load pml4 to CR3 */
     load_pml4(pml4);
-    //vga_print("Loaded PML4 to CR3\n");
+    PML4_0 = pml4;
+    PDPT_0 = pdpt;
+    PD_0 = pd;
+
     /* Enable 64 bit paging, and compatibility mode 
      * kernel and surrounding space should be identity mapped */
     enable_paging64();

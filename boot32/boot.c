@@ -89,8 +89,26 @@ void boot_main(void* mb2_bootinfo) {
      * as well all page allocations by the allocator */
     paging_initialise();
 
+    /* Prepare kernel load by identity mapping 16 MB of memory starting at 4 MB */
+    const uint8_t* kernel_physical_addr = (uint8_t*)0x00400000;
+
+    for (int i=0; i<8; i++) {
+        write_map_entry(PD_0, i+2, i*0x00200000+(uint32_t)kernel_physical_addr, SET_PAGESIZE, PDE_2M_PAGE_MASK);
+    }
+
     /* Load kernel ELF64 */
-    load(info.kernel_elf.start, info.kernel_elf.size);
+    struct elf_metadata meta = load_elf64_exec_at(info.kernel_elf.start, info.kernel_elf.size, (uint8_t*)kernel_physical_addr);
+
+    vga_print("64 bit kernel loaded into identity mapped memory\n");
+    vga_print("Virtual Address Start: ");
+    vga_print_u32(meta.virtual_start>>32, 16, 8);
+    vga_print_u32(meta.virtual_start&0xFFFFFFFF, 16, 8);
+    vga_print("\n");
+    vga_print("Entry point: ");
+    vga_print_u32(meta.entrypoint>>32, 16, 8);
+    vga_print_u32(meta.entrypoint&0xFFFFFFFF, 16, 8);
+    vga_print("\n");
+
     lock();
 }
 

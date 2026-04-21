@@ -2,7 +2,8 @@ ENTRY(_entry)
 
 SECTIONS {
     /* Bootstrapper must load kernel to -2GB virtual address */
-    _KERNEL_BEGIN = 0xFFFFFFFF80000000;
+    . = 0xFFFFFFFF80000000;
+    _KERNEL_BEGIN = .;
 
     /* code */
     .text ALIGN(4K) : {
