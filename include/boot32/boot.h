@@ -18,5 +18,6 @@ void boot_panic();
 
 /* longmode.s */
 void jump_kernel(uint32_t entry_lo, uint32_t entry_hi, struct bootinfo* info);
+void enable_sse();
 
 #endif

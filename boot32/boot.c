@@ -111,7 +111,8 @@ void boot_main(void* mb2_bootinfo) {
     vga_print_u32(meta.memory_image_size, 10, -1);
     vga_print("\n");
     
-    /* Enable SSE/SSE2 instructions and FPU */
+    /* Enable SSE instructions */
+    enable_sse();
 
     /* Map kernel memory to its expected 64 bit paging */
     map_memory_2M(meta.virtual_start, (uint32_t)kernel_physical_addr, initial_block_count);

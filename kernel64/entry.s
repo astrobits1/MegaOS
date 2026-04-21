@@ -1,5 +1,7 @@
 .section .bss
 
+
+/* Kernel stack located within the memory image */
 .align 16
 stack_bottom:
 .skip 16384
@@ -12,8 +14,6 @@ stack_top:
 .global _entry
 .type _entry, @function
 _entry:
-    mov $0xDEADBEEFCAFEBABE, %rax
-
     /* Bootinfo pointer */
     pop %rdi
 
@@ -25,6 +25,7 @@ _entry:
     /* Begin kernel main */
     call kernel_main
 
+    /* Kernel main should not return */
     cli
 1:
     hlt
