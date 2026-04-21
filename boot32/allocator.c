@@ -1,6 +1,6 @@
 #include <boot32/allocator.h>
 #include <boot32/boot.h>
-#include <boot32/vga.h>
+#include <common/drivers/vga/vga.h>
 #include <stddef.h>
 
 extern const void* _bootstart;

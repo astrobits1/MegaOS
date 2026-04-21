@@ -1,5 +1,5 @@
 #include <boot32/bootinfo.h>
-#include <boot32/vga.h>
+#include <common/drivers/vga/vga.h>
 #include <boot32/boot.h>
 #include <boot32/allocator.h>
 

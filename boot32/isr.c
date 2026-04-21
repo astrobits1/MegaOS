@@ -1,7 +1,7 @@
 /* Stores all IRQ routines for faults, exceptions and interrupts */
 
 #include <boot32/boot.h>
-#include <boot32/vga.h>
+#include <common/drivers/vga/vga.h>
 
 const char* exception_string[23] = {
     "Division error",

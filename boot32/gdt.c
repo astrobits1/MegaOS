@@ -1,5 +1,5 @@
 #include <boot32/gdt.h>
-#include <boot32/vga.h>
+#include <common/drivers/vga/vga.h>
 
 /* Allocate space for 8  segment descriptors */
 uint8_t GDT[8*SEG_DESCRIPTOR_ALLOC_COUNT];

@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <boot32/boot.h>
-#include <boot32/vga.h>
+#include <common/drivers/vga/vga.h>
 #include <boot32/gdt.h>
 #include <boot32/idt.h>
 #include <boot32/paging.h>
@@ -67,7 +67,7 @@ void boot_main(void* mb2_bootinfo) {
 
     /* Parse boot info */
     vga_print("\n");
-    vga_print("Parsing multiboot2 bootinfo\n");
+    vga_print_color("Parsing multiboot2 bootinfo\n", VGA_COLOR_LIGHT_GREEN);
     struct bootinfo info = parse_multiboot2_info(mb2_bootinfo);
 
     vga_print_color("Found kernel64.elf\n", VGA_COLOR_LIGHT_GREEN);
@@ -113,15 +113,18 @@ void boot_main(void* mb2_bootinfo) {
     
     /* Enable SSE instructions */
     enable_sse();
+    vga_print_color("SSE enabled\n", VGA_COLOR_LIGHT_GREEN);
 
     /* Map kernel memory to its expected 64 bit paging */
     map_memory_2M(meta.virtual_start, (uint32_t)kernel_physical_addr, initial_block_count);
+    vga_print_color("Kernel memory mapped to higher half 64 bit virtual address\n", VGA_COLOR_LIGHT_GREEN);
 
     /* Make all entries 64 bit in GDT */
+    vga_print_color("Setting up 64 bit GDT\n", VGA_COLOR_LIGHT_GREEN);
     gdt_set_long_mode();
 
     /* Long jump to entry point */
-    //jump_kernel(meta);
+    vga_print_color("Ready to boot kernel in long mode, jumping...\n", VGA_COLOR_LIGHT_MAGENTA);
     jump_kernel(meta.entrypoint&0xFFFFFFFF, meta.entrypoint>>32, &info);
     /* noreturn */
 

@@ -1,4 +1,4 @@
-#include <boot32/vga.h> 
+#include <common/drivers/vga/vga.h> 
 
 static inline uint16_t vga_entry(uint8_t uc, uint8_t color) {
 	return (uint16_t) uc | (uint16_t) color << 8;

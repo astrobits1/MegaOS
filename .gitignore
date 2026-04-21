@@ -1,8 +1,5 @@
 *.iso
 *.o
-build/boot32/*.o
-build/boot32.elf
-build/kernel64/*.o
-build/kernel64.elf
+build/
 iso/boot/boot32.elf
 iso/boot/kernel64.elf

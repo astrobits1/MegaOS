@@ -1,5 +1,5 @@
 #include <boot32/elf.h>
-#include <boot32/vga.h>
+#include <common/drivers/vga/vga.h>
 #include <boot32/boot.h>
 
 /* Input: Raw 64 bit ELF64 data, address to load to  */

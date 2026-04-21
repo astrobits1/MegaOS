@@ -1,6 +1,6 @@
 #include <boot32/idt.h>
 #include <boot32/gdt.h>
-#include <boot32/vga.h>
+#include <common/drivers/vga/vga.h>
 #include <boot32/isr.h>
 
 #define IDT_ENTRY_COUNT 256
