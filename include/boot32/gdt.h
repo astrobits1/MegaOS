@@ -10,6 +10,7 @@
 
 /* gdt.c */
 void gdt_initialise();
+void gdt_set_long_mode();
 
 /* descriptor.s */
 void gdtr_load(void* offset, uint16_t size);

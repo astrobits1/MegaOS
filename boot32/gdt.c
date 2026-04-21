@@ -1,6 +1,7 @@
 #include <boot32/gdt.h>
 #include <boot32/vga.h>
 
+/* Allocate space for 8  segment descriptors */
 uint8_t GDT[8*SEG_DESCRIPTOR_ALLOC_COUNT];
 uint16_t seg_descriptor_count = 0;
 
@@ -63,3 +64,13 @@ void gdt_initialise() {
     vga_print_color("Initialized Global Descriptor Table (32 bit)\n", VGA_COLOR_LIGHT_GREEN);
 }
 
+void gdt_set_long_mode() {
+    /* Enable long mode bit, disable DB size flag *
+     * base and limit are ignored in long mode */
+    /* Kernel ring 0 code */
+    gdt_write_entry(1, 0, 0xFFFFF, 0x9A, 0xA);
+    /* Kernel ring 0 data */
+    gdt_write_entry(2, 0, 0xFFFFF, 0x92, 0xA);
+
+    /* GDT is prepared for long mode switch now */
+}

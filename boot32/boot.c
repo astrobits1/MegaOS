@@ -91,12 +91,11 @@ void boot_main(void* mb2_bootinfo) {
 
     /* Prepare kernel load by identity mapping 16 MB of memory starting at 4 MB */
     const uint8_t* kernel_physical_addr = (uint8_t*)0x00400000;
+    const uint8_t initial_block_count = 8;
+    map_memory_2M((uint32_t)kernel_physical_addr, (uint32_t)kernel_physical_addr, initial_block_count);
 
-    for (int i=0; i<8; i++) {
-        write_map_entry(PD_0, i+2, i*0x00200000+(uint32_t)kernel_physical_addr, SET_PAGESIZE, PDE_2M_PAGE_MASK);
-    }
-
-    /* Load kernel ELF64 */
+    /* Load kernel ELF64 into identity mapped region and get entry point */ 
+    
     struct elf_metadata meta = load_elf64_exec_at(info.kernel_elf.start, info.kernel_elf.size, (uint8_t*)kernel_physical_addr);
 
     vga_print("64 bit kernel loaded into identity mapped memory\n");
@@ -108,6 +107,22 @@ void boot_main(void* mb2_bootinfo) {
     vga_print_u32(meta.entrypoint>>32, 16, 8);
     vga_print_u32(meta.entrypoint&0xFFFFFFFF, 16, 8);
     vga_print("\n");
+    vga_print("Memory image size: ");
+    vga_print_u32(meta.memory_image_size, 10, -1);
+    vga_print("\n");
+    
+    /* Enable SSE/SSE2 instructions and FPU */
+
+    /* Map kernel memory to its expected 64 bit paging */
+    map_memory_2M(meta.virtual_start, (uint32_t)kernel_physical_addr, initial_block_count);
+
+    /* Make all entries 64 bit in GDT */
+    gdt_set_long_mode();
+
+    /* Long jump to entry point */
+    //jump_kernel(meta);
+    jump_kernel(meta.entrypoint&0xFFFFFFFF, meta.entrypoint>>32, &info);
+    /* noreturn */
 
     lock();
 }

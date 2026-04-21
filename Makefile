@@ -11,11 +11,11 @@ LD32=i686-elf-ld
 LDFLAGS_BOOT32 = -nostdlib -lgcc
 #LDFLAGS_BOOT32 = -m elf_i386
 ASFLAGS_BOOT32 = --32
-CFLAGS_BOOT32 = -Iinclude -O2 -mno-sse -mno-sse2 -mno-mmx -msoft-float -fno-builtin -ffreestanding -Wall -Wextra
+CFLAGS_BOOT32 = -Iinclude -mno-sse -mno-sse2 -mno-mmx -msoft-float -fno-builtin -ffreestanding -Wall -Wextra
 
 BOOT32_BIN = $(addprefix build/boot32/, multiboot2.o descriptor.o boot.o vga.o gdt.o \
 			 idt.o isr.o isr_exceptions.o paging.o paging_as.o bootinfo.o allocator.o\
-			 elf.o) 
+			 elf.o longmode.o) 
 
 
 build/boot32.elf: $(BOOT32_BIN)

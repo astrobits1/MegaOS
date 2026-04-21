@@ -62,12 +62,13 @@ struct elf_metadata load_elf64_exec_at(uint8_t* data, uint32_t size, uint8_t* ad
         /* Skip if not loadable */
         if (entry->p_type != 1) continue;
         
-        if (virtual_start == UINT64_MAX) virtual_start = entry->p_vaddr;
-        if (virtual_end == 0) virtual_end = entry->p_vaddr;
+        if (virtual_end == 0 || entry->p_vaddr > virtual_end) 
+            virtual_end = entry->p_vaddr+entry->p_memsz-1;
 
-        if (entry->p_vaddr < virtual_start) virtual_start = entry->p_vaddr;
-        if (entry->p_vaddr > virtual_end) virtual_end = (entry->p_vaddr+entry->p_memsz-1);
+        if (virtual_start == UINT64_MAX || entry->p_vaddr < virtual_start) 
+            virtual_start = entry->p_vaddr;
     }
+    
 
     for (elft_half i=0; i<pht_entry_count; i++) {
         struct elf_phdr* entry = (struct elf_phdr*)&data[pht_offset+pht_entry_size*i];
@@ -115,7 +116,7 @@ struct elf_metadata load_elf64_exec_at(uint8_t* data, uint32_t size, uint8_t* ad
 
     meta.entrypoint = header->e_entry;
     meta.virtual_start = virtual_start;
-    meta.memory_image_size = (uint32_t)virtual_end - (uint32_t)virtual_start;
+    meta.memory_image_size = (uint32_t)(virtual_end -virtual_start);
     return meta;
 }
 

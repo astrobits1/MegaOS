@@ -1,8 +1,13 @@
+.section .text
+.code64
 
 .global _entry
 .type _entry, @function
 _entry:
-    call kernel_main
+    mov $0xDEADBEEFCAFEBABE, %rax
+
+    /* Bootinfo pointer */
+    pop %rbx
 
     cli
 1:
