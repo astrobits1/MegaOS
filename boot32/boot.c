@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <boot32/boot.h>
 #include <common/drivers/vga/vga.h>
-#include <boot32/gdt.h>
-#include <boot32/idt.h>
+#include <common/gdt.h>
+#include <common/idt.h>
 #include <boot32/paging.h>
 #include <boot32/bootinfo.h>
 #include <boot32/allocator.h>
@@ -40,11 +40,11 @@ void boot_main(void* mb2_bootinfo) {
     
     vga_print("\n");
     vga_print("Kernel Start Physical: ");
-    vga_print_u32_color((uint32_t)_bootstart, 16, 8, VGA_COLOR_LIGHT_GREEN);
+    vga_print_uint_color((uint32_t)_bootstart, 16, 8, VGA_COLOR_LIGHT_GREEN);
     vga_print(", End Physical: ");
-    vga_print_u32_color((uint32_t)_bootend, 16, 8, VGA_COLOR_LIGHT_GREEN);
+    vga_print_uint_color((uint32_t)_bootend, 16, 8, VGA_COLOR_LIGHT_GREEN);
     vga_print(", Size: ");
-    vga_print_u32_color((uint32_t)(_bootend)-(uint32_t)(_bootstart), 10, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print_uint_color((uint32_t)(_bootend)-(uint32_t)(_bootstart), 10, -1, VGA_COLOR_LIGHT_GREEN);
     vga_print(" bytes\n\n");
     
     /* Initialise global descriptor table (flat) */
@@ -75,19 +75,26 @@ void boot_main(void* mb2_bootinfo) {
     for (uint32_t i=0; i<info.map_entry_count; i++) {
         struct memory_map_entry* entry = &info.map_entries[i];
         
-        vga_print("base: "); vga_print_u32(entry->addr>>32, 16, 8); 
-        vga_print_u32(entry->addr&0xFFFFFFFF, 16, 8);
-        vga_print(", size: "); vga_print_u32(entry->length>>32, 16, 8); 
-        vga_print_u32(entry->length&0xFFFFFFFF, 16, 8);
-        vga_print(", type: "); vga_print_u32(entry->type, 10, -1); vga_print("\n");
+        vga_print("base: "); vga_print_uint(entry->addr>>32, 16, 8); 
+        vga_print_uint(entry->addr&0xFFFFFFFF, 16, 8);
+        vga_print(", size: "); vga_print_uint(entry->length>>32, 16, 8); 
+        vga_print_uint(entry->length&0xFFFFFFFF, 16, 8);
+        vga_print(", type: "); vga_print_uint(entry->type, 10, -1); vga_print("\n");
     }
 
     vga_print("\n");
+
+    /* Enable SSE instructions */
+    enable_sse();
+    vga_print_color("SSE enabled\n", VGA_COLOR_LIGHT_GREEN);
 
     /* Initialise page maps, enable paging and enter x86_64 compatibility mode
      * 0-4MB region is identity mapped, which includes IDT, GDT (data segments)
      * as well all page allocations by the allocator */
     paging_initialise();
+    
+    /* x86_64 compatibility mode has been entered, and our IDT is essentially invalid
+     * until we enter long mode and set it up again */
 
     /* Prepare kernel load by identity mapping 16 MB of memory starting at 4 MB */
     const uint8_t* kernel_physical_addr = (uint8_t*)0x00400000;
@@ -100,20 +107,17 @@ void boot_main(void* mb2_bootinfo) {
 
     vga_print("64 bit kernel loaded into identity mapped memory\n");
     vga_print("Virtual Address Start: ");
-    vga_print_u32(meta.virtual_start>>32, 16, 8);
-    vga_print_u32(meta.virtual_start&0xFFFFFFFF, 16, 8);
+    vga_print_uint(meta.virtual_start>>32, 16, 8);
+    vga_print_uint(meta.virtual_start&0xFFFFFFFF, 16, 8);
     vga_print("\n");
     vga_print("Entry point: ");
-    vga_print_u32(meta.entrypoint>>32, 16, 8);
-    vga_print_u32(meta.entrypoint&0xFFFFFFFF, 16, 8);
+    vga_print_uint(meta.entrypoint>>32, 16, 8);
+    vga_print_uint(meta.entrypoint&0xFFFFFFFF, 16, 8);
     vga_print("\n");
     vga_print("Memory image size: ");
-    vga_print_u32(meta.memory_image_size, 10, -1);
+    vga_print_uint(meta.memory_image_size, 10, -1);
     vga_print("\n");
     
-    /* Enable SSE instructions */
-    enable_sse();
-    vga_print_color("SSE enabled\n", VGA_COLOR_LIGHT_GREEN);
 
     /* Map kernel memory to its expected 64 bit paging */
     map_memory_2M(meta.virtual_start, (uint32_t)kernel_physical_addr, initial_block_count);
@@ -122,7 +126,7 @@ void boot_main(void* mb2_bootinfo) {
     /* Make all entries 64 bit in GDT */
     vga_print_color("Setting up 64 bit GDT\n", VGA_COLOR_LIGHT_GREEN);
     gdt_set_long_mode();
-
+    
     /* Long jump to entry point */
     vga_print_color("Ready to boot kernel in long mode, jumping...\n", VGA_COLOR_LIGHT_MAGENTA);
     jump_kernel(meta.entrypoint&0xFFFFFFFF, meta.entrypoint>>32, &info);

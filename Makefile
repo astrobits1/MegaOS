@@ -9,12 +9,14 @@ AS64 = x86_64-elf-as
 # =========================
 # Flags
 # =========================
-CFLAGS_COMMON = -Iinclude -ffreestanding -O2 -Wall -Wextra
+CFLAGS_COMMON = -Iinclude -O2 -ffreestanding -Wall -Wextra
 CFLAGS_BOOT32 = $(CFLAGS_COMMON) -mno-sse -mno-sse2 -mno-mmx -msoft-float -fno-builtin
 CFLAGS_KERNEL64 = $(CFLAGS_COMMON) -mno-red-zone -mcmodel=kernel
 
-LDFLAGS_BOOT32 = -T boot32/linker.ld -ffreestanding -nostdlib -lgcc
-LDFLAGS_KERNEL64 = -T kernel64/linker.ld -ffreestanding -mno-red-zone -nostdlib -lgcc
+LDFLAGS_BOOT32 = -T boot32/linker.ld -ffreestanding -nostdlib
+LDFLAGS_KERNEL64 = -T kernel64/linker.ld -ffreestanding -mno-red-zone -nostdlib
+LDFLAGS_BOOT32_POSTFIX = -lgcc
+LDFLAGS_KERNEL64_POSTFIX = -lgcc
 
 # =========================
 # Source discovery
@@ -62,10 +64,10 @@ all: build/boot32.elf build/kernel64.elf
 # =========================
 
 build/boot32.elf: $(BOOT32_OBJS)
-	$(CC32) $(LDFLAGS_BOOT32) -o $@ $^
+	$(CC32) $(LDFLAGS_BOOT32) $^ $(LDFLAGS_BOOT32_POSTFIX) -o $@
 
 build/kernel64.elf: $(KERNEL64_OBJS)
-	$(CC64) $(LDFLAGS_KERNEL64) -o $@ $^
+	$(CC64) $(LDFLAGS_KERNEL64) $^ $(LDFLAGS_KERNEL64_POSTFIX) -o $@
 
 # =========================
 # Generic compile rules

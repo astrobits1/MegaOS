@@ -1,0 +1,2722 @@
+
+build/boot32.elf:     file format elf32-i386
+
+
+Disassembly of section .text:
+
+00200000 <allocator_initialise>:
+  200000:	55                   	push   %ebp
+  200001:	89 e5                	mov    %esp,%ebp
+  200003:	8b 45 08             	mov    0x8(%ebp),%eax
+  200006:	a3 00 40 20 00       	mov    %eax,0x204000
+  20000b:	8b 45 0c             	mov    0xc(%ebp),%eax
+  20000e:	a3 08 40 20 00       	mov    %eax,0x204008
+  200013:	8b 45 08             	mov    0x8(%ebp),%eax
+  200016:	a3 04 40 20 00       	mov    %eax,0x204004
+  20001b:	90                   	nop
+  20001c:	5d                   	pop    %ebp
+  20001d:	c3                   	ret
+
+0020001e <allocator_alloc_page>:
+  20001e:	55                   	push   %ebp
+  20001f:	89 e5                	mov    %esp,%ebp
+  200021:	83 ec 18             	sub    $0x18,%esp
+  200024:	a1 04 40 20 00       	mov    0x204004,%eax
+  200029:	05 00 10 00 00       	add    $0x1000,%eax
+  20002e:	8b 15 08 40 20 00    	mov    0x204008,%edx
+  200034:	39 c2                	cmp    %eax,%edx
+  200036:	0f 83 aa 00 00 00    	jae    2000e6 <allocator_alloc_page+0xc8>
+  20003c:	83 ec 0c             	sub    $0xc,%esp
+  20003f:	6a 04                	push   $0x4
+  200041:	e8 cf 16 00 00       	call   201715 <vga_setfgcolor>
+  200046:	83 c4 10             	add    $0x10,%esp
+  200049:	83 ec 0c             	sub    $0xc,%esp
+  20004c:	68 00 20 20 00       	push   $0x202000
+  200051:	e8 81 19 00 00       	call   2019d7 <vga_print>
+  200056:	83 c4 10             	add    $0x10,%esp
+  200059:	a1 00 40 20 00       	mov    0x204000,%eax
+  20005e:	ba 00 00 00 00       	mov    $0x0,%edx
+  200063:	6a 08                	push   $0x8
+  200065:	6a 10                	push   $0x10
+  200067:	52                   	push   %edx
+  200068:	50                   	push   %eax
+  200069:	e8 86 19 00 00       	call   2019f4 <vga_print_uint>
+  20006e:	83 c4 10             	add    $0x10,%esp
+  200071:	83 ec 0c             	sub    $0xc,%esp
+  200074:	68 25 20 20 00       	push   $0x202025
+  200079:	e8 59 19 00 00       	call   2019d7 <vga_print>
+  20007e:	83 c4 10             	add    $0x10,%esp
+  200081:	a1 08 40 20 00       	mov    0x204008,%eax
+  200086:	ba 00 00 00 00       	mov    $0x0,%edx
+  20008b:	6a 08                	push   $0x8
+  20008d:	6a 10                	push   $0x10
+  20008f:	52                   	push   %edx
+  200090:	50                   	push   %eax
+  200091:	e8 5e 19 00 00       	call   2019f4 <vga_print_uint>
+  200096:	83 c4 10             	add    $0x10,%esp
+  200099:	83 ec 0c             	sub    $0xc,%esp
+  20009c:	68 30 20 20 00       	push   $0x202030
+  2000a1:	e8 31 19 00 00       	call   2019d7 <vga_print>
+  2000a6:	83 c4 10             	add    $0x10,%esp
+  2000a9:	83 ec 0c             	sub    $0xc,%esp
+  2000ac:	68 32 20 20 00       	push   $0x202032
+  2000b1:	e8 21 19 00 00       	call   2019d7 <vga_print>
+  2000b6:	83 c4 10             	add    $0x10,%esp
+  2000b9:	a1 04 40 20 00       	mov    0x204004,%eax
+  2000be:	ba 00 00 00 00       	mov    $0x0,%edx
+  2000c3:	6a 08                	push   $0x8
+  2000c5:	6a 10                	push   $0x10
+  2000c7:	52                   	push   %edx
+  2000c8:	50                   	push   %eax
+  2000c9:	e8 26 19 00 00       	call   2019f4 <vga_print_uint>
+  2000ce:	83 c4 10             	add    $0x10,%esp
+  2000d1:	83 ec 0c             	sub    $0xc,%esp
+  2000d4:	68 30 20 20 00       	push   $0x202030
+  2000d9:	e8 f9 18 00 00       	call   2019d7 <vga_print>
+  2000de:	83 c4 10             	add    $0x10,%esp
+  2000e1:	e8 24 00 00 00       	call   20010a <boot_panic>
+  2000e6:	a1 04 40 20 00       	mov    0x204004,%eax
+  2000eb:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  2000ee:	a1 04 40 20 00       	mov    0x204004,%eax
+  2000f3:	05 00 10 00 00       	add    $0x1000,%eax
+  2000f8:	a3 04 40 20 00       	mov    %eax,0x204004
+  2000fd:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  200100:	c9                   	leave
+  200101:	c3                   	ret
+
+00200102 <lock>:
+  200102:	55                   	push   %ebp
+  200103:	89 e5                	mov    %esp,%ebp
+  200105:	fa                   	cli
+  200106:	f4                   	hlt
+  200107:	90                   	nop
+  200108:	eb fb                	jmp    200105 <lock+0x3>
+
+0020010a <boot_panic>:
+  20010a:	55                   	push   %ebp
+  20010b:	89 e5                	mov    %esp,%ebp
+  20010d:	83 ec 08             	sub    $0x8,%esp
+  200110:	83 ec 08             	sub    $0x8,%esp
+  200113:	6a 04                	push   $0x4
+  200115:	6a 0f                	push   $0xf
+  200117:	e8 e1 15 00 00       	call   2016fd <vga_setcolor>
+  20011c:	83 c4 10             	add    $0x10,%esp
+  20011f:	83 ec 0c             	sub    $0xc,%esp
+  200122:	68 48 20 20 00       	push   $0x202048
+  200127:	e8 ab 18 00 00       	call   2019d7 <vga_print>
+  20012c:	83 c4 10             	add    $0x10,%esp
+  20012f:	e8 ce ff ff ff       	call   200102 <lock>
+
+00200134 <boot_main>:
+  200134:	55                   	push   %ebp
+  200135:	89 e5                	mov    %esp,%ebp
+  200137:	53                   	push   %ebx
+  200138:	83 ec 54             	sub    $0x54,%esp
+  20013b:	e8 10 16 00 00       	call   201750 <vga_initialize>
+  200140:	83 ec 08             	sub    $0x8,%esp
+  200143:	6a 01                	push   $0x1
+  200145:	6a 0f                	push   $0xf
+  200147:	e8 b1 15 00 00       	call   2016fd <vga_setcolor>
+  20014c:	83 c4 10             	add    $0x10,%esp
+  20014f:	e8 22 16 00 00       	call   201776 <vga_clear>
+  200154:	83 ec 08             	sub    $0x8,%esp
+  200157:	6a 0a                	push   $0xa
+  200159:	68 64 20 20 00       	push   $0x202064
+  20015e:	e8 21 19 00 00       	call   201a84 <vga_print_color>
+  200163:	83 c4 10             	add    $0x10,%esp
+  200166:	83 ec 0c             	sub    $0xc,%esp
+  200169:	68 9c 20 20 00       	push   $0x20209c
+  20016e:	e8 64 18 00 00       	call   2019d7 <vga_print>
+  200173:	83 c4 10             	add    $0x10,%esp
+  200176:	83 ec 0c             	sub    $0xc,%esp
+  200179:	68 9e 20 20 00       	push   $0x20209e
+  20017e:	e8 54 18 00 00       	call   2019d7 <vga_print>
+  200183:	83 c4 10             	add    $0x10,%esp
+  200186:	a1 00 30 20 00       	mov    0x203000,%eax
+  20018b:	ba 00 00 00 00       	mov    $0x0,%edx
+  200190:	83 ec 0c             	sub    $0xc,%esp
+  200193:	6a 0a                	push   $0xa
+  200195:	6a 08                	push   $0x8
+  200197:	6a 10                	push   $0x10
+  200199:	52                   	push   %edx
+  20019a:	50                   	push   %eax
+  20019b:	e8 29 19 00 00       	call   201ac9 <vga_print_uint_color>
+  2001a0:	83 c4 20             	add    $0x20,%esp
+  2001a3:	83 ec 0c             	sub    $0xc,%esp
+  2001a6:	68 b6 20 20 00       	push   $0x2020b6
+  2001ab:	e8 27 18 00 00       	call   2019d7 <vga_print>
+  2001b0:	83 c4 10             	add    $0x10,%esp
+  2001b3:	a1 04 30 20 00       	mov    0x203004,%eax
+  2001b8:	ba 00 00 00 00       	mov    $0x0,%edx
+  2001bd:	83 ec 0c             	sub    $0xc,%esp
+  2001c0:	6a 0a                	push   $0xa
+  2001c2:	6a 08                	push   $0x8
+  2001c4:	6a 10                	push   $0x10
+  2001c6:	52                   	push   %edx
+  2001c7:	50                   	push   %eax
+  2001c8:	e8 fc 18 00 00       	call   201ac9 <vga_print_uint_color>
+  2001cd:	83 c4 20             	add    $0x20,%esp
+  2001d0:	83 ec 0c             	sub    $0xc,%esp
+  2001d3:	68 c7 20 20 00       	push   $0x2020c7
+  2001d8:	e8 fa 17 00 00       	call   2019d7 <vga_print>
+  2001dd:	83 c4 10             	add    $0x10,%esp
+  2001e0:	a1 04 30 20 00       	mov    0x203004,%eax
+  2001e5:	89 c2                	mov    %eax,%edx
+  2001e7:	a1 00 30 20 00       	mov    0x203000,%eax
+  2001ec:	29 c2                	sub    %eax,%edx
+  2001ee:	89 d0                	mov    %edx,%eax
+  2001f0:	ba 00 00 00 00       	mov    $0x0,%edx
+  2001f5:	83 ec 0c             	sub    $0xc,%esp
+  2001f8:	6a 0a                	push   $0xa
+  2001fa:	6a ff                	push   $0xffffffff
+  2001fc:	6a 0a                	push   $0xa
+  2001fe:	52                   	push   %edx
+  2001ff:	50                   	push   %eax
+  200200:	e8 c4 18 00 00       	call   201ac9 <vga_print_uint_color>
+  200205:	83 c4 20             	add    $0x20,%esp
+  200208:	83 ec 0c             	sub    $0xc,%esp
+  20020b:	68 d0 20 20 00       	push   $0x2020d0
+  200210:	e8 c2 17 00 00       	call   2019d7 <vga_print>
+  200215:	83 c4 10             	add    $0x10,%esp
+  200218:	e8 e6 09 00 00       	call   200c03 <gdt_initialise>
+  20021d:	e8 dd 0a 00 00       	call   200cff <idt_initialise>
+  200222:	a1 04 30 20 00       	mov    0x203004,%eax
+  200227:	25 00 f0 ff ff       	and    $0xfffff000,%eax
+  20022c:	05 00 10 00 00       	add    $0x1000,%eax
+  200231:	89 45 f0             	mov    %eax,-0x10(%ebp)
+  200234:	c7 45 ec ff ff 3f 00 	movl   $0x3fffff,-0x14(%ebp)
+  20023b:	83 ec 08             	sub    $0x8,%esp
+  20023e:	ff 75 ec             	push   -0x14(%ebp)
+  200241:	ff 75 f0             	push   -0x10(%ebp)
+  200244:	e8 b7 fd ff ff       	call   200000 <allocator_initialise>
+  200249:	83 c4 10             	add    $0x10,%esp
+  20024c:	83 ec 0c             	sub    $0xc,%esp
+  20024f:	68 9c 20 20 00       	push   $0x20209c
+  200254:	e8 7e 17 00 00       	call   2019d7 <vga_print>
+  200259:	83 c4 10             	add    $0x10,%esp
+  20025c:	83 ec 08             	sub    $0x8,%esp
+  20025f:	6a 0a                	push   $0xa
+  200261:	68 d9 20 20 00       	push   $0x2020d9
+  200266:	e8 19 18 00 00       	call   201a84 <vga_print_color>
+  20026b:	83 c4 10             	add    $0x10,%esp
+  20026e:	8d 45 c4             	lea    -0x3c(%ebp),%eax
+  200271:	83 ec 08             	sub    $0x8,%esp
+  200274:	ff 75 08             	push   0x8(%ebp)
+  200277:	50                   	push   %eax
+  200278:	e8 d5 02 00 00       	call   200552 <parse_multiboot2_info>
+  20027d:	83 c4 0c             	add    $0xc,%esp
+  200280:	83 ec 08             	sub    $0x8,%esp
+  200283:	6a 0a                	push   $0xa
+  200285:	68 f6 20 20 00       	push   $0x2020f6
+  20028a:	e8 f5 17 00 00       	call   201a84 <vga_print_color>
+  20028f:	83 c4 10             	add    $0x10,%esp
+  200292:	83 ec 08             	sub    $0x8,%esp
+  200295:	6a 0a                	push   $0xa
+  200297:	68 0a 21 20 00       	push   $0x20210a
+  20029c:	e8 e3 17 00 00       	call   201a84 <vga_print_color>
+  2002a1:	83 c4 10             	add    $0x10,%esp
+  2002a4:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
+  2002ab:	e9 de 00 00 00       	jmp    20038e <boot_main+0x25a>
+  2002b0:	8b 4d d4             	mov    -0x2c(%ebp),%ecx
+  2002b3:	8b 55 f4             	mov    -0xc(%ebp),%edx
+  2002b6:	89 d0                	mov    %edx,%eax
+  2002b8:	c1 e0 02             	shl    $0x2,%eax
+  2002bb:	01 d0                	add    %edx,%eax
+  2002bd:	c1 e0 02             	shl    $0x2,%eax
+  2002c0:	01 c8                	add    %ecx,%eax
+  2002c2:	89 45 d8             	mov    %eax,-0x28(%ebp)
+  2002c5:	83 ec 0c             	sub    $0xc,%esp
+  2002c8:	68 16 21 20 00       	push   $0x202116
+  2002cd:	e8 05 17 00 00       	call   2019d7 <vga_print>
+  2002d2:	83 c4 10             	add    $0x10,%esp
+  2002d5:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  2002d8:	8b 50 04             	mov    0x4(%eax),%edx
+  2002db:	8b 00                	mov    (%eax),%eax
+  2002dd:	89 d0                	mov    %edx,%eax
+  2002df:	31 d2                	xor    %edx,%edx
+  2002e1:	6a 08                	push   $0x8
+  2002e3:	6a 10                	push   $0x10
+  2002e5:	52                   	push   %edx
+  2002e6:	50                   	push   %eax
+  2002e7:	e8 08 17 00 00       	call   2019f4 <vga_print_uint>
+  2002ec:	83 c4 10             	add    $0x10,%esp
+  2002ef:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  2002f2:	8b 50 04             	mov    0x4(%eax),%edx
+  2002f5:	8b 00                	mov    (%eax),%eax
+  2002f7:	ba 00 00 00 00       	mov    $0x0,%edx
+  2002fc:	6a 08                	push   $0x8
+  2002fe:	6a 10                	push   $0x10
+  200300:	52                   	push   %edx
+  200301:	50                   	push   %eax
+  200302:	e8 ed 16 00 00       	call   2019f4 <vga_print_uint>
+  200307:	83 c4 10             	add    $0x10,%esp
+  20030a:	83 ec 0c             	sub    $0xc,%esp
+  20030d:	68 1d 21 20 00       	push   $0x20211d
+  200312:	e8 c0 16 00 00       	call   2019d7 <vga_print>
+  200317:	83 c4 10             	add    $0x10,%esp
+  20031a:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  20031d:	8b 50 0c             	mov    0xc(%eax),%edx
+  200320:	8b 40 08             	mov    0x8(%eax),%eax
+  200323:	89 d0                	mov    %edx,%eax
+  200325:	31 d2                	xor    %edx,%edx
+  200327:	6a 08                	push   $0x8
+  200329:	6a 10                	push   $0x10
+  20032b:	52                   	push   %edx
+  20032c:	50                   	push   %eax
+  20032d:	e8 c2 16 00 00       	call   2019f4 <vga_print_uint>
+  200332:	83 c4 10             	add    $0x10,%esp
+  200335:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  200338:	8b 50 0c             	mov    0xc(%eax),%edx
+  20033b:	8b 40 08             	mov    0x8(%eax),%eax
+  20033e:	ba 00 00 00 00       	mov    $0x0,%edx
+  200343:	6a 08                	push   $0x8
+  200345:	6a 10                	push   $0x10
+  200347:	52                   	push   %edx
+  200348:	50                   	push   %eax
+  200349:	e8 a6 16 00 00       	call   2019f4 <vga_print_uint>
+  20034e:	83 c4 10             	add    $0x10,%esp
+  200351:	83 ec 0c             	sub    $0xc,%esp
+  200354:	68 26 21 20 00       	push   $0x202126
+  200359:	e8 79 16 00 00       	call   2019d7 <vga_print>
+  20035e:	83 c4 10             	add    $0x10,%esp
+  200361:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  200364:	8b 40 10             	mov    0x10(%eax),%eax
+  200367:	ba 00 00 00 00       	mov    $0x0,%edx
+  20036c:	6a ff                	push   $0xffffffff
+  20036e:	6a 0a                	push   $0xa
+  200370:	52                   	push   %edx
+  200371:	50                   	push   %eax
+  200372:	e8 7d 16 00 00       	call   2019f4 <vga_print_uint>
+  200377:	83 c4 10             	add    $0x10,%esp
+  20037a:	83 ec 0c             	sub    $0xc,%esp
+  20037d:	68 9c 20 20 00       	push   $0x20209c
+  200382:	e8 50 16 00 00       	call   2019d7 <vga_print>
+  200387:	83 c4 10             	add    $0x10,%esp
+  20038a:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
+  20038e:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  200391:	39 45 f4             	cmp    %eax,-0xc(%ebp)
+  200394:	0f 82 16 ff ff ff    	jb     2002b0 <boot_main+0x17c>
+  20039a:	83 ec 0c             	sub    $0xc,%esp
+  20039d:	68 9c 20 20 00       	push   $0x20209c
+  2003a2:	e8 30 16 00 00       	call   2019d7 <vga_print>
+  2003a7:	83 c4 10             	add    $0x10,%esp
+  2003aa:	e8 a4 0e 00 00       	call   201253 <paging_initialise>
+  2003af:	c7 45 e8 00 00 40 00 	movl   $0x400000,-0x18(%ebp)
+  2003b6:	c6 45 e7 08          	movb   $0x8,-0x19(%ebp)
+  2003ba:	0f b6 5d e7          	movzbl -0x19(%ebp),%ebx
+  2003be:	8b 4d e8             	mov    -0x18(%ebp),%ecx
+  2003c1:	8b 45 e8             	mov    -0x18(%ebp),%eax
+  2003c4:	ba 00 00 00 00       	mov    $0x0,%edx
+  2003c9:	53                   	push   %ebx
+  2003ca:	51                   	push   %ecx
+  2003cb:	52                   	push   %edx
+  2003cc:	50                   	push   %eax
+  2003cd:	e8 42 0c 00 00       	call   201014 <map_memory_2M>
+  2003d2:	83 c4 10             	add    $0x10,%esp
+  2003d5:	8b 4d cc             	mov    -0x34(%ebp),%ecx
+  2003d8:	8b 55 c4             	mov    -0x3c(%ebp),%edx
+  2003db:	8d 45 b0             	lea    -0x50(%ebp),%eax
+  2003de:	ff 75 e8             	push   -0x18(%ebp)
+  2003e1:	51                   	push   %ecx
+  2003e2:	52                   	push   %edx
+  2003e3:	50                   	push   %eax
+  2003e4:	e8 95 03 00 00       	call   20077e <load_elf64_exec_at>
+  2003e9:	83 c4 0c             	add    $0xc,%esp
+  2003ec:	83 ec 0c             	sub    $0xc,%esp
+  2003ef:	68 30 21 20 00       	push   $0x202130
+  2003f4:	e8 de 15 00 00       	call   2019d7 <vga_print>
+  2003f9:	83 c4 10             	add    $0x10,%esp
+  2003fc:	83 ec 0c             	sub    $0xc,%esp
+  2003ff:	68 62 21 20 00       	push   $0x202162
+  200404:	e8 ce 15 00 00       	call   2019d7 <vga_print>
+  200409:	83 c4 10             	add    $0x10,%esp
+  20040c:	8b 45 b8             	mov    -0x48(%ebp),%eax
+  20040f:	8b 55 bc             	mov    -0x44(%ebp),%edx
+  200412:	89 d0                	mov    %edx,%eax
+  200414:	31 d2                	xor    %edx,%edx
+  200416:	6a 08                	push   $0x8
+  200418:	6a 10                	push   $0x10
+  20041a:	52                   	push   %edx
+  20041b:	50                   	push   %eax
+  20041c:	e8 d3 15 00 00       	call   2019f4 <vga_print_uint>
+  200421:	83 c4 10             	add    $0x10,%esp
+  200424:	8b 45 b8             	mov    -0x48(%ebp),%eax
+  200427:	8b 55 bc             	mov    -0x44(%ebp),%edx
+  20042a:	ba 00 00 00 00       	mov    $0x0,%edx
+  20042f:	6a 08                	push   $0x8
+  200431:	6a 10                	push   $0x10
+  200433:	52                   	push   %edx
+  200434:	50                   	push   %eax
+  200435:	e8 ba 15 00 00       	call   2019f4 <vga_print_uint>
+  20043a:	83 c4 10             	add    $0x10,%esp
+  20043d:	83 ec 0c             	sub    $0xc,%esp
+  200440:	68 9c 20 20 00       	push   $0x20209c
+  200445:	e8 8d 15 00 00       	call   2019d7 <vga_print>
+  20044a:	83 c4 10             	add    $0x10,%esp
+  20044d:	83 ec 0c             	sub    $0xc,%esp
+  200450:	68 7a 21 20 00       	push   $0x20217a
+  200455:	e8 7d 15 00 00       	call   2019d7 <vga_print>
+  20045a:	83 c4 10             	add    $0x10,%esp
+  20045d:	8b 45 b0             	mov    -0x50(%ebp),%eax
+  200460:	8b 55 b4             	mov    -0x4c(%ebp),%edx
+  200463:	89 d0                	mov    %edx,%eax
+  200465:	31 d2                	xor    %edx,%edx
+  200467:	6a 08                	push   $0x8
+  200469:	6a 10                	push   $0x10
+  20046b:	52                   	push   %edx
+  20046c:	50                   	push   %eax
+  20046d:	e8 82 15 00 00       	call   2019f4 <vga_print_uint>
+  200472:	83 c4 10             	add    $0x10,%esp
+  200475:	8b 45 b0             	mov    -0x50(%ebp),%eax
+  200478:	8b 55 b4             	mov    -0x4c(%ebp),%edx
+  20047b:	ba 00 00 00 00       	mov    $0x0,%edx
+  200480:	6a 08                	push   $0x8
+  200482:	6a 10                	push   $0x10
+  200484:	52                   	push   %edx
+  200485:	50                   	push   %eax
+  200486:	e8 69 15 00 00       	call   2019f4 <vga_print_uint>
+  20048b:	83 c4 10             	add    $0x10,%esp
+  20048e:	83 ec 0c             	sub    $0xc,%esp
+  200491:	68 9c 20 20 00       	push   $0x20209c
+  200496:	e8 3c 15 00 00       	call   2019d7 <vga_print>
+  20049b:	83 c4 10             	add    $0x10,%esp
+  20049e:	83 ec 0c             	sub    $0xc,%esp
+  2004a1:	68 88 21 20 00       	push   $0x202188
+  2004a6:	e8 2c 15 00 00       	call   2019d7 <vga_print>
+  2004ab:	83 c4 10             	add    $0x10,%esp
+  2004ae:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  2004b1:	ba 00 00 00 00       	mov    $0x0,%edx
+  2004b6:	6a ff                	push   $0xffffffff
+  2004b8:	6a 0a                	push   $0xa
+  2004ba:	52                   	push   %edx
+  2004bb:	50                   	push   %eax
+  2004bc:	e8 33 15 00 00       	call   2019f4 <vga_print_uint>
+  2004c1:	83 c4 10             	add    $0x10,%esp
+  2004c4:	83 ec 0c             	sub    $0xc,%esp
+  2004c7:	68 9c 20 20 00       	push   $0x20209c
+  2004cc:	e8 06 15 00 00       	call   2019d7 <vga_print>
+  2004d1:	83 c4 10             	add    $0x10,%esp
+  2004d4:	c7 45 e0 05 00 00 00 	movl   $0x5,-0x20(%ebp)
+  2004db:	c7 45 dc 00 00 00 00 	movl   $0x0,-0x24(%ebp)
+  2004e2:	e8 89 0f 00 00       	call   201470 <enable_sse>
+  2004e7:	83 ec 08             	sub    $0x8,%esp
+  2004ea:	6a 0a                	push   $0xa
+  2004ec:	68 9c 21 20 00       	push   $0x20219c
+  2004f1:	e8 8e 15 00 00       	call   201a84 <vga_print_color>
+  2004f6:	83 c4 10             	add    $0x10,%esp
+  2004f9:	0f b6 5d e7          	movzbl -0x19(%ebp),%ebx
+  2004fd:	8b 4d e8             	mov    -0x18(%ebp),%ecx
+  200500:	8b 45 b8             	mov    -0x48(%ebp),%eax
+  200503:	8b 55 bc             	mov    -0x44(%ebp),%edx
+  200506:	53                   	push   %ebx
+  200507:	51                   	push   %ecx
+  200508:	52                   	push   %edx
+  200509:	50                   	push   %eax
+  20050a:	e8 05 0b 00 00       	call   201014 <map_memory_2M>
+  20050f:	83 c4 10             	add    $0x10,%esp
+  200512:	83 ec 08             	sub    $0x8,%esp
+  200515:	6a 0a                	push   $0xa
+  200517:	68 ac 21 20 00       	push   $0x2021ac
+  20051c:	e8 63 15 00 00       	call   201a84 <vga_print_color>
+  200521:	83 c4 10             	add    $0x10,%esp
+  200524:	83 ec 08             	sub    $0x8,%esp
+  200527:	6a 0a                	push   $0xa
+  200529:	68 e8 21 20 00       	push   $0x2021e8
+  20052e:	e8 51 15 00 00       	call   201a84 <vga_print_color>
+  200533:	83 c4 10             	add    $0x10,%esp
+  200536:	e8 2a 07 00 00       	call   200c65 <gdt_set_long_mode>
+  20053b:	83 ec 08             	sub    $0x8,%esp
+  20053e:	6a 0d                	push   $0xd
+  200540:	68 00 22 20 00       	push   $0x202200
+  200545:	e8 3a 15 00 00       	call   201a84 <vga_print_color>
+  20054a:	83 c4 10             	add    $0x10,%esp
+  20054d:	e8 b0 fb ff ff       	call   200102 <lock>
+
+00200552 <parse_multiboot2_info>:
+  200552:	55                   	push   %ebp
+  200553:	89 e5                	mov    %esp,%ebp
+  200555:	83 ec 58             	sub    $0x58,%esp
+  200558:	8b 45 0c             	mov    0xc(%ebp),%eax
+  20055b:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  20055e:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  200561:	89 45 e8             	mov    %eax,-0x18(%ebp)
+  200564:	8b 45 e8             	mov    -0x18(%ebp),%eax
+  200567:	8b 00                	mov    (%eax),%eax
+  200569:	89 45 e4             	mov    %eax,-0x1c(%ebp)
+  20056c:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  20056f:	89 45 e0             	mov    %eax,-0x20(%ebp)
+  200572:	83 45 f4 08          	addl   $0x8,-0xc(%ebp)
+  200576:	c7 45 a8 00 00 00 00 	movl   $0x0,-0x58(%ebp)
+  20057d:	c7 45 ac 00 00 00 00 	movl   $0x0,-0x54(%ebp)
+  200584:	c7 45 b0 00 00 00 00 	movl   $0x0,-0x50(%ebp)
+  20058b:	e8 8e fa ff ff       	call   20001e <allocator_alloc_page>
+  200590:	89 45 dc             	mov    %eax,-0x24(%ebp)
+  200593:	c7 45 f0 00 00 00 00 	movl   $0x0,-0x10(%ebp)
+  20059a:	e9 50 01 00 00       	jmp    2006ef <parse_multiboot2_info+0x19d>
+  20059f:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2005a2:	89 45 d8             	mov    %eax,-0x28(%ebp)
+  2005a5:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  2005a8:	8b 00                	mov    (%eax),%eax
+  2005aa:	83 f8 03             	cmp    $0x3,%eax
+  2005ad:	74 0a                	je     2005b9 <parse_multiboot2_info+0x67>
+  2005af:	83 f8 06             	cmp    $0x6,%eax
+  2005b2:	74 33                	je     2005e7 <parse_multiboot2_info+0x95>
+  2005b4:	e9 1b 01 00 00       	jmp    2006d4 <parse_multiboot2_info+0x182>
+  2005b9:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2005bc:	89 45 c8             	mov    %eax,-0x38(%ebp)
+  2005bf:	8b 45 c8             	mov    -0x38(%ebp),%eax
+  2005c2:	8b 40 08             	mov    0x8(%eax),%eax
+  2005c5:	89 45 a8             	mov    %eax,-0x58(%ebp)
+  2005c8:	8b 45 c8             	mov    -0x38(%ebp),%eax
+  2005cb:	8b 40 0c             	mov    0xc(%eax),%eax
+  2005ce:	89 45 ac             	mov    %eax,-0x54(%ebp)
+  2005d1:	8b 45 c8             	mov    -0x38(%ebp),%eax
+  2005d4:	8b 50 0c             	mov    0xc(%eax),%edx
+  2005d7:	8b 45 c8             	mov    -0x38(%ebp),%eax
+  2005da:	8b 40 08             	mov    0x8(%eax),%eax
+  2005dd:	29 c2                	sub    %eax,%edx
+  2005df:	89 55 b0             	mov    %edx,-0x50(%ebp)
+  2005e2:	e9 ed 00 00 00       	jmp    2006d4 <parse_multiboot2_info+0x182>
+  2005e7:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2005ea:	89 45 d4             	mov    %eax,-0x2c(%ebp)
+  2005ed:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2005f0:	83 c0 10             	add    $0x10,%eax
+  2005f3:	89 45 ec             	mov    %eax,-0x14(%ebp)
+  2005f6:	e9 c2 00 00 00       	jmp    2006bd <parse_multiboot2_info+0x16b>
+  2005fb:	8b 45 ec             	mov    -0x14(%ebp),%eax
+  2005fe:	89 45 d0             	mov    %eax,-0x30(%ebp)
+  200601:	8b 55 f0             	mov    -0x10(%ebp),%edx
+  200604:	89 d0                	mov    %edx,%eax
+  200606:	c1 e0 02             	shl    $0x2,%eax
+  200609:	01 d0                	add    %edx,%eax
+  20060b:	c1 e0 02             	shl    $0x2,%eax
+  20060e:	3d ff 0f 00 00       	cmp    $0xfff,%eax
+  200613:	76 17                	jbe    20062c <parse_multiboot2_info+0xda>
+  200615:	83 ec 08             	sub    $0x8,%esp
+  200618:	6a 04                	push   $0x4
+  20061a:	68 30 22 20 00       	push   $0x202230
+  20061f:	e8 60 14 00 00       	call   201a84 <vga_print_color>
+  200624:	83 c4 10             	add    $0x10,%esp
+  200627:	e8 de fa ff ff       	call   20010a <boot_panic>
+  20062c:	8b 55 f0             	mov    -0x10(%ebp),%edx
+  20062f:	89 d0                	mov    %edx,%eax
+  200631:	c1 e0 02             	shl    $0x2,%eax
+  200634:	01 d0                	add    %edx,%eax
+  200636:	c1 e0 02             	shl    $0x2,%eax
+  200639:	89 c2                	mov    %eax,%edx
+  20063b:	8b 45 dc             	mov    -0x24(%ebp),%eax
+  20063e:	01 d0                	add    %edx,%eax
+  200640:	89 45 cc             	mov    %eax,-0x34(%ebp)
+  200643:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  200646:	8b 50 04             	mov    0x4(%eax),%edx
+  200649:	8b 00                	mov    (%eax),%eax
+  20064b:	8b 4d cc             	mov    -0x34(%ebp),%ecx
+  20064e:	89 01                	mov    %eax,(%ecx)
+  200650:	89 51 04             	mov    %edx,0x4(%ecx)
+  200653:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  200656:	8b 50 0c             	mov    0xc(%eax),%edx
+  200659:	8b 40 08             	mov    0x8(%eax),%eax
+  20065c:	8b 4d cc             	mov    -0x34(%ebp),%ecx
+  20065f:	89 41 08             	mov    %eax,0x8(%ecx)
+  200662:	89 51 0c             	mov    %edx,0xc(%ecx)
+  200665:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  200668:	8b 40 10             	mov    0x10(%eax),%eax
+  20066b:	83 f8 04             	cmp    $0x4,%eax
+  20066e:	74 29                	je     200699 <parse_multiboot2_info+0x147>
+  200670:	83 f8 04             	cmp    $0x4,%eax
+  200673:	77 30                	ja     2006a5 <parse_multiboot2_info+0x153>
+  200675:	83 f8 01             	cmp    $0x1,%eax
+  200678:	74 07                	je     200681 <parse_multiboot2_info+0x12f>
+  20067a:	83 f8 03             	cmp    $0x3,%eax
+  20067d:	74 0e                	je     20068d <parse_multiboot2_info+0x13b>
+  20067f:	eb 24                	jmp    2006a5 <parse_multiboot2_info+0x153>
+  200681:	8b 45 cc             	mov    -0x34(%ebp),%eax
+  200684:	c7 40 10 00 00 00 00 	movl   $0x0,0x10(%eax)
+  20068b:	eb 23                	jmp    2006b0 <parse_multiboot2_info+0x15e>
+  20068d:	8b 45 cc             	mov    -0x34(%ebp),%eax
+  200690:	c7 40 10 01 00 00 00 	movl   $0x1,0x10(%eax)
+  200697:	eb 17                	jmp    2006b0 <parse_multiboot2_info+0x15e>
+  200699:	8b 45 cc             	mov    -0x34(%ebp),%eax
+  20069c:	c7 40 10 02 00 00 00 	movl   $0x2,0x10(%eax)
+  2006a3:	eb 0b                	jmp    2006b0 <parse_multiboot2_info+0x15e>
+  2006a5:	8b 45 cc             	mov    -0x34(%ebp),%eax
+  2006a8:	c7 40 10 03 00 00 00 	movl   $0x3,0x10(%eax)
+  2006af:	90                   	nop
+  2006b0:	83 45 f0 01          	addl   $0x1,-0x10(%ebp)
+  2006b4:	8b 45 d4             	mov    -0x2c(%ebp),%eax
+  2006b7:	8b 40 08             	mov    0x8(%eax),%eax
+  2006ba:	01 45 ec             	add    %eax,-0x14(%ebp)
+  2006bd:	8b 45 ec             	mov    -0x14(%ebp),%eax
+  2006c0:	2b 45 f4             	sub    -0xc(%ebp),%eax
+  2006c3:	89 c2                	mov    %eax,%edx
+  2006c5:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  2006c8:	8b 40 04             	mov    0x4(%eax),%eax
+  2006cb:	39 c2                	cmp    %eax,%edx
+  2006cd:	0f 82 28 ff ff ff    	jb     2005fb <parse_multiboot2_info+0xa9>
+  2006d3:	90                   	nop
+  2006d4:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  2006d7:	8b 40 04             	mov    0x4(%eax),%eax
+  2006da:	01 45 f4             	add    %eax,-0xc(%ebp)
+  2006dd:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2006e0:	83 e0 07             	and    $0x7,%eax
+  2006e3:	85 c0                	test   %eax,%eax
+  2006e5:	74 08                	je     2006ef <parse_multiboot2_info+0x19d>
+  2006e7:	83 65 f4 f8          	andl   $0xfffffff8,-0xc(%ebp)
+  2006eb:	83 45 f4 08          	addl   $0x8,-0xc(%ebp)
+  2006ef:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2006f2:	2b 45 e0             	sub    -0x20(%ebp),%eax
+  2006f5:	3b 45 e4             	cmp    -0x1c(%ebp),%eax
+  2006f8:	0f 82 a1 fe ff ff    	jb     20059f <parse_multiboot2_info+0x4d>
+  2006fe:	8b 45 b0             	mov    -0x50(%ebp),%eax
+  200701:	85 c0                	test   %eax,%eax
+  200703:	75 17                	jne    20071c <parse_multiboot2_info+0x1ca>
+  200705:	83 ec 08             	sub    $0x8,%esp
+  200708:	6a 04                	push   $0x4
+  20070a:	68 5c 22 20 00       	push   $0x20225c
+  20070f:	e8 70 13 00 00       	call   201a84 <vga_print_color>
+  200714:	83 c4 10             	add    $0x10,%esp
+  200717:	e8 ee f9 ff ff       	call   20010a <boot_panic>
+  20071c:	8b 45 a8             	mov    -0x58(%ebp),%eax
+  20071f:	89 45 b4             	mov    %eax,-0x4c(%ebp)
+  200722:	8b 45 ac             	mov    -0x54(%ebp),%eax
+  200725:	89 45 b8             	mov    %eax,-0x48(%ebp)
+  200728:	8b 45 b0             	mov    -0x50(%ebp),%eax
+  20072b:	89 45 bc             	mov    %eax,-0x44(%ebp)
+  20072e:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  200731:	89 45 c0             	mov    %eax,-0x40(%ebp)
+  200734:	83 7d f0 00          	cmpl   $0x0,-0x10(%ebp)
+  200738:	75 17                	jne    200751 <parse_multiboot2_info+0x1ff>
+  20073a:	83 ec 08             	sub    $0x8,%esp
+  20073d:	6a 04                	push   $0x4
+  20073f:	68 90 22 20 00       	push   $0x202290
+  200744:	e8 3b 13 00 00       	call   201a84 <vga_print_color>
+  200749:	83 c4 10             	add    $0x10,%esp
+  20074c:	e8 b9 f9 ff ff       	call   20010a <boot_panic>
+  200751:	8b 45 dc             	mov    -0x24(%ebp),%eax
+  200754:	89 45 c4             	mov    %eax,-0x3c(%ebp)
+  200757:	8b 45 08             	mov    0x8(%ebp),%eax
+  20075a:	8b 55 b4             	mov    -0x4c(%ebp),%edx
+  20075d:	89 10                	mov    %edx,(%eax)
+  20075f:	8b 55 b8             	mov    -0x48(%ebp),%edx
+  200762:	89 50 04             	mov    %edx,0x4(%eax)
+  200765:	8b 55 bc             	mov    -0x44(%ebp),%edx
+  200768:	89 50 08             	mov    %edx,0x8(%eax)
+  20076b:	8b 55 c0             	mov    -0x40(%ebp),%edx
+  20076e:	89 50 0c             	mov    %edx,0xc(%eax)
+  200771:	8b 55 c4             	mov    -0x3c(%ebp),%edx
+  200774:	89 50 10             	mov    %edx,0x10(%eax)
+  200777:	8b 45 08             	mov    0x8(%ebp),%eax
+  20077a:	c9                   	leave
+  20077b:	c2 04 00             	ret    $0x4
+
+0020077e <load_elf64_exec_at>:
+  20077e:	55                   	push   %ebp
+  20077f:	89 e5                	mov    %esp,%ebp
+  200781:	53                   	push   %ebx
+  200782:	83 ec 64             	sub    $0x64,%esp
+  200785:	c7 45 a0 00 00 00 00 	movl   $0x0,-0x60(%ebp)
+  20078c:	c7 45 a4 00 00 00 00 	movl   $0x0,-0x5c(%ebp)
+  200793:	c7 45 a8 00 00 00 00 	movl   $0x0,-0x58(%ebp)
+  20079a:	c7 45 ac 00 00 00 00 	movl   $0x0,-0x54(%ebp)
+  2007a1:	c7 45 b0 00 00 00 00 	movl   $0x0,-0x50(%ebp)
+  2007a8:	83 7d 10 3f          	cmpl   $0x3f,0x10(%ebp)
+  2007ac:	77 17                	ja     2007c5 <load_elf64_exec_at+0x47>
+  2007ae:	83 ec 08             	sub    $0x8,%esp
+  2007b1:	6a 04                	push   $0x4
+  2007b3:	68 bc 22 20 00       	push   $0x2022bc
+  2007b8:	e8 c7 12 00 00       	call   201a84 <vga_print_color>
+  2007bd:	83 c4 10             	add    $0x10,%esp
+  2007c0:	e8 45 f9 ff ff       	call   20010a <boot_panic>
+  2007c5:	8b 45 0c             	mov    0xc(%ebp),%eax
+  2007c8:	89 45 d8             	mov    %eax,-0x28(%ebp)
+  2007cb:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  2007ce:	89 45 d4             	mov    %eax,-0x2c(%ebp)
+  2007d1:	8b 45 d4             	mov    -0x2c(%ebp),%eax
+  2007d4:	0f b6 00             	movzbl (%eax),%eax
+  2007d7:	0f b6 c0             	movzbl %al,%eax
+  2007da:	8b 55 d4             	mov    -0x2c(%ebp),%edx
+  2007dd:	83 c2 01             	add    $0x1,%edx
+  2007e0:	0f b6 12             	movzbl (%edx),%edx
+  2007e3:	0f b6 d2             	movzbl %dl,%edx
+  2007e6:	c1 e2 08             	shl    $0x8,%edx
+  2007e9:	09 c2                	or     %eax,%edx
+  2007eb:	8b 45 d4             	mov    -0x2c(%ebp),%eax
+  2007ee:	83 c0 02             	add    $0x2,%eax
+  2007f1:	0f b6 00             	movzbl (%eax),%eax
+  2007f4:	0f b6 c0             	movzbl %al,%eax
+  2007f7:	c1 e0 10             	shl    $0x10,%eax
+  2007fa:	09 c2                	or     %eax,%edx
+  2007fc:	8b 45 d4             	mov    -0x2c(%ebp),%eax
+  2007ff:	83 c0 03             	add    $0x3,%eax
+  200802:	0f b6 00             	movzbl (%eax),%eax
+  200805:	0f b6 c0             	movzbl %al,%eax
+  200808:	c1 e0 18             	shl    $0x18,%eax
+  20080b:	09 d0                	or     %edx,%eax
+  20080d:	3d 7f 45 4c 46       	cmp    $0x464c457f,%eax
+  200812:	74 17                	je     20082b <load_elf64_exec_at+0xad>
+  200814:	83 ec 08             	sub    $0x8,%esp
+  200817:	6a 04                	push   $0x4
+  200819:	68 d0 22 20 00       	push   $0x2022d0
+  20081e:	e8 61 12 00 00       	call   201a84 <vga_print_color>
+  200823:	83 c4 10             	add    $0x10,%esp
+  200826:	e8 df f8 ff ff       	call   20010a <boot_panic>
+  20082b:	8b 45 d4             	mov    -0x2c(%ebp),%eax
+  20082e:	83 c0 04             	add    $0x4,%eax
+  200831:	0f b6 00             	movzbl (%eax),%eax
+  200834:	0f b6 d0             	movzbl %al,%edx
+  200837:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  20083a:	0f b7 40 10          	movzwl 0x10(%eax),%eax
+  20083e:	0f b7 c0             	movzwl %ax,%eax
+  200841:	c1 e0 08             	shl    $0x8,%eax
+  200844:	09 d0                	or     %edx,%eax
+  200846:	3d 02 02 00 00       	cmp    $0x202,%eax
+  20084b:	74 17                	je     200864 <load_elf64_exec_at+0xe6>
+  20084d:	83 ec 08             	sub    $0x8,%esp
+  200850:	6a 04                	push   $0x4
+  200852:	68 ec 22 20 00       	push   $0x2022ec
+  200857:	e8 28 12 00 00       	call   201a84 <vga_print_color>
+  20085c:	83 c4 10             	add    $0x10,%esp
+  20085f:	e8 a6 f8 ff ff       	call   20010a <boot_panic>
+  200864:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  200867:	8b 50 24             	mov    0x24(%eax),%edx
+  20086a:	8b 40 20             	mov    0x20(%eax),%eax
+  20086d:	89 45 c8             	mov    %eax,-0x38(%ebp)
+  200870:	89 55 cc             	mov    %edx,-0x34(%ebp)
+  200873:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  200876:	0f b7 40 36          	movzwl 0x36(%eax),%eax
+  20087a:	66 89 45 c6          	mov    %ax,-0x3a(%ebp)
+  20087e:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  200881:	0f b7 40 38          	movzwl 0x38(%eax),%eax
+  200885:	66 89 45 c4          	mov    %ax,-0x3c(%ebp)
+  200889:	c7 45 f0 ff ff ff ff 	movl   $0xffffffff,-0x10(%ebp)
+  200890:	c7 45 f4 ff ff ff ff 	movl   $0xffffffff,-0xc(%ebp)
+  200897:	c7 45 e8 00 00 00 00 	movl   $0x0,-0x18(%ebp)
+  20089e:	c7 45 ec 00 00 00 00 	movl   $0x0,-0x14(%ebp)
+  2008a5:	66 c7 45 e6 00 00    	movw   $0x0,-0x1a(%ebp)
+  2008ab:	e9 9b 00 00 00       	jmp    20094b <load_elf64_exec_at+0x1cd>
+  2008b0:	8b 4d c8             	mov    -0x38(%ebp),%ecx
+  2008b3:	0f b7 55 c6          	movzwl -0x3a(%ebp),%edx
+  2008b7:	0f b7 45 e6          	movzwl -0x1a(%ebp),%eax
+  2008bb:	0f af c2             	imul   %edx,%eax
+  2008be:	8d 14 01             	lea    (%ecx,%eax,1),%edx
+  2008c1:	8b 45 0c             	mov    0xc(%ebp),%eax
+  2008c4:	01 d0                	add    %edx,%eax
+  2008c6:	89 45 b4             	mov    %eax,-0x4c(%ebp)
+  2008c9:	8b 45 b4             	mov    -0x4c(%ebp),%eax
+  2008cc:	8b 00                	mov    (%eax),%eax
+  2008ce:	83 f8 01             	cmp    $0x1,%eax
+  2008d1:	75 6c                	jne    20093f <load_elf64_exec_at+0x1c1>
+  2008d3:	8b 45 e8             	mov    -0x18(%ebp),%eax
+  2008d6:	0b 45 ec             	or     -0x14(%ebp),%eax
+  2008d9:	74 13                	je     2008ee <load_elf64_exec_at+0x170>
+  2008db:	8b 45 b4             	mov    -0x4c(%ebp),%eax
+  2008de:	8b 50 14             	mov    0x14(%eax),%edx
+  2008e1:	8b 40 10             	mov    0x10(%eax),%eax
+  2008e4:	8b 4d ec             	mov    -0x14(%ebp),%ecx
+  2008e7:	39 45 e8             	cmp    %eax,-0x18(%ebp)
+  2008ea:	19 d1                	sbb    %edx,%ecx
+  2008ec:	73 22                	jae    200910 <load_elf64_exec_at+0x192>
+  2008ee:	8b 45 b4             	mov    -0x4c(%ebp),%eax
+  2008f1:	8b 48 10             	mov    0x10(%eax),%ecx
+  2008f4:	8b 58 14             	mov    0x14(%eax),%ebx
+  2008f7:	8b 45 b4             	mov    -0x4c(%ebp),%eax
+  2008fa:	8b 50 2c             	mov    0x2c(%eax),%edx
+  2008fd:	8b 40 28             	mov    0x28(%eax),%eax
+  200900:	01 c8                	add    %ecx,%eax
+  200902:	11 da                	adc    %ebx,%edx
+  200904:	83 c0 ff             	add    $0xffffffff,%eax
+  200907:	83 d2 ff             	adc    $0xffffffff,%edx
+  20090a:	89 45 e8             	mov    %eax,-0x18(%ebp)
+  20090d:	89 55 ec             	mov    %edx,-0x14(%ebp)
+  200910:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  200913:	23 45 f4             	and    -0xc(%ebp),%eax
+  200916:	83 f8 ff             	cmp    $0xffffffff,%eax
+  200919:	74 13                	je     20092e <load_elf64_exec_at+0x1b0>
+  20091b:	8b 45 b4             	mov    -0x4c(%ebp),%eax
+  20091e:	8b 50 14             	mov    0x14(%eax),%edx
+  200921:	8b 40 10             	mov    0x10(%eax),%eax
+  200924:	3b 45 f0             	cmp    -0x10(%ebp),%eax
+  200927:	89 d0                	mov    %edx,%eax
+  200929:	1b 45 f4             	sbb    -0xc(%ebp),%eax
+  20092c:	73 12                	jae    200940 <load_elf64_exec_at+0x1c2>
+  20092e:	8b 45 b4             	mov    -0x4c(%ebp),%eax
+  200931:	8b 50 14             	mov    0x14(%eax),%edx
+  200934:	8b 40 10             	mov    0x10(%eax),%eax
+  200937:	89 45 f0             	mov    %eax,-0x10(%ebp)
+  20093a:	89 55 f4             	mov    %edx,-0xc(%ebp)
+  20093d:	eb 01                	jmp    200940 <load_elf64_exec_at+0x1c2>
+  20093f:	90                   	nop
+  200940:	0f b7 45 e6          	movzwl -0x1a(%ebp),%eax
+  200944:	83 c0 01             	add    $0x1,%eax
+  200947:	66 89 45 e6          	mov    %ax,-0x1a(%ebp)
+  20094b:	0f b7 45 e6          	movzwl -0x1a(%ebp),%eax
+  20094f:	66 3b 45 c4          	cmp    -0x3c(%ebp),%ax
+  200953:	0f 82 57 ff ff ff    	jb     2008b0 <load_elf64_exec_at+0x132>
+  200959:	66 c7 45 e4 00 00    	movw   $0x0,-0x1c(%ebp)
+  20095f:	e9 75 01 00 00       	jmp    200ad9 <load_elf64_exec_at+0x35b>
+  200964:	8b 4d c8             	mov    -0x38(%ebp),%ecx
+  200967:	0f b7 55 c6          	movzwl -0x3a(%ebp),%edx
+  20096b:	0f b7 45 e4          	movzwl -0x1c(%ebp),%eax
+  20096f:	0f af c2             	imul   %edx,%eax
+  200972:	8d 14 01             	lea    (%ecx,%eax,1),%edx
+  200975:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200978:	01 d0                	add    %edx,%eax
+  20097a:	89 45 c0             	mov    %eax,-0x40(%ebp)
+  20097d:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  200980:	8b 00                	mov    (%eax),%eax
+  200982:	83 f8 01             	cmp    $0x1,%eax
+  200985:	0f 85 42 01 00 00    	jne    200acd <load_elf64_exec_at+0x34f>
+  20098b:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  20098e:	8b 48 20             	mov    0x20(%eax),%ecx
+  200991:	8b 58 24             	mov    0x24(%eax),%ebx
+  200994:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  200997:	8b 50 2c             	mov    0x2c(%eax),%edx
+  20099a:	8b 40 28             	mov    0x28(%eax),%eax
+  20099d:	09 c1                	or     %eax,%ecx
+  20099f:	09 d3                	or     %edx,%ebx
+  2009a1:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  2009a4:	8b 50 34             	mov    0x34(%eax),%edx
+  2009a7:	8b 40 30             	mov    0x30(%eax),%eax
+  2009aa:	09 c8                	or     %ecx,%eax
+  2009ac:	09 da                	or     %ebx,%edx
+  2009ae:	83 fa 00             	cmp    $0x0,%edx
+  2009b1:	76 17                	jbe    2009ca <load_elf64_exec_at+0x24c>
+  2009b3:	83 ec 08             	sub    $0x8,%esp
+  2009b6:	6a 04                	push   $0x4
+  2009b8:	68 10 23 20 00       	push   $0x202310
+  2009bd:	e8 c2 10 00 00       	call   201a84 <vga_print_color>
+  2009c2:	83 c4 10             	add    $0x10,%esp
+  2009c5:	e8 40 f7 ff ff       	call   20010a <boot_panic>
+  2009ca:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  2009cd:	8b 50 14             	mov    0x14(%eax),%edx
+  2009d0:	8b 40 10             	mov    0x10(%eax),%eax
+  2009d3:	2b 45 f0             	sub    -0x10(%ebp),%eax
+  2009d6:	1b 55 f4             	sbb    -0xc(%ebp),%edx
+  2009d9:	83 fa 00             	cmp    $0x0,%edx
+  2009dc:	76 17                	jbe    2009f5 <load_elf64_exec_at+0x277>
+  2009de:	83 ec 08             	sub    $0x8,%esp
+  2009e1:	6a 04                	push   $0x4
+  2009e3:	68 3c 23 20 00       	push   $0x20233c
+  2009e8:	e8 97 10 00 00       	call   201a84 <vga_print_color>
+  2009ed:	83 c4 10             	add    $0x10,%esp
+  2009f0:	e8 15 f7 ff ff       	call   20010a <boot_panic>
+  2009f5:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  2009f8:	8b 50 0c             	mov    0xc(%eax),%edx
+  2009fb:	8b 40 08             	mov    0x8(%eax),%eax
+  2009fe:	89 c2                	mov    %eax,%edx
+  200a00:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200a03:	01 d0                	add    %edx,%eax
+  200a05:	89 45 bc             	mov    %eax,-0x44(%ebp)
+  200a08:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  200a0b:	8b 50 14             	mov    0x14(%eax),%edx
+  200a0e:	8b 40 10             	mov    0x10(%eax),%eax
+  200a11:	89 c2                	mov    %eax,%edx
+  200a13:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  200a16:	29 c2                	sub    %eax,%edx
+  200a18:	8b 45 14             	mov    0x14(%ebp),%eax
+  200a1b:	01 d0                	add    %edx,%eax
+  200a1d:	89 45 b8             	mov    %eax,-0x48(%ebp)
+  200a20:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  200a23:	8b 50 0c             	mov    0xc(%eax),%edx
+  200a26:	8b 40 08             	mov    0x8(%eax),%eax
+  200a29:	89 c2                	mov    %eax,%edx
+  200a2b:	8b 45 b8             	mov    -0x48(%ebp),%eax
+  200a2e:	31 d0                	xor    %edx,%eax
+  200a30:	89 c1                	mov    %eax,%ecx
+  200a32:	bb 00 00 00 00       	mov    $0x0,%ebx
+  200a37:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  200a3a:	8b 50 34             	mov    0x34(%eax),%edx
+  200a3d:	8b 40 30             	mov    0x30(%eax),%eax
+  200a40:	83 c0 ff             	add    $0xffffffff,%eax
+  200a43:	83 d2 ff             	adc    $0xffffffff,%edx
+  200a46:	21 c8                	and    %ecx,%eax
+  200a48:	21 da                	and    %ebx,%edx
+  200a4a:	89 c1                	mov    %eax,%ecx
+  200a4c:	09 d1                	or     %edx,%ecx
+  200a4e:	74 17                	je     200a67 <load_elf64_exec_at+0x2e9>
+  200a50:	83 ec 08             	sub    $0x8,%esp
+  200a53:	6a 04                	push   $0x4
+  200a55:	68 60 23 20 00       	push   $0x202360
+  200a5a:	e8 25 10 00 00       	call   201a84 <vga_print_color>
+  200a5f:	83 c4 10             	add    $0x10,%esp
+  200a62:	e8 a3 f6 ff ff       	call   20010a <boot_panic>
+  200a67:	c7 45 e0 00 00 00 00 	movl   $0x0,-0x20(%ebp)
+  200a6e:	eb 19                	jmp    200a89 <load_elf64_exec_at+0x30b>
+  200a70:	8b 55 bc             	mov    -0x44(%ebp),%edx
+  200a73:	8b 45 e0             	mov    -0x20(%ebp),%eax
+  200a76:	01 d0                	add    %edx,%eax
+  200a78:	8b 4d b8             	mov    -0x48(%ebp),%ecx
+  200a7b:	8b 55 e0             	mov    -0x20(%ebp),%edx
+  200a7e:	01 ca                	add    %ecx,%edx
+  200a80:	0f b6 00             	movzbl (%eax),%eax
+  200a83:	88 02                	mov    %al,(%edx)
+  200a85:	83 45 e0 01          	addl   $0x1,-0x20(%ebp)
+  200a89:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  200a8c:	8b 50 24             	mov    0x24(%eax),%edx
+  200a8f:	8b 40 20             	mov    0x20(%eax),%eax
+  200a92:	39 45 e0             	cmp    %eax,-0x20(%ebp)
+  200a95:	72 d9                	jb     200a70 <load_elf64_exec_at+0x2f2>
+  200a97:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  200a9a:	8b 50 24             	mov    0x24(%eax),%edx
+  200a9d:	8b 40 20             	mov    0x20(%eax),%eax
+  200aa0:	89 45 dc             	mov    %eax,-0x24(%ebp)
+  200aa3:	eb 0f                	jmp    200ab4 <load_elf64_exec_at+0x336>
+  200aa5:	8b 55 b8             	mov    -0x48(%ebp),%edx
+  200aa8:	8b 45 dc             	mov    -0x24(%ebp),%eax
+  200aab:	01 d0                	add    %edx,%eax
+  200aad:	c6 00 00             	movb   $0x0,(%eax)
+  200ab0:	83 45 dc 01          	addl   $0x1,-0x24(%ebp)
+  200ab4:	8b 4d dc             	mov    -0x24(%ebp),%ecx
+  200ab7:	bb 00 00 00 00       	mov    $0x0,%ebx
+  200abc:	8b 45 c0             	mov    -0x40(%ebp),%eax
+  200abf:	8b 50 2c             	mov    0x2c(%eax),%edx
+  200ac2:	8b 40 28             	mov    0x28(%eax),%eax
+  200ac5:	39 c1                	cmp    %eax,%ecx
+  200ac7:	19 d3                	sbb    %edx,%ebx
+  200ac9:	72 da                	jb     200aa5 <load_elf64_exec_at+0x327>
+  200acb:	eb 01                	jmp    200ace <load_elf64_exec_at+0x350>
+  200acd:	90                   	nop
+  200ace:	0f b7 45 e4          	movzwl -0x1c(%ebp),%eax
+  200ad2:	83 c0 01             	add    $0x1,%eax
+  200ad5:	66 89 45 e4          	mov    %ax,-0x1c(%ebp)
+  200ad9:	0f b7 45 e4          	movzwl -0x1c(%ebp),%eax
+  200add:	66 3b 45 c4          	cmp    -0x3c(%ebp),%ax
+  200ae1:	0f 82 7d fe ff ff    	jb     200964 <load_elf64_exec_at+0x1e6>
+  200ae7:	8b 45 d8             	mov    -0x28(%ebp),%eax
+  200aea:	8b 50 1c             	mov    0x1c(%eax),%edx
+  200aed:	8b 40 18             	mov    0x18(%eax),%eax
+  200af0:	89 45 a0             	mov    %eax,-0x60(%ebp)
+  200af3:	89 55 a4             	mov    %edx,-0x5c(%ebp)
+  200af6:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  200af9:	8b 55 f4             	mov    -0xc(%ebp),%edx
+  200afc:	89 45 a8             	mov    %eax,-0x58(%ebp)
+  200aff:	89 55 ac             	mov    %edx,-0x54(%ebp)
+  200b02:	8b 55 e8             	mov    -0x18(%ebp),%edx
+  200b05:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  200b08:	29 c2                	sub    %eax,%edx
+  200b0a:	89 55 b0             	mov    %edx,-0x50(%ebp)
+  200b0d:	8b 45 08             	mov    0x8(%ebp),%eax
+  200b10:	8b 55 a0             	mov    -0x60(%ebp),%edx
+  200b13:	89 10                	mov    %edx,(%eax)
+  200b15:	8b 55 a4             	mov    -0x5c(%ebp),%edx
+  200b18:	89 50 04             	mov    %edx,0x4(%eax)
+  200b1b:	8b 55 a8             	mov    -0x58(%ebp),%edx
+  200b1e:	89 50 08             	mov    %edx,0x8(%eax)
+  200b21:	8b 55 ac             	mov    -0x54(%ebp),%edx
+  200b24:	89 50 0c             	mov    %edx,0xc(%eax)
+  200b27:	8b 55 b0             	mov    -0x50(%ebp),%edx
+  200b2a:	89 50 10             	mov    %edx,0x10(%eax)
+  200b2d:	8b 45 08             	mov    0x8(%ebp),%eax
+  200b30:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+  200b33:	c9                   	leave
+  200b34:	c2 04 00             	ret    $0x4
+
+00200b37 <gdt_write_entry>:
+  200b37:	55                   	push   %ebp
+  200b38:	89 e5                	mov    %esp,%ebp
+  200b3a:	83 ec 1c             	sub    $0x1c,%esp
+  200b3d:	8b 4d 08             	mov    0x8(%ebp),%ecx
+  200b40:	8b 55 14             	mov    0x14(%ebp),%edx
+  200b43:	8b 45 18             	mov    0x18(%ebp),%eax
+  200b46:	66 89 4d ec          	mov    %cx,-0x14(%ebp)
+  200b4a:	88 55 e8             	mov    %dl,-0x18(%ebp)
+  200b4d:	88 45 e4             	mov    %al,-0x1c(%ebp)
+  200b50:	0f b7 45 ec          	movzwl -0x14(%ebp),%eax
+  200b54:	c1 e0 03             	shl    $0x3,%eax
+  200b57:	66 89 45 fe          	mov    %ax,-0x2(%ebp)
+  200b5b:	0f b7 45 fe          	movzwl -0x2(%ebp),%eax
+  200b5f:	8b 55 10             	mov    0x10(%ebp),%edx
+  200b62:	88 90 0c 40 20 00    	mov    %dl,0x20400c(%eax)
+  200b68:	8b 45 10             	mov    0x10(%ebp),%eax
+  200b6b:	c1 e8 08             	shr    $0x8,%eax
+  200b6e:	89 c2                	mov    %eax,%edx
+  200b70:	0f b7 45 fe          	movzwl -0x2(%ebp),%eax
+  200b74:	83 c0 01             	add    $0x1,%eax
+  200b77:	88 90 0c 40 20 00    	mov    %dl,0x20400c(%eax)
+  200b7d:	0f b7 45 fe          	movzwl -0x2(%ebp),%eax
+  200b81:	83 c0 02             	add    $0x2,%eax
+  200b84:	8b 55 0c             	mov    0xc(%ebp),%edx
+  200b87:	88 90 0c 40 20 00    	mov    %dl,0x20400c(%eax)
+  200b8d:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200b90:	c1 e8 08             	shr    $0x8,%eax
+  200b93:	89 c2                	mov    %eax,%edx
+  200b95:	0f b7 45 fe          	movzwl -0x2(%ebp),%eax
+  200b99:	83 c0 03             	add    $0x3,%eax
+  200b9c:	88 90 0c 40 20 00    	mov    %dl,0x20400c(%eax)
+  200ba2:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200ba5:	c1 e8 10             	shr    $0x10,%eax
+  200ba8:	89 c2                	mov    %eax,%edx
+  200baa:	0f b7 45 fe          	movzwl -0x2(%ebp),%eax
+  200bae:	83 c0 04             	add    $0x4,%eax
+  200bb1:	88 90 0c 40 20 00    	mov    %dl,0x20400c(%eax)
+  200bb7:	0f b7 45 fe          	movzwl -0x2(%ebp),%eax
+  200bbb:	8d 50 05             	lea    0x5(%eax),%edx
+  200bbe:	0f b6 45 e8          	movzbl -0x18(%ebp),%eax
+  200bc2:	88 82 0c 40 20 00    	mov    %al,0x20400c(%edx)
+  200bc8:	8b 45 10             	mov    0x10(%ebp),%eax
+  200bcb:	c1 e8 10             	shr    $0x10,%eax
+  200bce:	83 e0 0f             	and    $0xf,%eax
+  200bd1:	89 c1                	mov    %eax,%ecx
+  200bd3:	0f b6 45 e4          	movzbl -0x1c(%ebp),%eax
+  200bd7:	c1 e0 04             	shl    $0x4,%eax
+  200bda:	89 c2                	mov    %eax,%edx
+  200bdc:	0f b7 45 fe          	movzwl -0x2(%ebp),%eax
+  200be0:	83 c0 06             	add    $0x6,%eax
+  200be3:	09 ca                	or     %ecx,%edx
+  200be5:	88 90 0c 40 20 00    	mov    %dl,0x20400c(%eax)
+  200beb:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200bee:	c1 e8 18             	shr    $0x18,%eax
+  200bf1:	89 c2                	mov    %eax,%edx
+  200bf3:	0f b7 45 fe          	movzwl -0x2(%ebp),%eax
+  200bf7:	83 c0 07             	add    $0x7,%eax
+  200bfa:	88 90 0c 40 20 00    	mov    %dl,0x20400c(%eax)
+  200c00:	90                   	nop
+  200c01:	c9                   	leave
+  200c02:	c3                   	ret
+
+00200c03 <gdt_initialise>:
+  200c03:	55                   	push   %ebp
+  200c04:	89 e5                	mov    %esp,%ebp
+  200c06:	83 ec 08             	sub    $0x8,%esp
+  200c09:	6a 00                	push   $0x0
+  200c0b:	6a 00                	push   $0x0
+  200c0d:	6a 00                	push   $0x0
+  200c0f:	6a 00                	push   $0x0
+  200c11:	6a 00                	push   $0x0
+  200c13:	e8 1f ff ff ff       	call   200b37 <gdt_write_entry>
+  200c18:	83 c4 14             	add    $0x14,%esp
+  200c1b:	6a 0c                	push   $0xc
+  200c1d:	68 9a 00 00 00       	push   $0x9a
+  200c22:	68 ff ff 0f 00       	push   $0xfffff
+  200c27:	6a 00                	push   $0x0
+  200c29:	6a 01                	push   $0x1
+  200c2b:	e8 07 ff ff ff       	call   200b37 <gdt_write_entry>
+  200c30:	83 c4 14             	add    $0x14,%esp
+  200c33:	6a 0c                	push   $0xc
+  200c35:	68 92 00 00 00       	push   $0x92
+  200c3a:	68 ff ff 0f 00       	push   $0xfffff
+  200c3f:	6a 00                	push   $0x0
+  200c41:	6a 02                	push   $0x2
+  200c43:	e8 ef fe ff ff       	call   200b37 <gdt_write_entry>
+  200c48:	83 c4 14             	add    $0x14,%esp
+  200c4b:	83 ec 08             	sub    $0x8,%esp
+  200c4e:	6a 17                	push   $0x17
+  200c50:	68 0c 40 20 00       	push   $0x20400c
+  200c55:	e8 5d 06 00 00       	call   2012b7 <gdtr_load>
+  200c5a:	83 c4 10             	add    $0x10,%esp
+  200c5d:	e8 75 06 00 00       	call   2012d7 <reload_seg_regs>
+  200c62:	90                   	nop
+  200c63:	c9                   	leave
+  200c64:	c3                   	ret
+
+00200c65 <gdt_set_long_mode>:
+  200c65:	55                   	push   %ebp
+  200c66:	89 e5                	mov    %esp,%ebp
+  200c68:	6a 0a                	push   $0xa
+  200c6a:	68 9a 00 00 00       	push   $0x9a
+  200c6f:	68 ff ff 0f 00       	push   $0xfffff
+  200c74:	6a 00                	push   $0x0
+  200c76:	6a 01                	push   $0x1
+  200c78:	e8 ba fe ff ff       	call   200b37 <gdt_write_entry>
+  200c7d:	83 c4 14             	add    $0x14,%esp
+  200c80:	90                   	nop
+  200c81:	c9                   	leave
+  200c82:	c3                   	ret
+
+00200c83 <idt_write_entry>:
+  200c83:	55                   	push   %ebp
+  200c84:	89 e5                	mov    %esp,%ebp
+  200c86:	83 ec 14             	sub    $0x14,%esp
+  200c89:	8b 45 08             	mov    0x8(%ebp),%eax
+  200c8c:	88 45 ec             	mov    %al,-0x14(%ebp)
+  200c8f:	0f b6 45 ec          	movzbl -0x14(%ebp),%eax
+  200c93:	c1 e0 02             	shl    $0x2,%eax
+  200c96:	89 45 fc             	mov    %eax,-0x4(%ebp)
+  200c99:	c6 45 fb 00          	movb   $0x0,-0x5(%ebp)
+  200c9d:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200ca0:	89 c2                	mov    %eax,%edx
+  200ca2:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  200ca5:	66 89 94 00 40 40 20 	mov    %dx,0x204040(%eax,%eax,1)
+  200cac:	00 
+  200cad:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  200cb0:	83 c0 01             	add    $0x1,%eax
+  200cb3:	66 c7 84 00 40 40 20 	movw   $0x8,0x204040(%eax,%eax,1)
+  200cba:	00 08 00 
+  200cbd:	8b 45 10             	mov    0x10(%ebp),%eax
+  200cc0:	83 e0 0f             	and    $0xf,%eax
+  200cc3:	89 c2                	mov    %eax,%edx
+  200cc5:	0f b6 45 fb          	movzbl -0x5(%ebp),%eax
+  200cc9:	c1 e0 05             	shl    $0x5,%eax
+  200ccc:	09 d0                	or     %edx,%eax
+  200cce:	c1 e0 08             	shl    $0x8,%eax
+  200cd1:	89 c2                	mov    %eax,%edx
+  200cd3:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  200cd6:	83 c0 02             	add    $0x2,%eax
+  200cd9:	66 81 ca 00 80       	or     $0x8000,%dx
+  200cde:	66 89 94 00 40 40 20 	mov    %dx,0x204040(%eax,%eax,1)
+  200ce5:	00 
+  200ce6:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200ce9:	c1 e8 10             	shr    $0x10,%eax
+  200cec:	89 c2                	mov    %eax,%edx
+  200cee:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  200cf1:	83 c0 03             	add    $0x3,%eax
+  200cf4:	66 89 94 00 40 40 20 	mov    %dx,0x204040(%eax,%eax,1)
+  200cfb:	00 
+  200cfc:	90                   	nop
+  200cfd:	c9                   	leave
+  200cfe:	c3                   	ret
+
+00200cff <idt_initialise>:
+  200cff:	55                   	push   %ebp
+  200d00:	89 e5                	mov    %esp,%ebp
+  200d02:	83 ec 18             	sub    $0x18,%esp
+  200d05:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
+  200d0c:	eb 1b                	jmp    200d29 <idt_initialise+0x2a>
+  200d0e:	ba f9 0e 20 00       	mov    $0x200ef9,%edx
+  200d13:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  200d16:	0f b6 c0             	movzbl %al,%eax
+  200d19:	6a 0e                	push   $0xe
+  200d1b:	52                   	push   %edx
+  200d1c:	50                   	push   %eax
+  200d1d:	e8 61 ff ff ff       	call   200c83 <idt_write_entry>
+  200d22:	83 c4 0c             	add    $0xc,%esp
+  200d25:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
+  200d29:	81 7d f4 ff 00 00 00 	cmpl   $0xff,-0xc(%ebp)
+  200d30:	7e dc                	jle    200d0e <idt_initialise+0xf>
+  200d32:	c7 45 f0 00 00 00 00 	movl   $0x0,-0x10(%ebp)
+  200d39:	eb 22                	jmp    200d5d <idt_initialise+0x5e>
+  200d3b:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  200d3e:	8b 04 85 8e 30 20 00 	mov    0x20308e(,%eax,4),%eax
+  200d45:	89 c2                	mov    %eax,%edx
+  200d47:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  200d4a:	0f b6 c0             	movzbl %al,%eax
+  200d4d:	6a 0e                	push   $0xe
+  200d4f:	52                   	push   %edx
+  200d50:	50                   	push   %eax
+  200d51:	e8 2d ff ff ff       	call   200c83 <idt_write_entry>
+  200d56:	83 c4 0c             	add    $0xc,%esp
+  200d59:	83 45 f0 01          	addl   $0x1,-0x10(%ebp)
+  200d5d:	83 7d f0 1f          	cmpl   $0x1f,-0x10(%ebp)
+  200d61:	7e d8                	jle    200d3b <idt_initialise+0x3c>
+  200d63:	83 ec 08             	sub    $0x8,%esp
+  200d66:	68 ff 07 00 00       	push   $0x7ff
+  200d6b:	68 40 40 20 00       	push   $0x204040
+  200d70:	e8 7e 05 00 00       	call   2012f3 <idtr_load>
+  200d75:	83 c4 10             	add    $0x10,%esp
+  200d78:	83 ec 08             	sub    $0x8,%esp
+  200d7b:	6a 0a                	push   $0xa
+  200d7d:	68 7c 23 20 00       	push   $0x20237c
+  200d82:	e8 fd 0c 00 00       	call   201a84 <vga_print_color>
+  200d87:	83 c4 10             	add    $0x10,%esp
+  200d8a:	90                   	nop
+  200d8b:	c9                   	leave
+  200d8c:	c3                   	ret
+
+00200d8d <panic_exception_handler_no_err>:
+  200d8d:	55                   	push   %ebp
+  200d8e:	89 e5                	mov    %esp,%ebp
+  200d90:	83 ec 08             	sub    $0x8,%esp
+  200d93:	83 7d 08 15          	cmpl   $0x15,0x8(%ebp)
+  200d97:	76 07                	jbe    200da0 <panic_exception_handler_no_err+0x13>
+  200d99:	c7 45 08 16 00 00 00 	movl   $0x16,0x8(%ebp)
+  200da0:	83 ec 0c             	sub    $0xc,%esp
+  200da3:	6a 0f                	push   $0xf
+  200da5:	e8 6b 09 00 00       	call   201715 <vga_setfgcolor>
+  200daa:	83 c4 10             	add    $0x10,%esp
+  200dad:	83 ec 0c             	sub    $0xc,%esp
+  200db0:	6a 04                	push   $0x4
+  200db2:	e8 7a 09 00 00       	call   201731 <vga_setbgcolor>
+  200db7:	83 c4 10             	add    $0x10,%esp
+  200dba:	83 ec 0c             	sub    $0xc,%esp
+  200dbd:	68 53 25 20 00       	push   $0x202553
+  200dc2:	e8 10 0c 00 00       	call   2019d7 <vga_print>
+  200dc7:	83 c4 10             	add    $0x10,%esp
+  200dca:	8b 45 08             	mov    0x8(%ebp),%eax
+  200dcd:	ba 00 00 00 00       	mov    $0x0,%edx
+  200dd2:	6a ff                	push   $0xffffffff
+  200dd4:	6a 0a                	push   $0xa
+  200dd6:	52                   	push   %edx
+  200dd7:	50                   	push   %eax
+  200dd8:	e8 17 0c 00 00       	call   2019f4 <vga_print_uint>
+  200ddd:	83 c4 10             	add    $0x10,%esp
+  200de0:	83 ec 0c             	sub    $0xc,%esp
+  200de3:	68 55 25 20 00       	push   $0x202555
+  200de8:	e8 ea 0b 00 00       	call   2019d7 <vga_print>
+  200ded:	83 c4 10             	add    $0x10,%esp
+  200df0:	8b 45 08             	mov    0x8(%ebp),%eax
+  200df3:	8b 04 85 20 30 20 00 	mov    0x203020(,%eax,4),%eax
+  200dfa:	83 ec 0c             	sub    $0xc,%esp
+  200dfd:	50                   	push   %eax
+  200dfe:	e8 d4 0b 00 00       	call   2019d7 <vga_print>
+  200e03:	83 c4 10             	add    $0x10,%esp
+  200e06:	83 ec 0c             	sub    $0xc,%esp
+  200e09:	68 58 25 20 00       	push   $0x202558
+  200e0e:	e8 c4 0b 00 00       	call   2019d7 <vga_print>
+  200e13:	83 c4 10             	add    $0x10,%esp
+  200e16:	83 ec 0c             	sub    $0xc,%esp
+  200e19:	68 5a 25 20 00       	push   $0x20255a
+  200e1e:	e8 b4 0b 00 00       	call   2019d7 <vga_print>
+  200e23:	83 c4 10             	add    $0x10,%esp
+  200e26:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200e29:	ba 00 00 00 00       	mov    $0x0,%edx
+  200e2e:	6a 08                	push   $0x8
+  200e30:	6a 10                	push   $0x10
+  200e32:	52                   	push   %edx
+  200e33:	50                   	push   %eax
+  200e34:	e8 bb 0b 00 00       	call   2019f4 <vga_print_uint>
+  200e39:	83 c4 10             	add    $0x10,%esp
+  200e3c:	83 ec 0c             	sub    $0xc,%esp
+  200e3f:	68 60 25 20 00       	push   $0x202560
+  200e44:	e8 8e 0b 00 00       	call   2019d7 <vga_print>
+  200e49:	83 c4 10             	add    $0x10,%esp
+  200e4c:	8b 45 10             	mov    0x10(%ebp),%eax
+  200e4f:	ba 00 00 00 00       	mov    $0x0,%edx
+  200e54:	6a 04                	push   $0x4
+  200e56:	6a 10                	push   $0x10
+  200e58:	52                   	push   %edx
+  200e59:	50                   	push   %eax
+  200e5a:	e8 95 0b 00 00       	call   2019f4 <vga_print_uint>
+  200e5f:	83 c4 10             	add    $0x10,%esp
+  200e62:	83 ec 0c             	sub    $0xc,%esp
+  200e65:	68 67 25 20 00       	push   $0x202567
+  200e6a:	e8 68 0b 00 00       	call   2019d7 <vga_print>
+  200e6f:	83 c4 10             	add    $0x10,%esp
+  200e72:	8b 45 14             	mov    0x14(%ebp),%eax
+  200e75:	ba 00 00 00 00       	mov    $0x0,%edx
+  200e7a:	6a ff                	push   $0xffffffff
+  200e7c:	6a 10                	push   $0x10
+  200e7e:	52                   	push   %edx
+  200e7f:	50                   	push   %eax
+  200e80:	e8 6f 0b 00 00       	call   2019f4 <vga_print_uint>
+  200e85:	83 c4 10             	add    $0x10,%esp
+  200e88:	83 ec 0c             	sub    $0xc,%esp
+  200e8b:	68 58 25 20 00       	push   $0x202558
+  200e90:	e8 42 0b 00 00       	call   2019d7 <vga_print>
+  200e95:	83 c4 10             	add    $0x10,%esp
+  200e98:	e8 6d f2 ff ff       	call   20010a <boot_panic>
+
+00200e9d <panic_exception_handler_err>:
+  200e9d:	55                   	push   %ebp
+  200e9e:	89 e5                	mov    %esp,%ebp
+  200ea0:	83 ec 08             	sub    $0x8,%esp
+  200ea3:	83 ec 08             	sub    $0x8,%esp
+  200ea6:	6a 04                	push   $0x4
+  200ea8:	6a 0f                	push   $0xf
+  200eaa:	e8 4e 08 00 00       	call   2016fd <vga_setcolor>
+  200eaf:	83 c4 10             	add    $0x10,%esp
+  200eb2:	83 ec 0c             	sub    $0xc,%esp
+  200eb5:	68 72 25 20 00       	push   $0x202572
+  200eba:	e8 18 0b 00 00       	call   2019d7 <vga_print>
+  200ebf:	83 c4 10             	add    $0x10,%esp
+  200ec2:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200ec5:	ba 00 00 00 00       	mov    $0x0,%edx
+  200eca:	6a ff                	push   $0xffffffff
+  200ecc:	6a 10                	push   $0x10
+  200ece:	52                   	push   %edx
+  200ecf:	50                   	push   %eax
+  200ed0:	e8 1f 0b 00 00       	call   2019f4 <vga_print_uint>
+  200ed5:	83 c4 10             	add    $0x10,%esp
+  200ed8:	83 ec 0c             	sub    $0xc,%esp
+  200edb:	68 58 25 20 00       	push   $0x202558
+  200ee0:	e8 f2 0a 00 00       	call   2019d7 <vga_print>
+  200ee5:	83 c4 10             	add    $0x10,%esp
+  200ee8:	ff 75 18             	push   0x18(%ebp)
+  200eeb:	ff 75 14             	push   0x14(%ebp)
+  200eee:	ff 75 10             	push   0x10(%ebp)
+  200ef1:	ff 75 08             	push   0x8(%ebp)
+  200ef4:	e8 94 fe ff ff       	call   200d8d <panic_exception_handler_no_err>
+
+00200ef9 <unimplemented_routine>:
+  200ef9:	55                   	push   %ebp
+  200efa:	89 e5                	mov    %esp,%ebp
+  200efc:	83 ec 08             	sub    $0x8,%esp
+  200eff:	83 ec 0c             	sub    $0xc,%esp
+  200f02:	68 7a 25 20 00       	push   $0x20257a
+  200f07:	e8 cb 0a 00 00       	call   2019d7 <vga_print>
+  200f0c:	83 c4 10             	add    $0x10,%esp
+  200f0f:	e8 f6 f1 ff ff       	call   20010a <boot_panic>
+
+00200f14 <initialise_map>:
+  200f14:	55                   	push   %ebp
+  200f15:	89 e5                	mov    %esp,%ebp
+  200f17:	83 ec 10             	sub    $0x10,%esp
+  200f1a:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
+  200f21:	eb 0f                	jmp    200f32 <initialise_map+0x1e>
+  200f23:	8b 55 08             	mov    0x8(%ebp),%edx
+  200f26:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  200f29:	01 d0                	add    %edx,%eax
+  200f2b:	c6 00 00             	movb   $0x0,(%eax)
+  200f2e:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
+  200f32:	81 7d fc ff 0f 00 00 	cmpl   $0xfff,-0x4(%ebp)
+  200f39:	76 e8                	jbe    200f23 <initialise_map+0xf>
+  200f3b:	90                   	nop
+  200f3c:	90                   	nop
+  200f3d:	c9                   	leave
+  200f3e:	c3                   	ret
+
+00200f3f <write_map_entry>:
+  200f3f:	55                   	push   %ebp
+  200f40:	89 e5                	mov    %esp,%ebp
+  200f42:	83 ec 18             	sub    $0x18,%esp
+  200f45:	8b 55 0c             	mov    0xc(%ebp),%edx
+  200f48:	8b 45 14             	mov    0x14(%ebp),%eax
+  200f4b:	66 89 55 ec          	mov    %dx,-0x14(%ebp)
+  200f4f:	88 45 e8             	mov    %al,-0x18(%ebp)
+  200f52:	8b 45 10             	mov    0x10(%ebp),%eax
+  200f55:	89 45 fc             	mov    %eax,-0x4(%ebp)
+  200f58:	c7 45 f8 03 00 00 00 	movl   $0x3,-0x8(%ebp)
+  200f5f:	80 7d e8 00          	cmpb   $0x0,-0x18(%ebp)
+  200f63:	74 0f                	je     200f74 <write_map_entry+0x35>
+  200f65:	81 4d f8 80 00 00 00 	orl    $0x80,-0x8(%ebp)
+  200f6c:	8b 45 18             	mov    0x18(%ebp),%eax
+  200f6f:	21 45 fc             	and    %eax,-0x4(%ebp)
+  200f72:	eb 07                	jmp    200f7b <write_map_entry+0x3c>
+  200f74:	81 65 fc 00 f0 ff ff 	andl   $0xfffff000,-0x4(%ebp)
+  200f7b:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  200f7e:	09 45 fc             	or     %eax,-0x4(%ebp)
+  200f81:	0f b7 45 ec          	movzwl -0x14(%ebp),%eax
+  200f85:	c1 e0 03             	shl    $0x3,%eax
+  200f88:	89 c2                	mov    %eax,%edx
+  200f8a:	8b 45 08             	mov    0x8(%ebp),%eax
+  200f8d:	01 d0                	add    %edx,%eax
+  200f8f:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  200f92:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  200f95:	8b 55 fc             	mov    -0x4(%ebp),%edx
+  200f98:	89 10                	mov    %edx,(%eax)
+  200f9a:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  200f9d:	83 c0 04             	add    $0x4,%eax
+  200fa0:	c7 00 00 00 00 00    	movl   $0x0,(%eax)
+  200fa6:	90                   	nop
+  200fa7:	c9                   	leave
+  200fa8:	c3                   	ret
+
+00200fa9 <read_map_entry>:
+  200fa9:	55                   	push   %ebp
+  200faa:	89 e5                	mov    %esp,%ebp
+  200fac:	83 ec 14             	sub    $0x14,%esp
+  200faf:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200fb2:	66 89 45 ec          	mov    %ax,-0x14(%ebp)
+  200fb6:	0f b7 45 ec          	movzwl -0x14(%ebp),%eax
+  200fba:	c1 e0 03             	shl    $0x3,%eax
+  200fbd:	89 c2                	mov    %eax,%edx
+  200fbf:	8b 45 08             	mov    0x8(%ebp),%eax
+  200fc2:	01 d0                	add    %edx,%eax
+  200fc4:	89 45 fc             	mov    %eax,-0x4(%ebp)
+  200fc7:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  200fca:	8b 00                	mov    (%eax),%eax
+  200fcc:	89 45 f8             	mov    %eax,-0x8(%ebp)
+  200fcf:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  200fd2:	c1 e8 07             	shr    $0x7,%eax
+  200fd5:	83 e0 01             	and    $0x1,%eax
+  200fd8:	89 c2                	mov    %eax,%edx
+  200fda:	8b 45 10             	mov    0x10(%ebp),%eax
+  200fdd:	88 10                	mov    %dl,(%eax)
+  200fdf:	81 65 f8 00 f0 ff ff 	andl   $0xfffff000,-0x8(%ebp)
+  200fe6:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  200fe9:	c9                   	leave
+  200fea:	c3                   	ret
+
+00200feb <check_map_entry_present>:
+  200feb:	55                   	push   %ebp
+  200fec:	89 e5                	mov    %esp,%ebp
+  200fee:	83 ec 04             	sub    $0x4,%esp
+  200ff1:	8b 45 0c             	mov    0xc(%ebp),%eax
+  200ff4:	66 89 45 fc          	mov    %ax,-0x4(%ebp)
+  200ff8:	0f b7 45 fc          	movzwl -0x4(%ebp),%eax
+  200ffc:	c1 e0 03             	shl    $0x3,%eax
+  200fff:	89 c2                	mov    %eax,%edx
+  201001:	8b 45 08             	mov    0x8(%ebp),%eax
+  201004:	01 d0                	add    %edx,%eax
+  201006:	0f b6 00             	movzbl (%eax),%eax
+  201009:	0f b6 c0             	movzbl %al,%eax
+  20100c:	83 e0 01             	and    $0x1,%eax
+  20100f:	83 e0 01             	and    $0x1,%eax
+  201012:	c9                   	leave
+  201013:	c3                   	ret
+
+00201014 <map_memory_2M>:
+  201014:	55                   	push   %ebp
+  201015:	89 e5                	mov    %esp,%ebp
+  201017:	83 ec 38             	sub    $0x38,%esp
+  20101a:	8b 55 14             	mov    0x14(%ebp),%edx
+  20101d:	8b 45 08             	mov    0x8(%ebp),%eax
+  201020:	89 45 d0             	mov    %eax,-0x30(%ebp)
+  201023:	8b 45 0c             	mov    0xc(%ebp),%eax
+  201026:	89 45 d4             	mov    %eax,-0x2c(%ebp)
+  201029:	89 d0                	mov    %edx,%eax
+  20102b:	88 45 cc             	mov    %al,-0x34(%ebp)
+  20102e:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  201031:	8b 55 d4             	mov    -0x2c(%ebp),%edx
+  201034:	25 ff ff 1f 00       	and    $0x1fffff,%eax
+  201039:	ba 00 00 00 00       	mov    $0x0,%edx
+  20103e:	89 c1                	mov    %eax,%ecx
+  201040:	09 d1                	or     %edx,%ecx
+  201042:	75 0c                	jne    201050 <map_memory_2M+0x3c>
+  201044:	8b 45 10             	mov    0x10(%ebp),%eax
+  201047:	25 ff ff 1f 00       	and    $0x1fffff,%eax
+  20104c:	85 c0                	test   %eax,%eax
+  20104e:	74 17                	je     201067 <map_memory_2M+0x53>
+  201050:	83 ec 08             	sub    $0x8,%esp
+  201053:	6a 04                	push   $0x4
+  201055:	68 8c 25 20 00       	push   $0x20258c
+  20105a:	e8 25 0a 00 00       	call   201a84 <vga_print_color>
+  20105f:	83 c4 10             	add    $0x10,%esp
+  201062:	e8 a3 f0 ff ff       	call   20010a <boot_panic>
+  201067:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  20106a:	8b 55 d4             	mov    -0x2c(%ebp),%edx
+  20106d:	0f ac d0 15          	shrd   $0x15,%edx,%eax
+  201071:	c1 ea 15             	shr    $0x15,%edx
+  201074:	66 25 ff 01          	and    $0x1ff,%ax
+  201078:	66 89 45 f6          	mov    %ax,-0xa(%ebp)
+  20107c:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  20107f:	8b 55 d4             	mov    -0x2c(%ebp),%edx
+  201082:	0f ac d0 1e          	shrd   $0x1e,%edx,%eax
+  201086:	c1 ea 1e             	shr    $0x1e,%edx
+  201089:	66 25 ff 01          	and    $0x1ff,%ax
+  20108d:	66 89 45 f4          	mov    %ax,-0xc(%ebp)
+  201091:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  201094:	8b 55 d4             	mov    -0x2c(%ebp),%edx
+  201097:	89 d0                	mov    %edx,%eax
+  201099:	31 d2                	xor    %edx,%edx
+  20109b:	c1 e8 07             	shr    $0x7,%eax
+  20109e:	66 25 ff 01          	and    $0x1ff,%ax
+  2010a2:	66 89 45 f2          	mov    %ax,-0xe(%ebp)
+  2010a6:	c7 45 ec 00 00 00 00 	movl   $0x0,-0x14(%ebp)
+  2010ad:	c7 45 e8 00 00 00 00 	movl   $0x0,-0x18(%ebp)
+  2010b4:	c6 45 e7 00          	movb   $0x0,-0x19(%ebp)
+  2010b8:	e9 87 01 00 00       	jmp    201244 <map_memory_2M+0x230>
+  2010bd:	0f b7 55 f2          	movzwl -0xe(%ebp),%edx
+  2010c1:	a1 40 48 20 00       	mov    0x204840,%eax
+  2010c6:	83 ec 08             	sub    $0x8,%esp
+  2010c9:	52                   	push   %edx
+  2010ca:	50                   	push   %eax
+  2010cb:	e8 1b ff ff ff       	call   200feb <check_map_entry_present>
+  2010d0:	83 c4 10             	add    $0x10,%esp
+  2010d3:	83 f0 01             	xor    $0x1,%eax
+  2010d6:	84 c0                	test   %al,%al
+  2010d8:	74 3c                	je     201116 <map_memory_2M+0x102>
+  2010da:	e8 3f ef ff ff       	call   20001e <allocator_alloc_page>
+  2010df:	89 45 e0             	mov    %eax,-0x20(%ebp)
+  2010e2:	83 ec 0c             	sub    $0xc,%esp
+  2010e5:	ff 75 e0             	push   -0x20(%ebp)
+  2010e8:	e8 27 fe ff ff       	call   200f14 <initialise_map>
+  2010ed:	83 c4 10             	add    $0x10,%esp
+  2010f0:	8b 4d e0             	mov    -0x20(%ebp),%ecx
+  2010f3:	0f b7 55 f2          	movzwl -0xe(%ebp),%edx
+  2010f7:	a1 40 48 20 00       	mov    0x204840,%eax
+  2010fc:	83 ec 0c             	sub    $0xc,%esp
+  2010ff:	6a 00                	push   $0x0
+  201101:	6a 00                	push   $0x0
+  201103:	51                   	push   %ecx
+  201104:	52                   	push   %edx
+  201105:	50                   	push   %eax
+  201106:	e8 34 fe ff ff       	call   200f3f <write_map_entry>
+  20110b:	83 c4 20             	add    $0x20,%esp
+  20110e:	8b 45 e0             	mov    -0x20(%ebp),%eax
+  201111:	89 45 e8             	mov    %eax,-0x18(%ebp)
+  201114:	eb 1d                	jmp    201133 <map_memory_2M+0x11f>
+  201116:	0f b7 55 f2          	movzwl -0xe(%ebp),%edx
+  20111a:	a1 40 48 20 00       	mov    0x204840,%eax
+  20111f:	83 ec 04             	sub    $0x4,%esp
+  201122:	8d 4d db             	lea    -0x25(%ebp),%ecx
+  201125:	51                   	push   %ecx
+  201126:	52                   	push   %edx
+  201127:	50                   	push   %eax
+  201128:	e8 7c fe ff ff       	call   200fa9 <read_map_entry>
+  20112d:	83 c4 10             	add    $0x10,%esp
+  201130:	89 45 e8             	mov    %eax,-0x18(%ebp)
+  201133:	0f b7 45 f4          	movzwl -0xc(%ebp),%eax
+  201137:	83 ec 08             	sub    $0x8,%esp
+  20113a:	50                   	push   %eax
+  20113b:	ff 75 e8             	push   -0x18(%ebp)
+  20113e:	e8 a8 fe ff ff       	call   200feb <check_map_entry_present>
+  201143:	83 c4 10             	add    $0x10,%esp
+  201146:	83 f0 01             	xor    $0x1,%eax
+  201149:	84 c0                	test   %al,%al
+  20114b:	74 39                	je     201186 <map_memory_2M+0x172>
+  20114d:	e8 cc ee ff ff       	call   20001e <allocator_alloc_page>
+  201152:	89 45 dc             	mov    %eax,-0x24(%ebp)
+  201155:	83 ec 0c             	sub    $0xc,%esp
+  201158:	ff 75 dc             	push   -0x24(%ebp)
+  20115b:	e8 b4 fd ff ff       	call   200f14 <initialise_map>
+  201160:	83 c4 10             	add    $0x10,%esp
+  201163:	8b 55 dc             	mov    -0x24(%ebp),%edx
+  201166:	0f b7 45 f4          	movzwl -0xc(%ebp),%eax
+  20116a:	83 ec 0c             	sub    $0xc,%esp
+  20116d:	6a 00                	push   $0x0
+  20116f:	6a 00                	push   $0x0
+  201171:	52                   	push   %edx
+  201172:	50                   	push   %eax
+  201173:	ff 75 e8             	push   -0x18(%ebp)
+  201176:	e8 c4 fd ff ff       	call   200f3f <write_map_entry>
+  20117b:	83 c4 20             	add    $0x20,%esp
+  20117e:	8b 45 dc             	mov    -0x24(%ebp),%eax
+  201181:	89 45 ec             	mov    %eax,-0x14(%ebp)
+  201184:	eb 1a                	jmp    2011a0 <map_memory_2M+0x18c>
+  201186:	0f b7 45 f4          	movzwl -0xc(%ebp),%eax
+  20118a:	83 ec 04             	sub    $0x4,%esp
+  20118d:	8d 55 da             	lea    -0x26(%ebp),%edx
+  201190:	52                   	push   %edx
+  201191:	50                   	push   %eax
+  201192:	ff 75 e8             	push   -0x18(%ebp)
+  201195:	e8 0f fe ff ff       	call   200fa9 <read_map_entry>
+  20119a:	83 c4 10             	add    $0x10,%esp
+  20119d:	89 45 ec             	mov    %eax,-0x14(%ebp)
+  2011a0:	0f b7 45 f6          	movzwl -0xa(%ebp),%eax
+  2011a4:	83 ec 0c             	sub    $0xc,%esp
+  2011a7:	68 00 00 e0 ff       	push   $0xffe00000
+  2011ac:	6a 01                	push   $0x1
+  2011ae:	ff 75 10             	push   0x10(%ebp)
+  2011b1:	50                   	push   %eax
+  2011b2:	ff 75 ec             	push   -0x14(%ebp)
+  2011b5:	e8 85 fd ff ff       	call   200f3f <write_map_entry>
+  2011ba:	83 c4 20             	add    $0x20,%esp
+  2011bd:	8b 45 10             	mov    0x10(%ebp),%eax
+  2011c0:	ba 00 00 00 00       	mov    $0x0,%edx
+  2011c5:	05 00 00 20 00       	add    $0x200000,%eax
+  2011ca:	83 d2 00             	adc    $0x0,%edx
+  2011cd:	83 fa 00             	cmp    $0x0,%edx
+  2011d0:	76 17                	jbe    2011e9 <map_memory_2M+0x1d5>
+  2011d2:	83 ec 08             	sub    $0x8,%esp
+  2011d5:	6a 04                	push   $0x4
+  2011d7:	68 c4 25 20 00       	push   $0x2025c4
+  2011dc:	e8 a3 08 00 00       	call   201a84 <vga_print_color>
+  2011e1:	83 c4 10             	add    $0x10,%esp
+  2011e4:	e8 21 ef ff ff       	call   20010a <boot_panic>
+  2011e9:	81 45 10 00 00 20 00 	addl   $0x200000,0x10(%ebp)
+  2011f0:	66 83 45 f6 01       	addw   $0x1,-0xa(%ebp)
+  2011f5:	66 81 7d f6 00 02    	cmpw   $0x200,-0xa(%ebp)
+  2011fb:	75 3d                	jne    20123a <map_memory_2M+0x226>
+  2011fd:	66 c7 45 f6 00 00    	movw   $0x0,-0xa(%ebp)
+  201203:	66 83 45 f4 01       	addw   $0x1,-0xc(%ebp)
+  201208:	66 81 7d f4 00 02    	cmpw   $0x200,-0xc(%ebp)
+  20120e:	75 2a                	jne    20123a <map_memory_2M+0x226>
+  201210:	66 c7 45 f4 00 00    	movw   $0x0,-0xc(%ebp)
+  201216:	66 83 45 f2 01       	addw   $0x1,-0xe(%ebp)
+  20121b:	66 81 7d f2 00 02    	cmpw   $0x200,-0xe(%ebp)
+  201221:	75 17                	jne    20123a <map_memory_2M+0x226>
+  201223:	83 ec 08             	sub    $0x8,%esp
+  201226:	6a 04                	push   $0x4
+  201228:	68 f0 25 20 00       	push   $0x2025f0
+  20122d:	e8 52 08 00 00       	call   201a84 <vga_print_color>
+  201232:	83 c4 10             	add    $0x10,%esp
+  201235:	e8 d0 ee ff ff       	call   20010a <boot_panic>
+  20123a:	0f b6 45 e7          	movzbl -0x19(%ebp),%eax
+  20123e:	83 c0 01             	add    $0x1,%eax
+  201241:	88 45 e7             	mov    %al,-0x19(%ebp)
+  201244:	0f b6 45 e7          	movzbl -0x19(%ebp),%eax
+  201248:	3a 45 cc             	cmp    -0x34(%ebp),%al
+  20124b:	0f 82 6c fe ff ff    	jb     2010bd <map_memory_2M+0xa9>
+  201251:	c9                   	leave
+  201252:	c3                   	ret
+
+00201253 <paging_initialise>:
+  201253:	55                   	push   %ebp
+  201254:	89 e5                	mov    %esp,%ebp
+  201256:	83 ec 18             	sub    $0x18,%esp
+  201259:	e8 c0 ed ff ff       	call   20001e <allocator_alloc_page>
+  20125e:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  201261:	83 ec 0c             	sub    $0xc,%esp
+  201264:	ff 75 f4             	push   -0xc(%ebp)
+  201267:	e8 a8 fc ff ff       	call   200f14 <initialise_map>
+  20126c:	83 c4 10             	add    $0x10,%esp
+  20126f:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  201272:	a3 40 48 20 00       	mov    %eax,0x204840
+  201277:	6a 02                	push   $0x2
+  201279:	6a 00                	push   $0x0
+  20127b:	6a 00                	push   $0x0
+  20127d:	6a 00                	push   $0x0
+  20127f:	e8 90 fd ff ff       	call   201014 <map_memory_2M>
+  201284:	83 c4 10             	add    $0x10,%esp
+  201287:	83 ec 0c             	sub    $0xc,%esp
+  20128a:	ff 75 f4             	push   -0xc(%ebp)
+  20128d:	e8 32 02 00 00       	call   2014c4 <load_pml4>
+  201292:	83 c4 10             	add    $0x10,%esp
+  201295:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  201298:	a3 40 48 20 00       	mov    %eax,0x204840
+  20129d:	e8 fa 01 00 00       	call   20149c <enable_paging64>
+  2012a2:	83 ec 08             	sub    $0x8,%esp
+  2012a5:	6a 0a                	push   $0xa
+  2012a7:	68 18 26 20 00       	push   $0x202618
+  2012ac:	e8 d3 07 00 00       	call   201a84 <vga_print_color>
+  2012b1:	83 c4 10             	add    $0x10,%esp
+  2012b4:	90                   	nop
+  2012b5:	c9                   	leave
+  2012b6:	c3                   	ret
+
+002012b7 <gdtr_load>:
+  2012b7:	55                   	push   %ebp
+  2012b8:	89 e5                	mov    %esp,%ebp
+  2012ba:	50                   	push   %eax
+  2012bb:	66 8b 45 0c          	mov    0xc(%ebp),%ax
+  2012bf:	66 a3 80 30 20 00    	mov    %ax,0x203080
+  2012c5:	8b 45 08             	mov    0x8(%ebp),%eax
+  2012c8:	a3 82 30 20 00       	mov    %eax,0x203082
+  2012cd:	0f 01 15 80 30 20 00 	lgdtl  0x203080
+  2012d4:	58                   	pop    %eax
+  2012d5:	5d                   	pop    %ebp
+  2012d6:	c3                   	ret
+
+002012d7 <reload_seg_regs>:
+  2012d7:	55                   	push   %ebp
+  2012d8:	89 e5                	mov    %esp,%ebp
+  2012da:	50                   	push   %eax
+  2012db:	66 b8 10 00          	mov    $0x10,%ax
+  2012df:	8e d8                	mov    %eax,%ds
+  2012e1:	8e c0                	mov    %eax,%es
+  2012e3:	8e e0                	mov    %eax,%fs
+  2012e5:	8e e8                	mov    %eax,%gs
+  2012e7:	8e d0                	mov    %eax,%ss
+  2012e9:	ea f0 12 20 00 08 00 	ljmp   $0x8,$0x2012f0
+  2012f0:	58                   	pop    %eax
+  2012f1:	5d                   	pop    %ebp
+  2012f2:	c3                   	ret
+
+002012f3 <idtr_load>:
+  2012f3:	55                   	push   %ebp
+  2012f4:	89 e5                	mov    %esp,%ebp
+  2012f6:	50                   	push   %eax
+  2012f7:	66 8b 45 0c          	mov    0xc(%ebp),%ax
+  2012fb:	66 a3 88 30 20 00    	mov    %ax,0x203088
+  201301:	8b 45 08             	mov    0x8(%ebp),%eax
+  201304:	a3 8a 30 20 00       	mov    %eax,0x20308a
+  201309:	0f 01 1d 88 30 20 00 	lidtl  0x203088
+  201310:	58                   	pop    %eax
+  201311:	5d                   	pop    %ebp
+  201312:	c3                   	ret
+
+00201313 <isr0_exception>:
+  201313:	6a 00                	push   $0x0
+  201315:	fa                   	cli
+  201316:	f4                   	hlt
+  201317:	e8 71 fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  20131c:	cf                   	iret
+
+0020131d <isr1_exception>:
+  20131d:	6a 01                	push   $0x1
+  20131f:	fa                   	cli
+  201320:	f4                   	hlt
+  201321:	e8 67 fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201326:	cf                   	iret
+
+00201327 <isr2_exception>:
+  201327:	6a 02                	push   $0x2
+  201329:	fa                   	cli
+  20132a:	f4                   	hlt
+  20132b:	e8 5d fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201330:	cf                   	iret
+
+00201331 <isr3_exception>:
+  201331:	6a 03                	push   $0x3
+  201333:	fa                   	cli
+  201334:	f4                   	hlt
+  201335:	e8 53 fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  20133a:	cf                   	iret
+
+0020133b <isr4_exception>:
+  20133b:	6a 04                	push   $0x4
+  20133d:	fa                   	cli
+  20133e:	f4                   	hlt
+  20133f:	e8 49 fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201344:	cf                   	iret
+
+00201345 <isr5_exception>:
+  201345:	6a 05                	push   $0x5
+  201347:	fa                   	cli
+  201348:	f4                   	hlt
+  201349:	e8 3f fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  20134e:	cf                   	iret
+
+0020134f <isr6_exception>:
+  20134f:	6a 06                	push   $0x6
+  201351:	fa                   	cli
+  201352:	f4                   	hlt
+  201353:	e8 35 fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201358:	cf                   	iret
+
+00201359 <isr7_exception>:
+  201359:	6a 07                	push   $0x7
+  20135b:	fa                   	cli
+  20135c:	f4                   	hlt
+  20135d:	e8 2b fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201362:	cf                   	iret
+
+00201363 <isr8_exception>:
+  201363:	6a 08                	push   $0x8
+  201365:	e8 33 fb ff ff       	call   200e9d <panic_exception_handler_err>
+  20136a:	cf                   	iret
+
+0020136b <isr9_exception>:
+  20136b:	6a 09                	push   $0x9
+  20136d:	fa                   	cli
+  20136e:	f4                   	hlt
+  20136f:	e8 19 fa ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201374:	cf                   	iret
+
+00201375 <isr10_exception>:
+  201375:	6a 0a                	push   $0xa
+  201377:	e8 21 fb ff ff       	call   200e9d <panic_exception_handler_err>
+  20137c:	cf                   	iret
+
+0020137d <isr11_exception>:
+  20137d:	6a 0b                	push   $0xb
+  20137f:	e8 19 fb ff ff       	call   200e9d <panic_exception_handler_err>
+  201384:	cf                   	iret
+
+00201385 <isr12_exception>:
+  201385:	6a 0c                	push   $0xc
+  201387:	e8 11 fb ff ff       	call   200e9d <panic_exception_handler_err>
+  20138c:	cf                   	iret
+
+0020138d <isr13_exception>:
+  20138d:	6a 0d                	push   $0xd
+  20138f:	e8 09 fb ff ff       	call   200e9d <panic_exception_handler_err>
+  201394:	cf                   	iret
+
+00201395 <isr14_exception>:
+  201395:	6a 0e                	push   $0xe
+  201397:	e8 01 fb ff ff       	call   200e9d <panic_exception_handler_err>
+  20139c:	cf                   	iret
+
+0020139d <isr15_exception>:
+  20139d:	6a 0f                	push   $0xf
+  20139f:	fa                   	cli
+  2013a0:	f4                   	hlt
+  2013a1:	e8 e7 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  2013a6:	cf                   	iret
+
+002013a7 <isr16_exception>:
+  2013a7:	6a 10                	push   $0x10
+  2013a9:	fa                   	cli
+  2013aa:	f4                   	hlt
+  2013ab:	e8 dd f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  2013b0:	cf                   	iret
+
+002013b1 <isr17_exception>:
+  2013b1:	6a 11                	push   $0x11
+  2013b3:	e8 e5 fa ff ff       	call   200e9d <panic_exception_handler_err>
+  2013b8:	cf                   	iret
+
+002013b9 <isr18_exception>:
+  2013b9:	6a 12                	push   $0x12
+  2013bb:	fa                   	cli
+  2013bc:	f4                   	hlt
+  2013bd:	e8 cb f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  2013c2:	cf                   	iret
+
+002013c3 <isr19_exception>:
+  2013c3:	6a 13                	push   $0x13
+  2013c5:	fa                   	cli
+  2013c6:	f4                   	hlt
+  2013c7:	e8 c1 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  2013cc:	cf                   	iret
+
+002013cd <isr20_exception>:
+  2013cd:	6a 14                	push   $0x14
+  2013cf:	fa                   	cli
+  2013d0:	f4                   	hlt
+  2013d1:	e8 b7 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  2013d6:	cf                   	iret
+
+002013d7 <isr21_exception>:
+  2013d7:	6a 15                	push   $0x15
+  2013d9:	e8 bf fa ff ff       	call   200e9d <panic_exception_handler_err>
+  2013de:	cf                   	iret
+
+002013df <isr22_exception>:
+  2013df:	6a 16                	push   $0x16
+  2013e1:	fa                   	cli
+  2013e2:	f4                   	hlt
+  2013e3:	e8 a5 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  2013e8:	cf                   	iret
+
+002013e9 <isr23_exception>:
+  2013e9:	6a 17                	push   $0x17
+  2013eb:	fa                   	cli
+  2013ec:	f4                   	hlt
+  2013ed:	e8 9b f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  2013f2:	cf                   	iret
+
+002013f3 <isr24_exception>:
+  2013f3:	6a 18                	push   $0x18
+  2013f5:	fa                   	cli
+  2013f6:	f4                   	hlt
+  2013f7:	e8 91 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  2013fc:	cf                   	iret
+
+002013fd <isr25_exception>:
+  2013fd:	6a 19                	push   $0x19
+  2013ff:	fa                   	cli
+  201400:	f4                   	hlt
+  201401:	e8 87 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201406:	cf                   	iret
+
+00201407 <isr26_exception>:
+  201407:	6a 1a                	push   $0x1a
+  201409:	fa                   	cli
+  20140a:	f4                   	hlt
+  20140b:	e8 7d f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201410:	cf                   	iret
+
+00201411 <isr27_exception>:
+  201411:	6a 1b                	push   $0x1b
+  201413:	fa                   	cli
+  201414:	f4                   	hlt
+  201415:	e8 73 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  20141a:	cf                   	iret
+
+0020141b <isr28_exception>:
+  20141b:	6a 1c                	push   $0x1c
+  20141d:	fa                   	cli
+  20141e:	f4                   	hlt
+  20141f:	e8 69 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201424:	cf                   	iret
+
+00201425 <isr29_exception>:
+  201425:	6a 1d                	push   $0x1d
+  201427:	fa                   	cli
+  201428:	f4                   	hlt
+  201429:	e8 5f f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  20142e:	cf                   	iret
+
+0020142f <isr30_exception>:
+  20142f:	6a 1e                	push   $0x1e
+  201431:	fa                   	cli
+  201432:	f4                   	hlt
+  201433:	e8 55 f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201438:	cf                   	iret
+
+00201439 <isr31_exception>:
+  201439:	6a 1f                	push   $0x1f
+  20143b:	fa                   	cli
+  20143c:	f4                   	hlt
+  20143d:	e8 4b f9 ff ff       	call   200d8d <panic_exception_handler_no_err>
+  201442:	cf                   	iret
+  201443:	66 90                	xchg   %ax,%ax
+  201445:	66 90                	xchg   %ax,%ax
+  201447:	90                   	nop
+
+00201448 <jmp64>:
+  201448:	89 d9                	mov    %ebx,%ecx
+  20144a:	48                   	dec    %eax
+  20144b:	c1 e1 20             	shl    $0x20,%ecx
+  20144e:	48                   	dec    %eax
+  20144f:	09 c1                	or     %eax,%ecx
+  201451:	ff e1                	jmp    *%ecx
+  201453:	90                   	nop
+  201454:	8d 74 26 00          	lea    0x0(%esi,%eiz,1),%esi
+
+00201458 <jump_kernel>:
+  201458:	55                   	push   %ebp
+  201459:	89 e5                	mov    %esp,%ebp
+  20145b:	8b 45 08             	mov    0x8(%ebp),%eax
+  20145e:	8b 5d 0c             	mov    0xc(%ebp),%ebx
+  201461:	8b 4d 10             	mov    0x10(%ebp),%ecx
+  201464:	6a 00                	push   $0x0
+  201466:	51                   	push   %ecx
+  201467:	ea 48 14 20 00 08 00 	ljmp   $0x8,$0x201448
+  20146e:	5d                   	pop    %ebp
+  20146f:	c3                   	ret
+
+00201470 <enable_sse>:
+  201470:	50                   	push   %eax
+  201471:	0f 20 c0             	mov    %cr0,%eax
+  201474:	83 e0 fb             	and    $0xfffffffb,%eax
+  201477:	83 c8 01             	or     $0x1,%eax
+  20147a:	0f 22 c0             	mov    %eax,%cr0
+  20147d:	0f 20 e0             	mov    %cr4,%eax
+  201480:	0d 00 06 00 00       	or     $0x600,%eax
+  201485:	0f 22 e0             	mov    %eax,%cr4
+  201488:	58                   	pop    %eax
+  201489:	c3                   	ret
+
+0020148a <_start>:
+  20148a:	fa                   	cli
+  20148b:	bc 50 88 20 00       	mov    $0x208850,%esp
+  201490:	53                   	push   %ebx
+  201491:	e8 9e ec ff ff       	call   200134 <boot_main>
+  201496:	83 c4 04             	add    $0x4,%esp
+  201499:	f4                   	hlt
+  20149a:	eb fd                	jmp    201499 <_start+0xf>
+
+0020149c <enable_paging64>:
+  20149c:	50                   	push   %eax
+  20149d:	0f 20 e0             	mov    %cr4,%eax
+  2014a0:	83 c8 20             	or     $0x20,%eax
+  2014a3:	0f 22 e0             	mov    %eax,%cr4
+  2014a6:	b9 80 00 00 c0       	mov    $0xc0000080,%ecx
+  2014ab:	0f 32                	rdmsr
+  2014ad:	0d 00 01 00 00       	or     $0x100,%eax
+  2014b2:	0f 30                	wrmsr
+  2014b4:	0f 20 c0             	mov    %cr0,%eax
+  2014b7:	0d 00 00 00 80       	or     $0x80000000,%eax
+  2014bc:	83 c8 01             	or     $0x1,%eax
+  2014bf:	0f 22 c0             	mov    %eax,%cr0
+  2014c2:	58                   	pop    %eax
+  2014c3:	c3                   	ret
+
+002014c4 <load_pml4>:
+  2014c4:	55                   	push   %ebp
+  2014c5:	89 e5                	mov    %esp,%ebp
+  2014c7:	50                   	push   %eax
+  2014c8:	8b 45 08             	mov    0x8(%ebp),%eax
+  2014cb:	25 00 f0 ff ff       	and    $0xfffff000,%eax
+  2014d0:	0f 22 d8             	mov    %eax,%cr3
+  2014d3:	58                   	pop    %eax
+  2014d4:	5d                   	pop    %ebp
+  2014d5:	c3                   	ret
+
+002014d6 <vga_entry>:
+  2014d6:	55                   	push   %ebp
+  2014d7:	89 e5                	mov    %esp,%ebp
+  2014d9:	83 ec 08             	sub    $0x8,%esp
+  2014dc:	8b 55 08             	mov    0x8(%ebp),%edx
+  2014df:	8b 45 0c             	mov    0xc(%ebp),%eax
+  2014e2:	88 55 fc             	mov    %dl,-0x4(%ebp)
+  2014e5:	88 45 f8             	mov    %al,-0x8(%ebp)
+  2014e8:	0f b6 55 fc          	movzbl -0x4(%ebp),%edx
+  2014ec:	0f b6 45 f8          	movzbl -0x8(%ebp),%eax
+  2014f0:	c1 e0 08             	shl    $0x8,%eax
+  2014f3:	09 d0                	or     %edx,%eax
+  2014f5:	c9                   	leave
+  2014f6:	c3                   	ret
+
+002014f7 <strlen>:
+  2014f7:	55                   	push   %ebp
+  2014f8:	89 e5                	mov    %esp,%ebp
+  2014fa:	83 ec 10             	sub    $0x10,%esp
+  2014fd:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
+  201504:	eb 04                	jmp    20150a <strlen+0x13>
+  201506:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
+  20150a:	8b 55 08             	mov    0x8(%ebp),%edx
+  20150d:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  201510:	01 d0                	add    %edx,%eax
+  201512:	0f b6 00             	movzbl (%eax),%eax
+  201515:	84 c0                	test   %al,%al
+  201517:	75 ed                	jne    201506 <strlen+0xf>
+  201519:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  20151c:	c9                   	leave
+  20151d:	c3                   	ret
+
+0020151e <u64_to_str>:
+  20151e:	55                   	push   %ebp
+  20151f:	89 e5                	mov    %esp,%ebp
+  201521:	56                   	push   %esi
+  201522:	53                   	push   %ebx
+  201523:	83 ec 30             	sub    $0x30,%esp
+  201526:	8b 55 10             	mov    0x10(%ebp),%edx
+  201529:	8b 45 08             	mov    0x8(%ebp),%eax
+  20152c:	89 45 d0             	mov    %eax,-0x30(%ebp)
+  20152f:	8b 45 0c             	mov    0xc(%ebp),%eax
+  201532:	89 45 d4             	mov    %eax,-0x2c(%ebp)
+  201535:	89 d0                	mov    %edx,%eax
+  201537:	88 45 cc             	mov    %al,-0x34(%ebp)
+  20153a:	89 e0                	mov    %esp,%eax
+  20153c:	89 c6                	mov    %eax,%esi
+  20153e:	80 7d cc 24          	cmpb   $0x24,-0x34(%ebp)
+  201542:	76 0a                	jbe    20154e <u64_to_str+0x30>
+  201544:	b8 01 00 00 00       	mov    $0x1,%eax
+  201549:	e9 a6 01 00 00       	jmp    2016f4 <u64_to_str+0x1d6>
+  20154e:	83 7d 14 00          	cmpl   $0x0,0x14(%ebp)
+  201552:	74 06                	je     20155a <u64_to_str+0x3c>
+  201554:	83 7d 1c 00          	cmpl   $0x0,0x1c(%ebp)
+  201558:	75 0a                	jne    201564 <u64_to_str+0x46>
+  20155a:	b8 02 00 00 00       	mov    $0x2,%eax
+  20155f:	e9 90 01 00 00       	jmp    2016f4 <u64_to_str+0x1d6>
+  201564:	83 7d 14 00          	cmpl   $0x0,0x14(%ebp)
+  201568:	7e 12                	jle    20157c <u64_to_str+0x5e>
+  20156a:	8b 45 14             	mov    0x14(%ebp),%eax
+  20156d:	39 45 1c             	cmp    %eax,0x1c(%ebp)
+  201570:	73 0a                	jae    20157c <u64_to_str+0x5e>
+  201572:	b8 03 00 00 00       	mov    $0x3,%eax
+  201577:	e9 78 01 00 00       	jmp    2016f4 <u64_to_str+0x1d6>
+  20157c:	c7 45 f4 01 00 00 00 	movl   $0x1,-0xc(%ebp)
+  201583:	8b 45 1c             	mov    0x1c(%ebp),%eax
+  201586:	89 c2                	mov    %eax,%edx
+  201588:	83 ea 01             	sub    $0x1,%edx
+  20158b:	89 55 e0             	mov    %edx,-0x20(%ebp)
+  20158e:	ba 10 00 00 00       	mov    $0x10,%edx
+  201593:	83 ea 01             	sub    $0x1,%edx
+  201596:	01 d0                	add    %edx,%eax
+  201598:	bb 10 00 00 00       	mov    $0x10,%ebx
+  20159d:	ba 00 00 00 00       	mov    $0x0,%edx
+  2015a2:	f7 f3                	div    %ebx
+  2015a4:	6b c0 10             	imul   $0x10,%eax,%eax
+  2015a7:	29 c4                	sub    %eax,%esp
+  2015a9:	89 e0                	mov    %esp,%eax
+  2015ab:	89 45 dc             	mov    %eax,-0x24(%ebp)
+  2015ae:	0f b6 45 cc          	movzbl -0x34(%ebp),%eax
+  2015b2:	89 c1                	mov    %eax,%ecx
+  2015b4:	bb 00 00 00 00       	mov    $0x0,%ebx
+  2015b9:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  2015bc:	8b 55 d4             	mov    -0x2c(%ebp),%edx
+  2015bf:	53                   	push   %ebx
+  2015c0:	51                   	push   %ecx
+  2015c1:	52                   	push   %edx
+  2015c2:	50                   	push   %eax
+  2015c3:	e8 88 06 00 00       	call   201c50 <__umoddi3>
+  2015c8:	83 c4 10             	add    $0x10,%esp
+  2015cb:	88 45 db             	mov    %al,-0x25(%ebp)
+  2015ce:	0f b6 45 cc          	movzbl -0x34(%ebp),%eax
+  2015d2:	ba 00 00 00 00       	mov    $0x0,%edx
+  2015d7:	52                   	push   %edx
+  2015d8:	50                   	push   %eax
+  2015d9:	ff 75 d4             	push   -0x2c(%ebp)
+  2015dc:	ff 75 d0             	push   -0x30(%ebp)
+  2015df:	e8 4c 05 00 00       	call   201b30 <__udivdi3>
+  2015e4:	83 c4 10             	add    $0x10,%esp
+  2015e7:	89 45 d0             	mov    %eax,-0x30(%ebp)
+  2015ea:	89 55 d4             	mov    %edx,-0x2c(%ebp)
+  2015ed:	0f b6 45 db          	movzbl -0x25(%ebp),%eax
+  2015f1:	83 c0 30             	add    $0x30,%eax
+  2015f4:	88 45 f3             	mov    %al,-0xd(%ebp)
+  2015f7:	80 7d db 09          	cmpb   $0x9,-0x25(%ebp)
+  2015fb:	76 0a                	jbe    201607 <u64_to_str+0xe9>
+  2015fd:	0f b6 45 db          	movzbl -0x25(%ebp),%eax
+  201601:	83 c0 57             	add    $0x57,%eax
+  201604:	88 45 f3             	mov    %al,-0xd(%ebp)
+  201607:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  20160a:	83 c0 01             	add    $0x1,%eax
+  20160d:	39 45 1c             	cmp    %eax,0x1c(%ebp)
+  201610:	73 0a                	jae    20161c <u64_to_str+0xfe>
+  201612:	b8 04 00 00 00       	mov    $0x4,%eax
+  201617:	e9 d8 00 00 00       	jmp    2016f4 <u64_to_str+0x1d6>
+  20161c:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  20161f:	8d 48 ff             	lea    -0x1(%eax),%ecx
+  201622:	8b 45 dc             	mov    -0x24(%ebp),%eax
+  201625:	0f b6 55 f3          	movzbl -0xd(%ebp),%edx
+  201629:	88 14 08             	mov    %dl,(%eax,%ecx,1)
+  20162c:	8b 45 d0             	mov    -0x30(%ebp),%eax
+  20162f:	0b 45 d4             	or     -0x2c(%ebp),%eax
+  201632:	74 09                	je     20163d <u64_to_str+0x11f>
+  201634:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
+  201638:	e9 71 ff ff ff       	jmp    2015ae <u64_to_str+0x90>
+  20163d:	90                   	nop
+  20163e:	83 7d 14 00          	cmpl   $0x0,0x14(%ebp)
+  201642:	7e 71                	jle    2016b5 <u64_to_str+0x197>
+  201644:	8b 45 14             	mov    0x14(%ebp),%eax
+  201647:	39 45 f4             	cmp    %eax,-0xc(%ebp)
+  20164a:	73 69                	jae    2016b5 <u64_to_str+0x197>
+  20164c:	c7 45 ec 00 00 00 00 	movl   $0x0,-0x14(%ebp)
+  201653:	eb 0f                	jmp    201664 <u64_to_str+0x146>
+  201655:	8b 55 18             	mov    0x18(%ebp),%edx
+  201658:	8b 45 ec             	mov    -0x14(%ebp),%eax
+  20165b:	01 d0                	add    %edx,%eax
+  20165d:	c6 00 30             	movb   $0x30,(%eax)
+  201660:	83 45 ec 01          	addl   $0x1,-0x14(%ebp)
+  201664:	8b 45 14             	mov    0x14(%ebp),%eax
+  201667:	2b 45 f4             	sub    -0xc(%ebp),%eax
+  20166a:	39 45 ec             	cmp    %eax,-0x14(%ebp)
+  20166d:	72 e6                	jb     201655 <u64_to_str+0x137>
+  20166f:	c7 45 e8 00 00 00 00 	movl   $0x0,-0x18(%ebp)
+  201676:	eb 28                	jmp    2016a0 <u64_to_str+0x182>
+  201678:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  20167b:	2b 45 e8             	sub    -0x18(%ebp),%eax
+  20167e:	8d 48 ff             	lea    -0x1(%eax),%ecx
+  201681:	8b 55 14             	mov    0x14(%ebp),%edx
+  201684:	8b 45 e8             	mov    -0x18(%ebp),%eax
+  201687:	01 d0                	add    %edx,%eax
+  201689:	2b 45 f4             	sub    -0xc(%ebp),%eax
+  20168c:	89 c2                	mov    %eax,%edx
+  20168e:	8b 45 18             	mov    0x18(%ebp),%eax
+  201691:	01 c2                	add    %eax,%edx
+  201693:	8b 45 dc             	mov    -0x24(%ebp),%eax
+  201696:	0f b6 04 08          	movzbl (%eax,%ecx,1),%eax
+  20169a:	88 02                	mov    %al,(%edx)
+  20169c:	83 45 e8 01          	addl   $0x1,-0x18(%ebp)
+  2016a0:	8b 45 e8             	mov    -0x18(%ebp),%eax
+  2016a3:	3b 45 f4             	cmp    -0xc(%ebp),%eax
+  2016a6:	72 d0                	jb     201678 <u64_to_str+0x15a>
+  2016a8:	8b 55 14             	mov    0x14(%ebp),%edx
+  2016ab:	8b 45 18             	mov    0x18(%ebp),%eax
+  2016ae:	01 d0                	add    %edx,%eax
+  2016b0:	c6 00 00             	movb   $0x0,(%eax)
+  2016b3:	eb 3a                	jmp    2016ef <u64_to_str+0x1d1>
+  2016b5:	c7 45 e4 00 00 00 00 	movl   $0x0,-0x1c(%ebp)
+  2016bc:	eb 1e                	jmp    2016dc <u64_to_str+0x1be>
+  2016be:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2016c1:	2b 45 e4             	sub    -0x1c(%ebp),%eax
+  2016c4:	8d 48 ff             	lea    -0x1(%eax),%ecx
+  2016c7:	8b 55 18             	mov    0x18(%ebp),%edx
+  2016ca:	8b 45 e4             	mov    -0x1c(%ebp),%eax
+  2016cd:	01 c2                	add    %eax,%edx
+  2016cf:	8b 45 dc             	mov    -0x24(%ebp),%eax
+  2016d2:	0f b6 04 08          	movzbl (%eax,%ecx,1),%eax
+  2016d6:	88 02                	mov    %al,(%edx)
+  2016d8:	83 45 e4 01          	addl   $0x1,-0x1c(%ebp)
+  2016dc:	8b 45 e4             	mov    -0x1c(%ebp),%eax
+  2016df:	3b 45 f4             	cmp    -0xc(%ebp),%eax
+  2016e2:	72 da                	jb     2016be <u64_to_str+0x1a0>
+  2016e4:	8b 55 18             	mov    0x18(%ebp),%edx
+  2016e7:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2016ea:	01 d0                	add    %edx,%eax
+  2016ec:	c6 00 00             	movb   $0x0,(%eax)
+  2016ef:	b8 00 00 00 00       	mov    $0x0,%eax
+  2016f4:	89 f4                	mov    %esi,%esp
+  2016f6:	8d 65 f8             	lea    -0x8(%ebp),%esp
+  2016f9:	5b                   	pop    %ebx
+  2016fa:	5e                   	pop    %esi
+  2016fb:	5d                   	pop    %ebp
+  2016fc:	c3                   	ret
+
+002016fd <vga_setcolor>:
+  2016fd:	55                   	push   %ebp
+  2016fe:	89 e5                	mov    %esp,%ebp
+  201700:	8b 45 0c             	mov    0xc(%ebp),%eax
+  201703:	c1 e0 04             	shl    $0x4,%eax
+  201706:	89 c2                	mov    %eax,%edx
+  201708:	8b 45 08             	mov    0x8(%ebp),%eax
+  20170b:	09 d0                	or     %edx,%eax
+  20170d:	a2 58 88 20 00       	mov    %al,0x208858
+  201712:	90                   	nop
+  201713:	5d                   	pop    %ebp
+  201714:	c3                   	ret
+
+00201715 <vga_setfgcolor>:
+  201715:	55                   	push   %ebp
+  201716:	89 e5                	mov    %esp,%ebp
+  201718:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  20171f:	83 e0 f0             	and    $0xfffffff0,%eax
+  201722:	89 c2                	mov    %eax,%edx
+  201724:	8b 45 08             	mov    0x8(%ebp),%eax
+  201727:	09 d0                	or     %edx,%eax
+  201729:	a2 58 88 20 00       	mov    %al,0x208858
+  20172e:	90                   	nop
+  20172f:	5d                   	pop    %ebp
+  201730:	c3                   	ret
+
+00201731 <vga_setbgcolor>:
+  201731:	55                   	push   %ebp
+  201732:	89 e5                	mov    %esp,%ebp
+  201734:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  20173b:	83 e0 0f             	and    $0xf,%eax
+  20173e:	89 c2                	mov    %eax,%edx
+  201740:	8b 45 08             	mov    0x8(%ebp),%eax
+  201743:	c1 e0 04             	shl    $0x4,%eax
+  201746:	09 d0                	or     %edx,%eax
+  201748:	a2 58 88 20 00       	mov    %al,0x208858
+  20174d:	90                   	nop
+  20174e:	5d                   	pop    %ebp
+  20174f:	c3                   	ret
+
+00201750 <vga_initialize>:
+  201750:	55                   	push   %ebp
+  201751:	89 e5                	mov    %esp,%ebp
+  201753:	c7 05 50 88 20 00 00 	movl   $0x0,0x208850
+  20175a:	00 00 00 
+  20175d:	c7 05 54 88 20 00 00 	movl   $0x0,0x208854
+  201764:	00 00 00 
+  201767:	6a 00                	push   $0x0
+  201769:	6a 07                	push   $0x7
+  20176b:	e8 8d ff ff ff       	call   2016fd <vga_setcolor>
+  201770:	83 c4 08             	add    $0x8,%esp
+  201773:	90                   	nop
+  201774:	c9                   	leave
+  201775:	c3                   	ret
+
+00201776 <vga_clear>:
+  201776:	55                   	push   %ebp
+  201777:	89 e5                	mov    %esp,%ebp
+  201779:	53                   	push   %ebx
+  20177a:	83 ec 10             	sub    $0x10,%esp
+  20177d:	c7 45 f8 00 00 00 00 	movl   $0x0,-0x8(%ebp)
+  201784:	eb 54                	jmp    2017da <vga_clear+0x64>
+  201786:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
+  20178d:	eb 41                	jmp    2017d0 <vga_clear+0x5a>
+  20178f:	8b 55 f8             	mov    -0x8(%ebp),%edx
+  201792:	89 d0                	mov    %edx,%eax
+  201794:	c1 e0 02             	shl    $0x2,%eax
+  201797:	01 d0                	add    %edx,%eax
+  201799:	c1 e0 04             	shl    $0x4,%eax
+  20179c:	89 c2                	mov    %eax,%edx
+  20179e:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  2017a1:	01 d0                	add    %edx,%eax
+  2017a3:	89 45 f0             	mov    %eax,-0x10(%ebp)
+  2017a6:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  2017ad:	0f b6 c0             	movzbl %al,%eax
+  2017b0:	8b 15 10 31 20 00    	mov    0x203110,%edx
+  2017b6:	8b 4d f0             	mov    -0x10(%ebp),%ecx
+  2017b9:	01 c9                	add    %ecx,%ecx
+  2017bb:	8d 1c 0a             	lea    (%edx,%ecx,1),%ebx
+  2017be:	50                   	push   %eax
+  2017bf:	6a 20                	push   $0x20
+  2017c1:	e8 10 fd ff ff       	call   2014d6 <vga_entry>
+  2017c6:	83 c4 08             	add    $0x8,%esp
+  2017c9:	66 89 03             	mov    %ax,(%ebx)
+  2017cc:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
+  2017d0:	83 7d f4 4f          	cmpl   $0x4f,-0xc(%ebp)
+  2017d4:	76 b9                	jbe    20178f <vga_clear+0x19>
+  2017d6:	83 45 f8 01          	addl   $0x1,-0x8(%ebp)
+  2017da:	83 7d f8 18          	cmpl   $0x18,-0x8(%ebp)
+  2017de:	76 a6                	jbe    201786 <vga_clear+0x10>
+  2017e0:	90                   	nop
+  2017e1:	90                   	nop
+  2017e2:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+  2017e5:	c9                   	leave
+  2017e6:	c3                   	ret
+
+002017e7 <vga_scrolldown>:
+  2017e7:	55                   	push   %ebp
+  2017e8:	89 e5                	mov    %esp,%ebp
+  2017ea:	53                   	push   %ebx
+  2017eb:	83 ec 20             	sub    $0x20,%esp
+  2017ee:	c7 45 f8 01 00 00 00 	movl   $0x1,-0x8(%ebp)
+  2017f5:	eb 67                	jmp    20185e <vga_scrolldown+0x77>
+  2017f7:	c7 45 f4 00 00 00 00 	movl   $0x0,-0xc(%ebp)
+  2017fe:	eb 54                	jmp    201854 <vga_scrolldown+0x6d>
+  201800:	8b 55 f8             	mov    -0x8(%ebp),%edx
+  201803:	89 d0                	mov    %edx,%eax
+  201805:	c1 e0 02             	shl    $0x2,%eax
+  201808:	01 d0                	add    %edx,%eax
+  20180a:	c1 e0 04             	shl    $0x4,%eax
+  20180d:	89 c2                	mov    %eax,%edx
+  20180f:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  201812:	01 d0                	add    %edx,%eax
+  201814:	89 45 e8             	mov    %eax,-0x18(%ebp)
+  201817:	8b 45 f8             	mov    -0x8(%ebp),%eax
+  20181a:	8d 50 ff             	lea    -0x1(%eax),%edx
+  20181d:	89 d0                	mov    %edx,%eax
+  20181f:	c1 e0 02             	shl    $0x2,%eax
+  201822:	01 d0                	add    %edx,%eax
+  201824:	c1 e0 04             	shl    $0x4,%eax
+  201827:	89 c2                	mov    %eax,%edx
+  201829:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  20182c:	01 d0                	add    %edx,%eax
+  20182e:	89 45 e4             	mov    %eax,-0x1c(%ebp)
+  201831:	a1 10 31 20 00       	mov    0x203110,%eax
+  201836:	8b 55 e8             	mov    -0x18(%ebp),%edx
+  201839:	01 d2                	add    %edx,%edx
+  20183b:	01 d0                	add    %edx,%eax
+  20183d:	8b 15 10 31 20 00    	mov    0x203110,%edx
+  201843:	8b 4d e4             	mov    -0x1c(%ebp),%ecx
+  201846:	01 c9                	add    %ecx,%ecx
+  201848:	01 ca                	add    %ecx,%edx
+  20184a:	0f b7 00             	movzwl (%eax),%eax
+  20184d:	66 89 02             	mov    %ax,(%edx)
+  201850:	83 45 f4 01          	addl   $0x1,-0xc(%ebp)
+  201854:	83 7d f4 4f          	cmpl   $0x4f,-0xc(%ebp)
+  201858:	7e a6                	jle    201800 <vga_scrolldown+0x19>
+  20185a:	83 45 f8 01          	addl   $0x1,-0x8(%ebp)
+  20185e:	83 7d f8 18          	cmpl   $0x18,-0x8(%ebp)
+  201862:	7e 93                	jle    2017f7 <vga_scrolldown+0x10>
+  201864:	c7 45 f0 00 00 00 00 	movl   $0x0,-0x10(%ebp)
+  20186b:	eb 35                	jmp    2018a2 <vga_scrolldown+0xbb>
+  20186d:	8b 45 f0             	mov    -0x10(%ebp),%eax
+  201870:	05 80 07 00 00       	add    $0x780,%eax
+  201875:	89 45 ec             	mov    %eax,-0x14(%ebp)
+  201878:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  20187f:	0f b6 c0             	movzbl %al,%eax
+  201882:	8b 15 10 31 20 00    	mov    0x203110,%edx
+  201888:	8b 4d ec             	mov    -0x14(%ebp),%ecx
+  20188b:	01 c9                	add    %ecx,%ecx
+  20188d:	8d 1c 0a             	lea    (%edx,%ecx,1),%ebx
+  201890:	50                   	push   %eax
+  201891:	6a 20                	push   $0x20
+  201893:	e8 3e fc ff ff       	call   2014d6 <vga_entry>
+  201898:	83 c4 08             	add    $0x8,%esp
+  20189b:	66 89 03             	mov    %ax,(%ebx)
+  20189e:	83 45 f0 01          	addl   $0x1,-0x10(%ebp)
+  2018a2:	83 7d f0 4f          	cmpl   $0x4f,-0x10(%ebp)
+  2018a6:	7e c5                	jle    20186d <vga_scrolldown+0x86>
+  2018a8:	90                   	nop
+  2018a9:	90                   	nop
+  2018aa:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+  2018ad:	c9                   	leave
+  2018ae:	c3                   	ret
+
+002018af <vga_putentryat>:
+  2018af:	55                   	push   %ebp
+  2018b0:	89 e5                	mov    %esp,%ebp
+  2018b2:	53                   	push   %ebx
+  2018b3:	83 ec 18             	sub    $0x18,%esp
+  2018b6:	8b 55 08             	mov    0x8(%ebp),%edx
+  2018b9:	8b 45 0c             	mov    0xc(%ebp),%eax
+  2018bc:	88 55 e8             	mov    %dl,-0x18(%ebp)
+  2018bf:	88 45 e4             	mov    %al,-0x1c(%ebp)
+  2018c2:	8b 55 14             	mov    0x14(%ebp),%edx
+  2018c5:	89 d0                	mov    %edx,%eax
+  2018c7:	c1 e0 02             	shl    $0x2,%eax
+  2018ca:	01 d0                	add    %edx,%eax
+  2018cc:	c1 e0 04             	shl    $0x4,%eax
+  2018cf:	89 c2                	mov    %eax,%edx
+  2018d1:	8b 45 10             	mov    0x10(%ebp),%eax
+  2018d4:	01 d0                	add    %edx,%eax
+  2018d6:	89 45 f8             	mov    %eax,-0x8(%ebp)
+  2018d9:	0f b6 55 e4          	movzbl -0x1c(%ebp),%edx
+  2018dd:	0f b6 45 e8          	movzbl -0x18(%ebp),%eax
+  2018e1:	0f b6 c0             	movzbl %al,%eax
+  2018e4:	8b 0d 10 31 20 00    	mov    0x203110,%ecx
+  2018ea:	8b 5d f8             	mov    -0x8(%ebp),%ebx
+  2018ed:	01 db                	add    %ebx,%ebx
+  2018ef:	01 cb                	add    %ecx,%ebx
+  2018f1:	52                   	push   %edx
+  2018f2:	50                   	push   %eax
+  2018f3:	e8 de fb ff ff       	call   2014d6 <vga_entry>
+  2018f8:	83 c4 08             	add    $0x8,%esp
+  2018fb:	66 89 03             	mov    %ax,(%ebx)
+  2018fe:	90                   	nop
+  2018ff:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+  201902:	c9                   	leave
+  201903:	c3                   	ret
+
+00201904 <vga_putchar>:
+  201904:	55                   	push   %ebp
+  201905:	89 e5                	mov    %esp,%ebp
+  201907:	53                   	push   %ebx
+  201908:	83 ec 04             	sub    $0x4,%esp
+  20190b:	8b 45 08             	mov    0x8(%ebp),%eax
+  20190e:	88 45 f8             	mov    %al,-0x8(%ebp)
+  201911:	0f b6 05 59 88 20 00 	movzbl 0x208859,%eax
+  201918:	84 c0                	test   %al,%al
+  20191a:	74 0c                	je     201928 <vga_putchar+0x24>
+  20191c:	c6 05 59 88 20 00 00 	movb   $0x0,0x208859
+  201923:	e8 bf fe ff ff       	call   2017e7 <vga_scrolldown>
+  201928:	80 7d f8 0a          	cmpb   $0xa,-0x8(%ebp)
+  20192c:	74 26                	je     201954 <vga_putchar+0x50>
+  20192e:	8b 1d 50 88 20 00    	mov    0x208850,%ebx
+  201934:	8b 0d 54 88 20 00    	mov    0x208854,%ecx
+  20193a:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  201941:	0f b6 d0             	movzbl %al,%edx
+  201944:	0f be 45 f8          	movsbl -0x8(%ebp),%eax
+  201948:	53                   	push   %ebx
+  201949:	51                   	push   %ecx
+  20194a:	52                   	push   %edx
+  20194b:	50                   	push   %eax
+  20194c:	e8 5e ff ff ff       	call   2018af <vga_putentryat>
+  201951:	83 c4 10             	add    $0x10,%esp
+  201954:	a1 54 88 20 00       	mov    0x208854,%eax
+  201959:	83 c0 01             	add    $0x1,%eax
+  20195c:	a3 54 88 20 00       	mov    %eax,0x208854
+  201961:	a1 54 88 20 00       	mov    0x208854,%eax
+  201966:	83 f8 50             	cmp    $0x50,%eax
+  201969:	74 06                	je     201971 <vga_putchar+0x6d>
+  20196b:	80 7d f8 0a          	cmpb   $0xa,-0x8(%ebp)
+  20196f:	75 2a                	jne    20199b <vga_putchar+0x97>
+  201971:	c7 05 54 88 20 00 00 	movl   $0x0,0x208854
+  201978:	00 00 00 
+  20197b:	a1 50 88 20 00       	mov    0x208850,%eax
+  201980:	83 f8 17             	cmp    $0x17,%eax
+  201983:	77 0f                	ja     201994 <vga_putchar+0x90>
+  201985:	a1 50 88 20 00       	mov    0x208850,%eax
+  20198a:	83 c0 01             	add    $0x1,%eax
+  20198d:	a3 50 88 20 00       	mov    %eax,0x208850
+  201992:	eb 07                	jmp    20199b <vga_putchar+0x97>
+  201994:	c6 05 59 88 20 00 01 	movb   $0x1,0x208859
+  20199b:	90                   	nop
+  20199c:	8b 5d fc             	mov    -0x4(%ebp),%ebx
+  20199f:	c9                   	leave
+  2019a0:	c3                   	ret
+
+002019a1 <vga_write>:
+  2019a1:	55                   	push   %ebp
+  2019a2:	89 e5                	mov    %esp,%ebp
+  2019a4:	83 ec 10             	sub    $0x10,%esp
+  2019a7:	c7 45 fc 00 00 00 00 	movl   $0x0,-0x4(%ebp)
+  2019ae:	eb 1b                	jmp    2019cb <vga_write+0x2a>
+  2019b0:	8b 55 08             	mov    0x8(%ebp),%edx
+  2019b3:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  2019b6:	01 d0                	add    %edx,%eax
+  2019b8:	0f b6 00             	movzbl (%eax),%eax
+  2019bb:	0f be c0             	movsbl %al,%eax
+  2019be:	50                   	push   %eax
+  2019bf:	e8 40 ff ff ff       	call   201904 <vga_putchar>
+  2019c4:	83 c4 04             	add    $0x4,%esp
+  2019c7:	83 45 fc 01          	addl   $0x1,-0x4(%ebp)
+  2019cb:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  2019ce:	3b 45 0c             	cmp    0xc(%ebp),%eax
+  2019d1:	72 dd                	jb     2019b0 <vga_write+0xf>
+  2019d3:	90                   	nop
+  2019d4:	90                   	nop
+  2019d5:	c9                   	leave
+  2019d6:	c3                   	ret
+
+002019d7 <vga_print>:
+  2019d7:	55                   	push   %ebp
+  2019d8:	89 e5                	mov    %esp,%ebp
+  2019da:	ff 75 08             	push   0x8(%ebp)
+  2019dd:	e8 15 fb ff ff       	call   2014f7 <strlen>
+  2019e2:	83 c4 04             	add    $0x4,%esp
+  2019e5:	50                   	push   %eax
+  2019e6:	ff 75 08             	push   0x8(%ebp)
+  2019e9:	e8 b3 ff ff ff       	call   2019a1 <vga_write>
+  2019ee:	83 c4 08             	add    $0x8,%esp
+  2019f1:	90                   	nop
+  2019f2:	c9                   	leave
+  2019f3:	c3                   	ret
+
+002019f4 <vga_print_uint>:
+  2019f4:	55                   	push   %ebp
+  2019f5:	89 e5                	mov    %esp,%ebp
+  2019f7:	83 ec 68             	sub    $0x68,%esp
+  2019fa:	8b 55 10             	mov    0x10(%ebp),%edx
+  2019fd:	8b 45 08             	mov    0x8(%ebp),%eax
+  201a00:	89 45 a0             	mov    %eax,-0x60(%ebp)
+  201a03:	8b 45 0c             	mov    0xc(%ebp),%eax
+  201a06:	89 45 a4             	mov    %eax,-0x5c(%ebp)
+  201a09:	89 d0                	mov    %edx,%eax
+  201a0b:	88 45 9c             	mov    %al,-0x64(%ebp)
+  201a0e:	0f b6 45 9c          	movzbl -0x64(%ebp),%eax
+  201a12:	83 ec 08             	sub    $0x8,%esp
+  201a15:	6a 41                	push   $0x41
+  201a17:	8d 55 b3             	lea    -0x4d(%ebp),%edx
+  201a1a:	52                   	push   %edx
+  201a1b:	ff 75 14             	push   0x14(%ebp)
+  201a1e:	50                   	push   %eax
+  201a1f:	ff 75 a4             	push   -0x5c(%ebp)
+  201a22:	ff 75 a0             	push   -0x60(%ebp)
+  201a25:	e8 f4 fa ff ff       	call   20151e <u64_to_str>
+  201a2a:	83 c4 20             	add    $0x20,%esp
+  201a2d:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  201a30:	83 7d f4 00          	cmpl   $0x0,-0xc(%ebp)
+  201a34:	75 11                	jne    201a47 <vga_print_uint+0x53>
+  201a36:	83 ec 0c             	sub    $0xc,%esp
+  201a39:	8d 45 b3             	lea    -0x4d(%ebp),%eax
+  201a3c:	50                   	push   %eax
+  201a3d:	e8 95 ff ff ff       	call   2019d7 <vga_print>
+  201a42:	83 c4 10             	add    $0x10,%esp
+  201a45:	eb 3a                	jmp    201a81 <vga_print_uint+0x8d>
+  201a47:	83 ec 0c             	sub    $0xc,%esp
+  201a4a:	68 4d 26 20 00       	push   $0x20264d
+  201a4f:	e8 83 ff ff ff       	call   2019d7 <vga_print>
+  201a54:	83 c4 10             	add    $0x10,%esp
+  201a57:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  201a5a:	99                   	cltd
+  201a5b:	83 ec 08             	sub    $0x8,%esp
+  201a5e:	6a 41                	push   $0x41
+  201a60:	8d 4d b3             	lea    -0x4d(%ebp),%ecx
+  201a63:	51                   	push   %ecx
+  201a64:	6a ff                	push   $0xffffffff
+  201a66:	6a 0a                	push   $0xa
+  201a68:	52                   	push   %edx
+  201a69:	50                   	push   %eax
+  201a6a:	e8 af fa ff ff       	call   20151e <u64_to_str>
+  201a6f:	83 c4 20             	add    $0x20,%esp
+  201a72:	83 ec 0c             	sub    $0xc,%esp
+  201a75:	8d 45 b3             	lea    -0x4d(%ebp),%eax
+  201a78:	50                   	push   %eax
+  201a79:	e8 59 ff ff ff       	call   2019d7 <vga_print>
+  201a7e:	83 c4 10             	add    $0x10,%esp
+  201a81:	90                   	nop
+  201a82:	c9                   	leave
+  201a83:	c3                   	ret
+
+00201a84 <vga_print_color>:
+  201a84:	55                   	push   %ebp
+  201a85:	89 e5                	mov    %esp,%ebp
+  201a87:	83 ec 10             	sub    $0x10,%esp
+  201a8a:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  201a91:	0f b6 c0             	movzbl %al,%eax
+  201a94:	89 45 fc             	mov    %eax,-0x4(%ebp)
+  201a97:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  201a9e:	c0 e8 04             	shr    $0x4,%al
+  201aa1:	0f b6 c0             	movzbl %al,%eax
+  201aa4:	83 e0 0f             	and    $0xf,%eax
+  201aa7:	50                   	push   %eax
+  201aa8:	ff 75 0c             	push   0xc(%ebp)
+  201aab:	e8 4d fc ff ff       	call   2016fd <vga_setcolor>
+  201ab0:	83 c4 08             	add    $0x8,%esp
+  201ab3:	ff 75 08             	push   0x8(%ebp)
+  201ab6:	e8 1c ff ff ff       	call   2019d7 <vga_print>
+  201abb:	83 c4 04             	add    $0x4,%esp
+  201abe:	8b 45 fc             	mov    -0x4(%ebp),%eax
+  201ac1:	a2 58 88 20 00       	mov    %al,0x208858
+  201ac6:	90                   	nop
+  201ac7:	c9                   	leave
+  201ac8:	c3                   	ret
+
+00201ac9 <vga_print_uint_color>:
+  201ac9:	55                   	push   %ebp
+  201aca:	89 e5                	mov    %esp,%ebp
+  201acc:	83 ec 28             	sub    $0x28,%esp
+  201acf:	8b 55 10             	mov    0x10(%ebp),%edx
+  201ad2:	8b 45 08             	mov    0x8(%ebp),%eax
+  201ad5:	89 45 e0             	mov    %eax,-0x20(%ebp)
+  201ad8:	8b 45 0c             	mov    0xc(%ebp),%eax
+  201adb:	89 45 e4             	mov    %eax,-0x1c(%ebp)
+  201ade:	89 d0                	mov    %edx,%eax
+  201ae0:	88 45 dc             	mov    %al,-0x24(%ebp)
+  201ae3:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  201aea:	0f b6 c0             	movzbl %al,%eax
+  201aed:	89 45 f4             	mov    %eax,-0xc(%ebp)
+  201af0:	0f b6 05 58 88 20 00 	movzbl 0x208858,%eax
+  201af7:	c0 e8 04             	shr    $0x4,%al
+  201afa:	0f b6 c0             	movzbl %al,%eax
+  201afd:	83 e0 0f             	and    $0xf,%eax
+  201b00:	50                   	push   %eax
+  201b01:	ff 75 18             	push   0x18(%ebp)
+  201b04:	e8 f4 fb ff ff       	call   2016fd <vga_setcolor>
+  201b09:	83 c4 08             	add    $0x8,%esp
+  201b0c:	0f b6 45 dc          	movzbl -0x24(%ebp),%eax
+  201b10:	ff 75 14             	push   0x14(%ebp)
+  201b13:	50                   	push   %eax
+  201b14:	ff 75 e4             	push   -0x1c(%ebp)
+  201b17:	ff 75 e0             	push   -0x20(%ebp)
+  201b1a:	e8 d5 fe ff ff       	call   2019f4 <vga_print_uint>
+  201b1f:	83 c4 10             	add    $0x10,%esp
+  201b22:	8b 45 f4             	mov    -0xc(%ebp),%eax
+  201b25:	a2 58 88 20 00       	mov    %al,0x208858
+  201b2a:	90                   	nop
+  201b2b:	c9                   	leave
+  201b2c:	c3                   	ret
+  201b2d:	66 90                	xchg   %ax,%ax
+  201b2f:	90                   	nop
+
+00201b30 <__udivdi3>:
+  201b30:	55                   	push   %ebp
+  201b31:	89 e5                	mov    %esp,%ebp
+  201b33:	57                   	push   %edi
+  201b34:	56                   	push   %esi
+  201b35:	53                   	push   %ebx
+  201b36:	83 ec 1c             	sub    $0x1c,%esp
+  201b39:	8b 75 08             	mov    0x8(%ebp),%esi
+  201b3c:	8b 45 14             	mov    0x14(%ebp),%eax
+  201b3f:	8b 5d 0c             	mov    0xc(%ebp),%ebx
+  201b42:	8b 7d 10             	mov    0x10(%ebp),%edi
+  201b45:	89 75 e4             	mov    %esi,-0x1c(%ebp)
+  201b48:	85 c0                	test   %eax,%eax
+  201b4a:	75 1c                	jne    201b68 <__udivdi3+0x38>
+  201b4c:	39 fb                	cmp    %edi,%ebx
+  201b4e:	73 50                	jae    201ba0 <__udivdi3+0x70>
+  201b50:	89 f0                	mov    %esi,%eax
+  201b52:	31 f6                	xor    %esi,%esi
+  201b54:	89 da                	mov    %ebx,%edx
+  201b56:	f7 f7                	div    %edi
+  201b58:	89 f2                	mov    %esi,%edx
+  201b5a:	83 c4 1c             	add    $0x1c,%esp
+  201b5d:	5b                   	pop    %ebx
+  201b5e:	5e                   	pop    %esi
+  201b5f:	5f                   	pop    %edi
+  201b60:	5d                   	pop    %ebp
+  201b61:	c3                   	ret
+  201b62:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+  201b68:	39 c3                	cmp    %eax,%ebx
+  201b6a:	73 14                	jae    201b80 <__udivdi3+0x50>
+  201b6c:	31 f6                	xor    %esi,%esi
+  201b6e:	31 c0                	xor    %eax,%eax
+  201b70:	89 f2                	mov    %esi,%edx
+  201b72:	83 c4 1c             	add    $0x1c,%esp
+  201b75:	5b                   	pop    %ebx
+  201b76:	5e                   	pop    %esi
+  201b77:	5f                   	pop    %edi
+  201b78:	5d                   	pop    %ebp
+  201b79:	c3                   	ret
+  201b7a:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+  201b80:	0f bd f0             	bsr    %eax,%esi
+  201b83:	83 f6 1f             	xor    $0x1f,%esi
+  201b86:	75 48                	jne    201bd0 <__udivdi3+0xa0>
+  201b88:	39 d8                	cmp    %ebx,%eax
+  201b8a:	72 07                	jb     201b93 <__udivdi3+0x63>
+  201b8c:	31 c0                	xor    %eax,%eax
+  201b8e:	39 7d e4             	cmp    %edi,-0x1c(%ebp)
+  201b91:	72 dd                	jb     201b70 <__udivdi3+0x40>
+  201b93:	b8 01 00 00 00       	mov    $0x1,%eax
+  201b98:	eb d6                	jmp    201b70 <__udivdi3+0x40>
+  201b9a:	8d b6 00 00 00 00    	lea    0x0(%esi),%esi
+  201ba0:	89 f9                	mov    %edi,%ecx
+  201ba2:	85 ff                	test   %edi,%edi
+  201ba4:	75 0b                	jne    201bb1 <__udivdi3+0x81>
+  201ba6:	b8 01 00 00 00       	mov    $0x1,%eax
+  201bab:	31 d2                	xor    %edx,%edx
+  201bad:	f7 f7                	div    %edi
+  201baf:	89 c1                	mov    %eax,%ecx
+  201bb1:	31 d2                	xor    %edx,%edx
+  201bb3:	89 d8                	mov    %ebx,%eax
+  201bb5:	f7 f1                	div    %ecx
+  201bb7:	89 c6                	mov    %eax,%esi
+  201bb9:	8b 45 e4             	mov    -0x1c(%ebp),%eax
+  201bbc:	f7 f1                	div    %ecx
+  201bbe:	89 f2                	mov    %esi,%edx
+  201bc0:	83 c4 1c             	add    $0x1c,%esp
+  201bc3:	5b                   	pop    %ebx
+  201bc4:	5e                   	pop    %esi
+  201bc5:	5f                   	pop    %edi
+  201bc6:	5d                   	pop    %ebp
+  201bc7:	c3                   	ret
+  201bc8:	2e 8d b4 26 00 00 00 	lea    %cs:0x0(%esi,%eiz,1),%esi
+  201bcf:	00 
+  201bd0:	89 f1                	mov    %esi,%ecx
+  201bd2:	ba 20 00 00 00       	mov    $0x20,%edx
+  201bd7:	29 f2                	sub    %esi,%edx
+  201bd9:	d3 e0                	shl    %cl,%eax
+  201bdb:	89 45 e0             	mov    %eax,-0x20(%ebp)
+  201bde:	89 d1                	mov    %edx,%ecx
+  201be0:	89 f8                	mov    %edi,%eax
+  201be2:	d3 e8                	shr    %cl,%eax
+  201be4:	8b 4d e0             	mov    -0x20(%ebp),%ecx
+  201be7:	09 c1                	or     %eax,%ecx
+  201be9:	89 d8                	mov    %ebx,%eax
+  201beb:	89 4d e0             	mov    %ecx,-0x20(%ebp)
+  201bee:	89 f1                	mov    %esi,%ecx
+  201bf0:	d3 e7                	shl    %cl,%edi
+  201bf2:	89 d1                	mov    %edx,%ecx
+  201bf4:	d3 e8                	shr    %cl,%eax
+  201bf6:	89 f1                	mov    %esi,%ecx
+  201bf8:	89 7d dc             	mov    %edi,-0x24(%ebp)
+  201bfb:	89 45 d8             	mov    %eax,-0x28(%ebp)
+  201bfe:	8b 45 e4             	mov    -0x1c(%ebp),%eax
+  201c01:	d3 e3                	shl    %cl,%ebx
+  201c03:	89 d1                	mov    %edx,%ecx
+  201c05:	8b 55 d8             	mov    -0x28(%ebp),%edx
+  201c08:	d3 e8                	shr    %cl,%eax
+  201c0a:	09 d8                	or     %ebx,%eax
+  201c0c:	f7 75 e0             	divl   -0x20(%ebp)
+  201c0f:	89 d3                	mov    %edx,%ebx
+  201c11:	89 c7                	mov    %eax,%edi
+  201c13:	f7 65 dc             	mull   -0x24(%ebp)
+  201c16:	89 45 e0             	mov    %eax,-0x20(%ebp)
+  201c19:	39 d3                	cmp    %edx,%ebx
+  201c1b:	72 23                	jb     201c40 <__udivdi3+0x110>
+  201c1d:	8b 45 e4             	mov    -0x1c(%ebp),%eax
+  201c20:	89 f1                	mov    %esi,%ecx
+  201c22:	d3 e0                	shl    %cl,%eax
+  201c24:	3b 45 e0             	cmp    -0x20(%ebp),%eax
+  201c27:	73 04                	jae    201c2d <__udivdi3+0xfd>
+  201c29:	39 d3                	cmp    %edx,%ebx
+  201c2b:	74 13                	je     201c40 <__udivdi3+0x110>
+  201c2d:	89 f8                	mov    %edi,%eax
+  201c2f:	31 f6                	xor    %esi,%esi
+  201c31:	e9 3a ff ff ff       	jmp    201b70 <__udivdi3+0x40>
+  201c36:	66 90                	xchg   %ax,%ax
+  201c38:	2e 8d b4 26 00 00 00 	lea    %cs:0x0(%esi,%eiz,1),%esi
+  201c3f:	00 
+  201c40:	8d 47 ff             	lea    -0x1(%edi),%eax
+  201c43:	31 f6                	xor    %esi,%esi
+  201c45:	e9 26 ff ff ff       	jmp    201b70 <__udivdi3+0x40>
+  201c4a:	66 90                	xchg   %ax,%ax
+  201c4c:	66 90                	xchg   %ax,%ax
+  201c4e:	66 90                	xchg   %ax,%ax
+
+00201c50 <__umoddi3>:
+  201c50:	55                   	push   %ebp
+  201c51:	89 e5                	mov    %esp,%ebp
+  201c53:	57                   	push   %edi
+  201c54:	56                   	push   %esi
+  201c55:	53                   	push   %ebx
+  201c56:	83 ec 2c             	sub    $0x2c,%esp
+  201c59:	8b 5d 0c             	mov    0xc(%ebp),%ebx
+  201c5c:	8b 45 14             	mov    0x14(%ebp),%eax
+  201c5f:	8b 75 08             	mov    0x8(%ebp),%esi
+  201c62:	8b 7d 10             	mov    0x10(%ebp),%edi
+  201c65:	89 da                	mov    %ebx,%edx
+  201c67:	85 c0                	test   %eax,%eax
+  201c69:	75 15                	jne    201c80 <__umoddi3+0x30>
+  201c6b:	39 fb                	cmp    %edi,%ebx
+  201c6d:	73 51                	jae    201cc0 <__umoddi3+0x70>
+  201c6f:	89 f0                	mov    %esi,%eax
+  201c71:	f7 f7                	div    %edi
+  201c73:	89 d0                	mov    %edx,%eax
+  201c75:	31 d2                	xor    %edx,%edx
+  201c77:	83 c4 2c             	add    $0x2c,%esp
+  201c7a:	5b                   	pop    %ebx
+  201c7b:	5e                   	pop    %esi
+  201c7c:	5f                   	pop    %edi
+  201c7d:	5d                   	pop    %ebp
+  201c7e:	c3                   	ret
+  201c7f:	90                   	nop
+  201c80:	89 75 e0             	mov    %esi,-0x20(%ebp)
+  201c83:	39 c3                	cmp    %eax,%ebx
+  201c85:	73 11                	jae    201c98 <__umoddi3+0x48>
+  201c87:	89 f0                	mov    %esi,%eax
+  201c89:	83 c4 2c             	add    $0x2c,%esp
+  201c8c:	5b                   	pop    %ebx
+  201c8d:	5e                   	pop    %esi
+  201c8e:	5f                   	pop    %edi
+  201c8f:	5d                   	pop    %ebp
+  201c90:	c3                   	ret
+  201c91:	8d b4 26 00 00 00 00 	lea    0x0(%esi,%eiz,1),%esi
+  201c98:	0f bd c8             	bsr    %eax,%ecx
+  201c9b:	83 f1 1f             	xor    $0x1f,%ecx
+  201c9e:	89 4d e4             	mov    %ecx,-0x1c(%ebp)
+  201ca1:	75 3d                	jne    201ce0 <__umoddi3+0x90>
+  201ca3:	39 d8                	cmp    %ebx,%eax
+  201ca5:	0f 82 cd 00 00 00    	jb     201d78 <__umoddi3+0x128>
+  201cab:	39 fe                	cmp    %edi,%esi
+  201cad:	0f 83 c5 00 00 00    	jae    201d78 <__umoddi3+0x128>
+  201cb3:	8b 45 e0             	mov    -0x20(%ebp),%eax
+  201cb6:	83 c4 2c             	add    $0x2c,%esp
+  201cb9:	5b                   	pop    %ebx
+  201cba:	5e                   	pop    %esi
+  201cbb:	5f                   	pop    %edi
+  201cbc:	5d                   	pop    %ebp
+  201cbd:	c3                   	ret
+  201cbe:	66 90                	xchg   %ax,%ax
+  201cc0:	89 f9                	mov    %edi,%ecx
+  201cc2:	85 ff                	test   %edi,%edi
+  201cc4:	75 0b                	jne    201cd1 <__umoddi3+0x81>
+  201cc6:	b8 01 00 00 00       	mov    $0x1,%eax
+  201ccb:	31 d2                	xor    %edx,%edx
+  201ccd:	f7 f7                	div    %edi
+  201ccf:	89 c1                	mov    %eax,%ecx
+  201cd1:	89 d8                	mov    %ebx,%eax
+  201cd3:	31 d2                	xor    %edx,%edx
+  201cd5:	f7 f1                	div    %ecx
+  201cd7:	89 f0                	mov    %esi,%eax
+  201cd9:	f7 f1                	div    %ecx
+  201cdb:	eb 96                	jmp    201c73 <__umoddi3+0x23>
+  201cdd:	8d 76 00             	lea    0x0(%esi),%esi
+  201ce0:	0f b6 4d e4          	movzbl -0x1c(%ebp),%ecx
+  201ce4:	ba 20 00 00 00       	mov    $0x20,%edx
+  201ce9:	2b 55 e4             	sub    -0x1c(%ebp),%edx
+  201cec:	89 55 e0             	mov    %edx,-0x20(%ebp)
+  201cef:	d3 e0                	shl    %cl,%eax
+  201cf1:	0f b6 4d e0          	movzbl -0x20(%ebp),%ecx
+  201cf5:	89 45 dc             	mov    %eax,-0x24(%ebp)
+  201cf8:	89 f8                	mov    %edi,%eax
+  201cfa:	8b 55 dc             	mov    -0x24(%ebp),%edx
+  201cfd:	d3 e8                	shr    %cl,%eax
+  201cff:	0f b6 4d e4          	movzbl -0x1c(%ebp),%ecx
+  201d03:	09 c2                	or     %eax,%edx
+  201d05:	d3 e7                	shl    %cl,%edi
+  201d07:	0f b6 4d e0          	movzbl -0x20(%ebp),%ecx
+  201d0b:	89 55 dc             	mov    %edx,-0x24(%ebp)
+  201d0e:	89 da                	mov    %ebx,%edx
+  201d10:	89 7d d8             	mov    %edi,-0x28(%ebp)
+  201d13:	89 f7                	mov    %esi,%edi
+  201d15:	d3 ea                	shr    %cl,%edx
+  201d17:	0f b6 4d e4          	movzbl -0x1c(%ebp),%ecx
+  201d1b:	d3 e3                	shl    %cl,%ebx
+  201d1d:	0f b6 4d e0          	movzbl -0x20(%ebp),%ecx
+  201d21:	d3 ef                	shr    %cl,%edi
+  201d23:	0f b6 4d e4          	movzbl -0x1c(%ebp),%ecx
+  201d27:	89 f8                	mov    %edi,%eax
+  201d29:	d3 e6                	shl    %cl,%esi
+  201d2b:	09 d8                	or     %ebx,%eax
+  201d2d:	f7 75 dc             	divl   -0x24(%ebp)
+  201d30:	89 d3                	mov    %edx,%ebx
+  201d32:	89 75 d4             	mov    %esi,-0x2c(%ebp)
+  201d35:	89 f7                	mov    %esi,%edi
+  201d37:	f7 65 d8             	mull   -0x28(%ebp)
+  201d3a:	89 c6                	mov    %eax,%esi
+  201d3c:	89 d1                	mov    %edx,%ecx
+  201d3e:	39 d3                	cmp    %edx,%ebx
+  201d40:	72 06                	jb     201d48 <__umoddi3+0xf8>
+  201d42:	75 0e                	jne    201d52 <__umoddi3+0x102>
+  201d44:	39 c7                	cmp    %eax,%edi
+  201d46:	73 0a                	jae    201d52 <__umoddi3+0x102>
+  201d48:	2b 45 d8             	sub    -0x28(%ebp),%eax
+  201d4b:	1b 55 dc             	sbb    -0x24(%ebp),%edx
+  201d4e:	89 d1                	mov    %edx,%ecx
+  201d50:	89 c6                	mov    %eax,%esi
+  201d52:	8b 45 d4             	mov    -0x2c(%ebp),%eax
+  201d55:	29 f0                	sub    %esi,%eax
+  201d57:	19 cb                	sbb    %ecx,%ebx
+  201d59:	0f b6 4d e0          	movzbl -0x20(%ebp),%ecx
+  201d5d:	89 da                	mov    %ebx,%edx
+  201d5f:	d3 e2                	shl    %cl,%edx
+  201d61:	0f b6 4d e4          	movzbl -0x1c(%ebp),%ecx
+  201d65:	d3 e8                	shr    %cl,%eax
+  201d67:	d3 eb                	shr    %cl,%ebx
+  201d69:	09 d0                	or     %edx,%eax
+  201d6b:	89 da                	mov    %ebx,%edx
+  201d6d:	83 c4 2c             	add    $0x2c,%esp
+  201d70:	5b                   	pop    %ebx
+  201d71:	5e                   	pop    %esi
+  201d72:	5f                   	pop    %edi
+  201d73:	5d                   	pop    %ebp
+  201d74:	c3                   	ret
+  201d75:	8d 76 00             	lea    0x0(%esi),%esi
+  201d78:	89 da                	mov    %ebx,%edx
+  201d7a:	29 fe                	sub    %edi,%esi
+  201d7c:	19 c2                	sbb    %eax,%edx
+  201d7e:	89 75 e0             	mov    %esi,-0x20(%ebp)
+  201d81:	e9 2d ff ff ff       	jmp    201cb3 <__umoddi3+0x63>

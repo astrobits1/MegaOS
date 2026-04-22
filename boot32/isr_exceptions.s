@@ -1,3 +1,6 @@
+/* All exceptions cause panic, as this is the boot kernel
+ State preservation is not needed */
+
 .macro isr_no_err_stub x
 isr\x\()_exception:
     pushl $\x
@@ -19,13 +22,10 @@ isr\x\()_exception:
 .code32
 
 isr_no_err_stub 0
-/* 1-4 are non critical interrupts and traps
-   and their handlers will get overwritten  */
 isr_no_err_stub 1
 isr_no_err_stub 2
 isr_no_err_stub 3
 isr_no_err_stub 4
-
 isr_no_err_stub 5
 isr_no_err_stub 6
 isr_no_err_stub 7

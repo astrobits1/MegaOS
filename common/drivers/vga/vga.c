@@ -11,7 +11,7 @@ size_t strlen(const char* str) {
 	return len;
 }
 
-int u32_to_str(uint32_t u, uint8_t base, int pad, char* buf, size_t buf_length) {
+int u64_to_str(uint64_t u, uint8_t base, int pad, char* buf, size_t buf_length) {
     /* Digits and letters have been exhausted */
     if (base > 36) return 1;
     if (pad == 0 || buf_length == 0) return 2;
@@ -145,18 +145,19 @@ void vga_print(const char* data) {
 	vga_write(data, strlen(data));
 }
 
-void vga_print_u32(uint32_t u, uint8_t base, int padding) {
+void vga_print_uint(uint64_t u, uint8_t base, int padding) {
     char buf[65];
     
-    int e = u32_to_str(u, base, padding, buf, 65);
+    int e = u64_to_str(u, base, padding, buf, 65);
     if (e == 0) {
         vga_print(buf);
     } else {
         vga_print("!#ERR");
-        u32_to_str(e, 10, -1, buf, 65);
+        u64_to_str(e, 10, -1, buf, 65);
         vga_print(buf);
     }
 }
+
 
 void vga_print_color(const char* data, enum VGA_COLOR fg) {
     enum VGA_COLOR old = vga_color;
@@ -165,10 +166,10 @@ void vga_print_color(const char* data, enum VGA_COLOR fg) {
     vga_color = old;
 }
 
-void vga_print_u32_color(uint32_t u, uint8_t base, int padding, enum VGA_COLOR fg) {
+void vga_print_uint_color(uint64_t u, uint8_t base, int padding, enum VGA_COLOR fg) {
     enum VGA_COLOR old = vga_color;
     vga_setcolor(fg, vga_color >> 4 & 0xF);
-	vga_print_u32(u, base, padding);
+	vga_print_uint(u, base, padding);
     vga_color = old;
 }
 

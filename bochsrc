@@ -1,0 +1,24 @@
+# Memory
+megs: 512
+
+# BIOS (adjust paths if needed)
+romimage: file=/usr/share/bochs/BIOS-bochs-latest
+vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
+
+# Boot from CD-ROM
+boot: cdrom
+
+# CD-ROM with ISO
+ata0-master: type=cdrom, path="/home/tushar/Projects/C/MegaOS/MegaOS.iso", status=inserted
+
+# Optional: log file
+log: bochslog.txt
+
+# Display
+display_library: sdl2
+
+plugin_ctrl: unmapped=0
+plugin_ctrl: iodebug=0
+plugin_ctrl: gdbstub=0
+plugin_ctrl: speaker=0
+debug: action=ignore

@@ -1,8 +1,10 @@
 #ifndef BOOT32_BOOTINFO_H
 #define BOOT32_BOOTINFO_H
 
+#include <common/bootinfo.h>
 #include <stdint.h>
 #include <stddef.h>
+
 
 enum MBI_TAG_TYPE {
     MBI_TAG_NULL = 0,
@@ -40,35 +42,6 @@ struct __attribute__((packed)) mbi_memory_map_entry {
     uint64_t length;
     uint32_t type;
     uint32_t reserved;
-};
-
-/* Kernel specific bootinfo structures */
-
-struct blob {
-    void* start;
-    void* end;
-    uint32_t size;
-};
-
-enum MEMORY_MAP_ENTRY_TYPE {
-    MEMORY_MAP_ENTRY_USABLE,
-    MEMORY_MAP_ENTRY_USABLE_ACPI,
-    MEMORY_MAP_ENTRY_PRESERVE,
-    MEMORY_MAP_ENTRY_UNUSABLE
-};
-
-struct memory_map_entry {
-    uint64_t addr;
-    uint64_t length;
-    enum MEMORY_MAP_ENTRY_TYPE type;
-};
-
-struct bootinfo {
-    struct blob kernel_elf;
-
-    /* Memory map information */
-    uint32_t map_entry_count;
-    struct memory_map_entry* map_entries;
 };
 
 

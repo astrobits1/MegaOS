@@ -1,5 +1,5 @@
-#ifndef BOOT32_VGA_H
-#define BOOT32_VGA_H
+#ifndef COMMON_DRIVERS_VGA_H
+#define COMMON_DRIVERS_VGA_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -36,12 +36,12 @@ void vga_setfgcolor(enum VGA_COLOR fg);
 void vga_setbgcolor(enum VGA_COLOR bg);
 
 void vga_print(const char* data);
-void vga_print_u32(uint32_t u, uint8_t base, int padding);
+void vga_print_uint(uint64_t u, uint8_t base, int padding);
 
 void vga_print_color(const char* data, enum VGA_COLOR fg);
-void vga_print_u32_color(uint32_t u, uint8_t base, int padding, enum VGA_COLOR fg);
+void vga_print_uint_color(uint64_t u, uint8_t base, int padding, enum VGA_COLOR fg);
 
-int u32_to_str(uint32_t u, uint8_t base, int pad, char* buf, size_t buf_length);
+int u64_to_str(uint64_t u, uint8_t base, int pad, char* buf, size_t buf_length);
 size_t strlen(const char* str) ;
 
 #endif

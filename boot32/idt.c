@@ -1,11 +1,10 @@
-#include <boot32/idt.h>
-#include <boot32/gdt.h>
+#include <common/idt.h>
+#include <common/gdt.h>
 #include <common/drivers/vga/vga.h>
-#include <boot32/isr.h>
+#include <common/isr.h>
 
-#define IDT_ENTRY_COUNT 256
 
-uint16_t IDT[IDT_ENTRY_COUNT*4];
+#define IDT_ENTRY_SIZE32 8
 
 enum GATE_TYPE {
     GATE_TASK = 0x5,
@@ -15,8 +14,11 @@ enum GATE_TYPE {
     GATE_TRAP_32 = 0xF
 };
 
+
+uint16_t IDT[IDT_ENTRY_COUNT*IDT_ENTRY_SIZE32/2] __attribute__((aligned(16)));
+
 void idt_write_entry(uint8_t index, uint32_t vec, enum GATE_TYPE gate_type) {
-    uint32_t offset = index*4;
+    uint32_t offset = index*IDT_ENTRY_SIZE32/2;
     /* Force ring 0 access for now 
      * as well as default code selector */
     uint8_t DPL = 0;
@@ -44,7 +46,7 @@ void idt_initialise() {
     } 
 
     //vga_print("Loading IDT to IDTR\n");
-    idtr_load((void*)IDT, IDT_ENTRY_COUNT*8-1);
+    idtr_load((void*)IDT, IDT_ENTRY_COUNT*IDT_ENTRY_SIZE32-1);
 
     vga_print_color("Initialized Interrupt Descriptor Table\n", VGA_COLOR_LIGHT_GREEN);
 }

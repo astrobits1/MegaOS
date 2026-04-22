@@ -21,7 +21,7 @@ _entry:
     mov $stack_top, %rbp
     mov $stack_top, %rsp
 
-    /* Move bootinfo is in 1st arg reg %rdi */ 
+    /* bootinfo is in 1st arg reg %rdi */ 
     /* Begin kernel main */
     call kernel_main
 

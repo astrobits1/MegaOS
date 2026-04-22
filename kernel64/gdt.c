@@ -2,7 +2,7 @@
 
 /* Allocate space for segment descriptors */
 
-uint8_t GDT[8*SEG_COUNT_BOOT];
+uint8_t GDT[8*SEG_COUNT_KERNEL];
 
 void gdt_write_entry(uint16_t index, uint32_t base, uint32_t limit, uint8_t access, uint8_t flags) {
     /* Writes GDT Descriptor values to given index in the GDT */
@@ -20,18 +20,26 @@ void gdt_write_entry(uint16_t index, uint32_t base, uint32_t limit, uint8_t acce
 
 
 void gdt_initialise() {
-    /* 32 bit */
+    /* 64 bit */
     /* Null descriptor */
     gdt_write_entry(0, 0, 0, 0, 0);
 
     /* Kernel ring 0 code segment (flat) */
-    gdt_write_entry(1, 0, 0xFFFFF, 0x9A, 0xC); 
+    gdt_write_entry(1, 0, 0xFFFFF, 0x9A, 0xA); 
 
     /* Kernel ring 0 data segment (flat) */
     gdt_write_entry(2, 0, 0xFFFFF, 0x92, 0xC);
 
+    /* User ring 3 code segment (flat) */
+    gdt_write_entry(3, 0, 0xFFFFF, 0xFA, 0xA);
+
+    /* User ring 3 data segment (flat) */
+    gdt_write_entry(4, 0, 0xFFFFF, 0xF2, 0xC);
+
+    /* Setup TSS */
+
     /* Load our GDT to the GDTR using assembly routine */
-    gdtr_load((void*)GDT, SEG_COUNT_BOOT*8-1);
+    gdtr_load((void*)GDT, SEG_COUNT_KERNEL*8-1);
 
     /* Reloads code segment located at index 1 to CS 
      * and data segment at index 2 to DS and the rest
@@ -41,9 +49,4 @@ void gdt_initialise() {
 }
 
 
-void gdt_set_long_mode() {
-    /* Enable long mode bit, disable DB size flag *
-     * base and limit are ignored in long mode */
-    /* Kernel ring 0 code */
-    gdt_write_entry(1, 0, 0xFFFFF, 0x9A, 0xA);
-}
+
