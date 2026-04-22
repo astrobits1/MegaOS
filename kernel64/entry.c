@@ -25,9 +25,5 @@ void kernel_main(struct bootinfo* info) {
     kernel_setup();
     vga_print("Done setup\n");
 
-    int a = 4;
-    int b = 0;
-    int c = a/b;
-    
     lock();
 }

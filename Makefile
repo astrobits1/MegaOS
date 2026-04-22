@@ -13,6 +13,10 @@ CFLAGS_COMMON = -Iinclude -O2 -ffreestanding -Wall -Wextra
 CFLAGS_BOOT32 = $(CFLAGS_COMMON) -mno-sse -mno-sse2 -mno-mmx -msoft-float -fno-builtin
 CFLAGS_KERNEL64 = $(CFLAGS_COMMON) -mno-red-zone -mcmodel=kernel
 
+ASFLAGS_COMMON = -Iinclude
+ASFLAGS_BOOT32 = $(ASFLAGS_COMMON)
+ASFLAGS_KERNEL64 = $(ASFLAGS_COMMON)
+
 LDFLAGS_BOOT32 = -T boot32/linker.ld -ffreestanding -nostdlib
 LDFLAGS_KERNEL64 = -T kernel64/linker.ld -ffreestanding -mno-red-zone -nostdlib
 LDFLAGS_BOOT32_POSTFIX = -lgcc
@@ -81,7 +85,7 @@ build/boot32/%.o: boot32/%.c
 # ASM files (boot32)
 build/boot32/%.o: boot32/%.s
 	@mkdir -p $(dir $@)
-	$(AS32) -c $< -o $@
+	$(AS32) $(ASFLAGS_BOOT32) -c $< -o $@
 
 # C files (kernel64)
 build/kernel64/%.o: kernel64/%.c
@@ -91,7 +95,7 @@ build/kernel64/%.o: kernel64/%.c
 # ASM files (kernel64)
 build/kernel64/%.o: kernel64/%.s
 	@mkdir -p $(dir $@)
-	$(AS64) -c $< -o $@
+	$(AS64) $(ASFLAGS_KERNEL64) -c $< -o $@
 
 # =========================
 # COMMON (shared code)
@@ -107,11 +111,11 @@ build/kernel64/common/%.o: common/%.c
 
 build/boot32/common/%.o: common/%.s
 	@mkdir -p $(dir $@)
-	$(AS32) -c $< -o $@
+	$(AS32) $(ASFLAGS_BOOT32) -c $< -o $@
 
 build/kernel64/common/%.o: common/%.s
 	@mkdir -p $(dir $@)
-	$(AS64) -c $< -o $@
+	$(AS64) $(ASFLAGS_KERNEL64) -c $< -o $@
 
 # =========================
 # Clean

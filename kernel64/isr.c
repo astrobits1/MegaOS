@@ -1,26 +1,11 @@
 /* Stores all IRQ routines for faults, exceptions and interrupts */
 
 #include <kernel64/state.h>
-#include <common/isr.h>
+#include <kernel64/isr.h>
 #include <common/isr_const.h>
 #include <common/drivers/vga/vga.h>
 
-/* For kernel exceptions */
-struct interrupt_frame {
-    uint64_t rip;
-    uint64_t cs;
-    uint64_t rflags;
-};
 
-/* For user mode exceptions, rsp and ss is pushed additionally */
-
-struct interrupt_frame_user {
-    uint64_t rip;
-    uint64_t cs;
-    uint64_t rflags;
-    uint64_t rsp;
-    uint64_t ss;
-};
 
 /* Default exception handlers that just panic */
 
@@ -51,8 +36,10 @@ void exception_handler_panic_err(uint64_t n, uint64_t err, struct interrupt_fram
 
 /* For any other IRQs that arent implemented yet, also panic */
 
-void unimplemented_routine() {
-    vga_print("Unknown routine\n");
-
-    kernel_panic();
+void interrupt_handler_unimplemented(uint64_t n, struct interrupt_frame* frame) {
+    vga_setfgcolor(VGA_COLOR_BLACK);
+    vga_print("Interrupt handler triggered, interrupt requested: 0x");
+    vga_print_uint(n, 16, -1);
+    vga_print("\n");
+    vga_setfgcolor(VGA_COLOR_WHITE);
 }

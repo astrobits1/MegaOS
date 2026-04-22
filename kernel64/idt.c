@@ -1,7 +1,7 @@
 #include <common/idt.h>
 #include <common/gdt.h>
 #include <common/drivers/vga/vga.h>
-#include <common/isr.h>
+#include <kernel64/isr.h>
 
 
 #define IDT_ENTRY_SIZE64 16
@@ -33,15 +33,15 @@ void idt_write_entry(uint8_t index, uint64_t vec, enum GATE_TYPE gate_type) {
 
 
 void idt_initialise() {
-    /* Set all service routine handlers to null */
-
-    for (int i=0; i<IDT_ENTRY_COUNT; i++) {
-        idt_write_entry(i, (uint64_t)&unimplemented_routine, GATE_INT_64);
-    }
+    /* Initialize all service routine entries to the assembly stubs */
 
     for (int i=0; i<32; i++) {
         idt_write_entry(i, (uint64_t)isr_exception_table[i], GATE_INT_64);
     } 
+
+    for (int i=32; i<IDT_ENTRY_COUNT; i++) {
+        idt_write_entry(i, (uint64_t)isr_interrupt_table[i-32], GATE_INT_64);
+    }
 
     idtr_load((void*)IDT, IDT_ENTRY_COUNT*IDT_ENTRY_SIZE64-1);
 }

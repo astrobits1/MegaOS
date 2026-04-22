@@ -4,7 +4,7 @@
 .macro isr_no_err_stub x
 isr\x\()_exception:
     pushl $\x
-    call panic_exception_handler_no_err
+    call exception_handler_panic_no_err
     iret
     /* No return */
 .endm
@@ -12,7 +12,7 @@ isr\x\()_exception:
 .macro isr_err_stub x
 isr\x\()_exception:
     pushl $\x
-    call panic_exception_handler_err
+    call exception_handler_panic_err
     iret
     /* No return */
 .endm

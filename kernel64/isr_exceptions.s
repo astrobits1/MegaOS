@@ -1,39 +1,4 @@
-.macro push_regs_setup_frame
-    push %rbp
-    mov %rsp, %rbp
-    push %rax
-    push %rbx
-    push %rcx
-    push %rdx
-    push %rsi
-    push %rdi
-    push %r8
-    push %r9
-    push %r10
-    push %r11
-    push %r12
-    push %r13
-    push %r14
-    push %r15
-.endm
-
-.macro pop_regs
-    pop %r15
-    pop %r14
-    pop %r13
-    pop %r12
-    pop %r11
-    pop %r10
-    pop %r9
-    pop %r8
-    pop %rdi
-    pop %rsi
-    pop %rdx
-    pop %rcx
-    pop %rbx
-    pop %rax
-    pop %rbp
-.endm
+.include "kernel64/macros.inc"
 
 
 /* Causes panic to occur on exception, pushes exception no., interrupt frame pointer and error code
@@ -42,12 +7,8 @@ if applicable */
 .macro isr_panic_no_err_stub x
 isr\x\()_exception:
     push_regs_setup_frame
-
-    /* Exception index as 1st arg */ 
-    mov $\x, %rdi
-    /* Interrupt frame pointer as 2st arg */
-    mov %rbp, %rsi
-    add $8, %rsi
+    load_interrupt_args \x
+    
     call exception_handler_panic_no_err
 
     pop_regs
@@ -57,16 +18,7 @@ isr\x\()_exception:
 .macro isr_panic_err_stub x
 isr\x\()_exception:
     push_regs_setup_frame
-
-    /* Exception index as 1st arg */
-    mov $\x, %rdi
-
-    /* Error code as 2nd arg */
-    mov 16(%rbp), %rsi
-
-    /* Interrupt frame pointer as 3rd arg */
-    mov %rbp, %rdx
-    add $8, %rdx
+    load_exception_args_err \x
 
     call exception_handler_panic_err
 

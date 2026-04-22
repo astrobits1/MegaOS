@@ -1,5 +1,5 @@
-#ifndef COMMON_ISR_H
-#define COMMON_ISR_H
+#ifndef BOOT32_ISR_H
+#define BOOT32_ISR_H
 
 
 extern void (*isr_exception_table[32])(void);
