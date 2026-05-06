@@ -1,16 +1,11 @@
 #ifndef COMMON_PMM_H
 #define COMMON_PMM_H
 
+#include <common/memory/memcommons.h>
 #include <common/bootinfo.h>
 #include <stdint.h>
 
-#define PAGE_4K 0x1000
-#define PAGE_2M 0x200000
 
-#define PAGE_4K_ALIGN(x) (((x)&~(PAGE_4K-1))+PAGE_4K)
-#define PAGE_4K_ALIGN_DOWN(x) ((x)&~(PAGE_4K-1))
-
-#define CHECK_PAGE_4K_ALIGN(x) (((x)&~(PAGE_4K-1))==(x))
 /* 4KB is order 0 (fundamental page)
  * 8KB is order 1
  * ...

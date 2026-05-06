@@ -1,17 +1,43 @@
-#include <common/memory/pmm.h>
 #include <common/memory/vmm.h>
 #include <common/drivers/vga/vga.h>
 
-/* Map references for initial 0-1GB */
-volatile void* vmm_PML4 = NULL;
+volatile void* VMM_PML4 = NULL;
+void* (*vmm_allocate_page)() = NULL;
+void (*vmm_free_page)(void*) = NULL;
+
+/* Initialize allocator, this is generalized to handle anything from basic
+ * virtual memory at boot to full kernel management */
+void vmm_initialize_allocator(void* (*allocate_page)(), void (*free_page)(void*)) {
+    vmm_allocate_page = allocate_page;
+    vmm_free_page = free_page;
+}
+
+volatile void* vmm_new_pml4() {
+    volatile void* ptr = vmm_allocate_page();
+
+    if (ptr == NULL) return NULL;
+
+    vmm_initialize_map(ptr);
+    return ptr;
+}
+
+void vmm_free_pml4(volatile void* pml4) {
+    vmm_free_page((void*)pml4);
+}
 
 /* Set top level pml4 */
 void vmm_set_pml4(volatile void* pml4) {
-    vmm_PML4 = pml4;
+    VMM_PML4 = pml4;
 }
 
-/* Initialise map to unmapped by default, (P bit 0) */
-void vmm_initialise_map(volatile uint8_t* map) {
+void vmm_reload_pml4(void(*reload)(volatile void* pml4)) {
+    if (VMM_PML4 == NULL) return;
+
+    reload(VMM_PML4);
+}
+
+/* Initialize map to unmapped by default, (P bit 0) */
+void vmm_initialize_map(volatile uint8_t* map) {
     for (uint32_t i=0; i<MAP_SIZE; i++) {
         map[i] = 0;
     }
@@ -61,7 +87,7 @@ bool vmm_check_map_entry_present(volatile uint8_t* map, uint16_t index) {
 
 /* Linear map virtual address to given physical address in 2MB page blocks,
  * count represents no. of 2MB blocks starting from physical and mapped to virtual 1:1 */
-int vmm_map_memory_2M(uintptr_t v_addr, uintptr_t p_addr, uint8_t count) {
+int vmm_map_memory_2M(uint64_t v_addr, uintptr_t p_addr, uint8_t count) {
     /* Virtual and physical must be page aligned */
     if ((v_addr & PDE_2M_PAGE_MASK) != v_addr || (p_addr & PDE_2M_PAGE_MASK) != p_addr) {
         vga_print_color("Virtual and Physical address must be 2MB page aligned\n", VGA_COLOR_RED);
@@ -79,21 +105,21 @@ int vmm_map_memory_2M(uintptr_t v_addr, uintptr_t p_addr, uint8_t count) {
     
     for (uint8_t i=0; i<count; i++) {
         /* PML4E decoding */
-        if (!vmm_check_map_entry_present(vmm_PML4, pml4e)) {
-            volatile void* map = pmm_allocate_page();
-            vmm_initialise_map(map);
+        if (!vmm_check_map_entry_present(VMM_PML4, pml4e)) {
+            volatile void* map = vmm_allocate_page();
+            vmm_initialize_map(map);
 
-            vmm_write_map_entry(vmm_PML4, pml4e, (uintptr_t)map, NOSET_PAGESIZE, NO_PAGE_MASK);
+            vmm_write_map_entry(VMM_PML4, pml4e, (uintptr_t)map, NOSET_PAGESIZE, NO_PAGE_MASK);
             pdpt = map;
         } else {
             uint8_t PS;
-            pdpt = (volatile void*)(uintptr_t)vmm_read_map_entry(vmm_PML4, pml4e, &PS);
+            pdpt = (volatile void*)(uintptr_t)vmm_read_map_entry(VMM_PML4, pml4e, &PS);
         }
 
         /* PDPTE decoding */
         if (!vmm_check_map_entry_present(pdpt, pdpte)) {
-            volatile void* map = pmm_allocate_page();
-            vmm_initialise_map(map);
+            volatile void* map = vmm_allocate_page();
+            vmm_initialize_map(map);
 
             vmm_write_map_entry(pdpt, pdpte, (uintptr_t)map, NOSET_PAGESIZE, NO_PAGE_MASK);
             pd = map;

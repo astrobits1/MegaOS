@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <common/memory/pmm.h>
+#include <common/memory/bump.h>
 #include <common/memory/vmm.h>
 #include <common/drivers/vga/vga.h>
 #include <boot32/boot.h>
@@ -41,16 +41,14 @@ void paging_initialize() {
      * All the page structures should be within identity mapped region
      * or modifying them will cause a page fault */
 
-    volatile void* pml4 = pmm_allocate_page();        /* Page map layer 4 */
-
-    vmm_initialise_map(pml4);
+    volatile void* pml4 = vmm_new_pml4();
     vmm_set_pml4(pml4);
 
     /* Identity map first 4 MB that consists of boot kernel + allocation limit */
     vmm_map_memory_2M(0, 0, 2); 
 
     /* Load pml4 to CR3 */
-    load_pml4(pml4);
+    vmm_reload_pml4(load_pml4);
 
     /* Enable 64 bit paging, and compatibility mode 
      * kernel and surrounding space should be identity mapped */
@@ -117,19 +115,19 @@ void boot_main(void* mb2_bootinfo) {
 
     /* Initalize physical memory allocator, starting from bottom
      * (above the memory map allocation, at page boundary) */
-    pmm_initialize(info.map_entries, info.map_entry_count, bottom, top);
-    /* pmm_allocate_page can now be used */
+    bump_initialize(bottom, top);
+    /* bump_allocate/free_page can now be used */
 
     /* Enable SSE instructions */
     enable_sse();
     vga_print_color("SSE enabled\n", VGA_COLOR_LIGHT_GREEN);
 
-    lock();
+    /* Initialize VMM */
+    vmm_initialize_allocator(bump_allocate_page, bump_free_page);
     /* Initialise page maps, enable paging and enter x86_64 compatibility mode
      * 0-4MB region is identity mapped, which includes IDT, GDT (data segments)
      * as well all page allocations by the allocator
-     *
-     * vmm is initalized */
+     */
     paging_initialize();
 
     /* x86_64 compatibility mode has been entered, and our IDT is essentially invalid
@@ -155,8 +153,7 @@ void boot_main(void* mb2_bootinfo) {
     vga_print("Memory image size: ");
     vga_print_uint(meta.memory_image_size, 10, -1);
     vga_print("\n");
-    
-
+   
     /* Map kernel memory to its expected 64 bit paging */
     vmm_map_memory_2M(meta.virtual_start, (uint32_t)kernel_physical_addr, initial_block_count);
     vga_print_color("Kernel memory mapped to higher half 64 bit virtual address\n", VGA_COLOR_LIGHT_GREEN);
@@ -167,6 +164,7 @@ void boot_main(void* mb2_bootinfo) {
     
     /* Long jump to entry point */
     vga_print_color("Ready to boot kernel in long mode, jumping...\n", VGA_COLOR_LIGHT_MAGENTA);
+
     jump_kernel(meta.entrypoint&0xFFFFFFFF, meta.entrypoint>>32, &info);
     /* noreturn */
 
