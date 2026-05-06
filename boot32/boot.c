@@ -98,7 +98,9 @@ void boot_main(void* mb2_bootinfo) {
     vga_print_color("Parsing multiboot2 bootinfo\n", VGA_COLOR_LIGHT_GREEN);
     struct bootinfo info = parse_multiboot2_info(mb2_bootinfo, (void*)(bottom));
     bottom += info.map_entry_count*sizeof(struct memory_map_entry);
-    bottom = (bottom & ~(PAGE_4K-1))+PAGE_4K;
+
+    if (!CHECK_PAGE_4K_ALIGN(bottom))
+        bottom = PAGE_4K_ALIGN(bottom);
 
     vga_print_color("Found kernel64.elf\n", VGA_COLOR_LIGHT_GREEN);
     vga_print_color("Memory Map\n", VGA_COLOR_LIGHT_GREEN);

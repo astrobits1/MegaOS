@@ -2,14 +2,23 @@
 #include <common/bootinfo.h>
 #include <stddef.h>
 
+#include <common/drivers/vga/vga.h>
+
 struct memory_map_entry* MEMORY_MAP = NULL;
 uint32_t MEMORY_MAP_COUNT = 0;
 uint64_t BOTTOM = 0;
 uint64_t TOP = 0;
 
+/* Free list head pointer for every order */
+uint8_t* free_lists[18];
+
 /* Initialize and mark top level zone */
 void pmm_top_level_zone(uint64_t addr, uint8_t order) {
-
+    vga_print("Top level: ");
+    vga_print_uint_color(addr, 16, 16, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print(", Order: ");
+    vga_print_uint_color(order, 10, -1, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print("\n");
 }
 
 void pmm_initialize_zones() {
@@ -23,18 +32,22 @@ void pmm_initialize_zones() {
         uint64_t length = entry.length;
 
         /* Make sure page alignment is there */
-        length -= addr&(PAGE_4K-1);
-        addr = PAGE_4K_ALIGN(addr);
+        if (!CHECK_PAGE_4K_ALIGN(addr)) {
+            uint64_t end = addr+length;
+            addr = PAGE_4K_ALIGN(addr);
+            length = end-addr;
+        }
         /* There may be some wastage near the end of the mapping
          * if length is not page aligned, but will always be lesser than 4KB */
-        length = PAGE_4K_ALIGN_DOWN(length);
+        if (!CHECK_PAGE_4K_ALIGN(length))
+            length = PAGE_4K_ALIGN_DOWN(length);
 
         if (addr + length - 1 < BOTTOM)
             continue;
 
         if (addr < BOTTOM) {
+            length = addr+length-BOTTOM;
             addr = BOTTOM;
-            length -= BOTTOM - addr;
         }
 
         if (addr + length - 1 >= TOP) 
@@ -61,12 +74,12 @@ void pmm_initialize_zones() {
             /* Choose suitable order based on alignment and size constraints (min) */
             uint8_t order = highest_fit_od;
             if (order > size_od) order = size_od;
-     
+
             pmm_top_level_zone(addr, order);
 
             uint64_t block_length = PAGE_4K<<order;
             length -= block_length;
-            addr += block_length;
+            addr += block_length; 
         }
     }
 }
@@ -76,8 +89,21 @@ void pmm_initialize_zones() {
 void pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint64_t bottom, uint64_t top) {
     MEMORY_MAP = entries;
     MEMORY_MAP_COUNT = entry_count;
-    BOTTOM = PAGE_4K_ALIGN(bottom);
-    TOP = PAGE_4K_ALIGN(top);
+    BOTTOM = bottom;
+    TOP = top;
+
+    if (!CHECK_PAGE_4K_ALIGN(BOTTOM))
+        BOTTOM = PAGE_4K_ALIGN(BOTTOM);
+    if (!CHECK_PAGE_4K_ALIGN(TOP))
+        TOP = PAGE_4K_ALIGN(TOP);
+
+    vga_print("PMM Bottom: "); vga_print_uint_color(BOTTOM, 16, 8, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print("\nPMM TOP: "); vga_print_uint_color(TOP, 16, 8, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print("\n");
+
+    for (int i=0; i<18; i++) {
+        free_lists[i] = NULL;
+    }
 
     pmm_initialize_zones();
 }
