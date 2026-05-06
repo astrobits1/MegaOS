@@ -1,6 +1,6 @@
 #include <kernel64/state.h>
-#include <common/gdt.h>
-#include <common/idt.h>
+#include <kernel64/cpu/gdt.h>
+#include <kernel64/cpu/idt.h>
 #include <common/bootinfo.h>
 #include <common/drivers/vga/vga.h>
 
@@ -23,7 +23,7 @@ void kernel_main(struct bootinfo* info) {
     vga_print("Hello kernel64!\n");
 
     kernel_setup();
-    vga_print("Done setup\n");
+    vga_print("Setup complete\n");
 
     lock();
 }

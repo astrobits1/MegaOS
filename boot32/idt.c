@@ -1,8 +1,7 @@
-#include <common/idt.h>
-#include <common/gdt.h>
-#include <common/drivers/vga/vga.h>
+#include <boot32/idt.h>
+#include <boot32/gdt.h>
 #include <boot32/isr.h>
-
+#include <common/drivers/vga/vga.h>
 
 #define IDT_ENTRY_SIZE32 8
 

@@ -1,8 +1,7 @@
-#include <common/idt.h>
-#include <common/gdt.h>
+#include <kernel64/cpu/idt.h>
+#include <kernel64/cpu/gdt.h>
+#include <kernel64/cpu/isr.h>
 #include <common/drivers/vga/vga.h>
-#include <kernel64/isr.h>
-
 
 #define IDT_ENTRY_SIZE64 16
 

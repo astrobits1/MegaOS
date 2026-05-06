@@ -2,13 +2,10 @@
 #define BOOT32_BOOT_H
 
 #include <stdint.h>
-#include <boot32/bootinfo.h>
+#include <boot32/mbi2.h>
 
 /* Byte immediately at the beginning and after the end of the kernel in physical memory,
  * marked in linker script */
-
-#define PAGE_4K 0x1000
-#define PAGE_2M 0x200000
 
 extern uint8_t _BOOT_BEGIN;
 extern uint8_t _BOOT_END;

@@ -1,7 +1,7 @@
 /* Stores all IRQ routines for faults, exceptions and interrupts */
 
 #include <kernel64/state.h>
-#include <kernel64/isr.h>
+#include <kernel64/cpu/isr.h>
 #include <common/isr_const.h>
 #include <common/drivers/vga/vga.h>
 

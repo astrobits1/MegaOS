@@ -27,12 +27,20 @@ LDFLAGS_KERNEL64_POSTFIX = -lgcc
 # =========================
 
 # Boot32 sources
-BOOT32_C_SRCS := $(wildcard boot32/*.c)
-BOOT32_S_SRCS := $(wildcard boot32/*.s)
+#BOOT32_C_SRCS := $(wildcard boot32/*.c)
+#BOOT32_S_SRCS := $(wildcard boot32/*.s)
+
+BOOT32_C_SRCS := $(shell find boot32 -name "*.c")
+BOOT32_S_SRCS := $(shell find boot32 -name "*.s")
+
 
 # Kernel64 sources
-KERNEL64_C_SRCS := $(wildcard kernel64/*.c)
-KERNEL64_S_SRCS := $(wildcard kernel64/*.s)
+#KERNEL64_C_SRCS := $(wildcard kernel64/*.c)
+#KERNEL64_S_SRCS := $(wildcard kernel64/*.s)
+
+KERNEL64_C_SRCS := $(shell find kernel64 -name "*.c")
+KERNEL64_S_SRCS := $(shell find kernel64 -name "*.s")
+
 
 # Common sources (drivers etc.)
 # COMMON_C_SRCS := $(wildcard common/**/*.c)

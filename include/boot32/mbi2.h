@@ -1,5 +1,5 @@
-#ifndef BOOT32_BOOTINFO_H
-#define BOOT32_BOOTINFO_H
+#ifndef BOOT32_MBI2_H
+#define BOOT32_MBI2_H
 
 #include <common/bootinfo.h>
 #include <stdint.h>
@@ -45,6 +45,6 @@ struct __attribute__((packed)) mbi_memory_map_entry {
 };
 
 
-struct bootinfo parse_multiboot2_info(void* multiboot2_info);
+struct bootinfo parse_multiboot2_info(void* multiboot2_info, struct memory_map_entry* mapentries);
 
 #endif

@@ -1,4 +1,4 @@
-#include <common/gdt.h>
+#include <boot32/gdt.h>
 
 /* Allocate space for segment descriptors */
 

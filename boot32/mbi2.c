@@ -1,10 +1,10 @@
-#include <boot32/bootinfo.h>
-#include <common/drivers/vga/vga.h>
+#include <boot32/mbi2.h>
 #include <boot32/boot.h>
-#include <boot32/allocator.h>
+#include <common/drivers/vga/vga.h>
 
+#define PAGE_4K 0x1000
 
-struct bootinfo parse_multiboot2_info(void* multiboot2_info) {
+struct bootinfo parse_multiboot2_info(void* multiboot2_info, struct memory_map_entry* mapentries) {
     uint32_t addr = (uint32_t)multiboot2_info;
     struct mbi_header* header = (void*)addr;
     uint32_t total_size = header->size;
@@ -15,7 +15,6 @@ struct bootinfo parse_multiboot2_info(void* multiboot2_info) {
     /* Fields to read into from tags */
     struct bootinfo info;
     struct blob kernel_elf = {NULL, NULL, 0};
-    struct memory_map_entry* mapentries = allocator_alloc_page();
     uint32_t memory_map_entry_count = 0;
 
     /* Start reading tags */

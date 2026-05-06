@@ -1,18 +1,17 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <boot32/boot.h>
+#include <common/memory/pmm.h>
+#include <common/memory/vmm.h>
 #include <common/drivers/vga/vga.h>
-#include <common/gdt.h>
-#include <common/idt.h>
-#include <boot32/paging.h>
-#include <boot32/bootinfo.h>
-#include <boot32/allocator.h>
+#include <boot32/boot.h>
+#include <boot32/gdt.h>
+#include <boot32/idt.h>
+#include <boot32/mbi2.h>
 #include <boot32/elf.h>
 
 const void* _bootstart = (void*)&_BOOT_BEGIN;
 const void* _bootend = (void*)&_BOOT_END;
-
 
 __attribute__((noreturn))
 void lock() {
@@ -27,6 +26,36 @@ void boot_panic() {
     vga_print("Boot Kernel Panic!\nHalting\n");
 
     lock();
+}
+
+/* In paging_as.s */
+extern void enable_paging64();
+extern void load_pml4(volatile void* pml4);
+
+void paging_initialize() {
+    /* Allocate page maps in physical memory, in a region that is outside .data
+     * right at the end of the kernel 
+     * They should be put at a page aligned physical address
+     * Each map is 4KB in size 
+     *
+     * All the page structures should be within identity mapped region
+     * or modifying them will cause a page fault */
+
+    volatile void* pml4 = pmm_allocate_page();        /* Page map layer 4 */
+
+    vmm_initialise_map(pml4);
+    vmm_set_pml4(pml4);
+
+    /* Identity map first 4 MB that consists of boot kernel + allocation limit */
+    vmm_map_memory_2M(0, 0, 2); 
+
+    /* Load pml4 to CR3 */
+    load_pml4(pml4);
+
+    /* Enable 64 bit paging, and compatibility mode 
+     * kernel and surrounding space should be identity mapped */
+    enable_paging64();
+    vga_print_color("Enabled 64 bit Paging and x86_64 compatibility mode\n", VGA_COLOR_LIGHT_GREEN);
 }
 
 __attribute__((noreturn))
@@ -61,14 +90,15 @@ void boot_main(void* mb2_bootinfo) {
      *
      * Identity map is set up until 4MB and we do not expect boot kernel to occupy 
      * any more memory space beyond that point */
-    void* heap_bottom = (void*)((uint32_t)(_bootend)&(~(PAGE_4K-1)))+PAGE_4K;
-    void* heap_top = (void*)0x003FFFFF;
-    allocator_initialise(heap_bottom, heap_top);
+    uint32_t bottom = PAGE_4K_ALIGN((uint32_t)(_bootend));
+    uint32_t top = 0x00400000;
 
     /* Parse boot info */
     vga_print("\n");
     vga_print_color("Parsing multiboot2 bootinfo\n", VGA_COLOR_LIGHT_GREEN);
-    struct bootinfo info = parse_multiboot2_info(mb2_bootinfo);
+    struct bootinfo info = parse_multiboot2_info(mb2_bootinfo, (void*)(bottom));
+    bottom += info.map_entry_count*sizeof(struct memory_map_entry);
+    bottom = (bottom & ~(PAGE_4K-1))+PAGE_4K;
 
     vga_print_color("Found kernel64.elf\n", VGA_COLOR_LIGHT_GREEN);
     vga_print_color("Memory Map\n", VGA_COLOR_LIGHT_GREEN);
@@ -81,28 +111,34 @@ void boot_main(void* mb2_bootinfo) {
         vga_print_uint(entry->length&0xFFFFFFFF, 16, 8);
         vga_print(", type: "); vga_print_uint(entry->type, 10, -1); vga_print("\n");
     }
-
     vga_print("\n");
+
+    /* Initalize physical memory allocator, starting from bottom
+     * (above the memory map allocation, at page boundary) */
+    pmm_initialize(info.map_entries, info.map_entry_count, bottom, top);
+    /* pmm_allocate_page can now be used */
 
     /* Enable SSE instructions */
     enable_sse();
     vga_print_color("SSE enabled\n", VGA_COLOR_LIGHT_GREEN);
 
+    lock();
     /* Initialise page maps, enable paging and enter x86_64 compatibility mode
      * 0-4MB region is identity mapped, which includes IDT, GDT (data segments)
-     * as well all page allocations by the allocator */
-    paging_initialise();
-    
+     * as well all page allocations by the allocator
+     *
+     * vmm is initalized */
+    paging_initialize();
+
     /* x86_64 compatibility mode has been entered, and our IDT is essentially invalid
      * until we enter long mode and set it up again */
 
     /* Prepare kernel load by identity mapping 16 MB of memory starting at 4 MB */
     const uint8_t* kernel_physical_addr = (uint8_t*)0x00400000;
     const uint8_t initial_block_count = 8;
-    map_memory_2M((uint32_t)kernel_physical_addr, (uint32_t)kernel_physical_addr, initial_block_count);
+    vmm_map_memory_2M((uint32_t)kernel_physical_addr, (uint32_t)kernel_physical_addr, initial_block_count);
 
     /* Load kernel ELF64 into identity mapped region and get entry point */ 
-    
     struct elf_metadata meta = load_elf64_exec_at(info.kernel_elf.start, info.kernel_elf.size, (uint8_t*)kernel_physical_addr);
 
     vga_print("64 bit kernel loaded into identity mapped memory\n");
@@ -120,7 +156,7 @@ void boot_main(void* mb2_bootinfo) {
     
 
     /* Map kernel memory to its expected 64 bit paging */
-    map_memory_2M(meta.virtual_start, (uint32_t)kernel_physical_addr, initial_block_count);
+    vmm_map_memory_2M(meta.virtual_start, (uint32_t)kernel_physical_addr, initial_block_count);
     vga_print_color("Kernel memory mapped to higher half 64 bit virtual address\n", VGA_COLOR_LIGHT_GREEN);
 
     /* Make all entries 64 bit in GDT */
