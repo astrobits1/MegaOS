@@ -59,25 +59,27 @@ void pmm_initialize_zones() {
              * initialize block with highest possible order block given the size of region
              *
              * Order 0 is minimum requirement, which is ensured by previous page alignment */
-            uint8_t highest_fit_od=0;
-            for (int i=0; i<=18; i++) {
+
+            uint8_t highest_fit_od=18;
+            for (int i=1; i<=18; i++) {
                 if (!CHECK_ORDER_ALIGN(addr, i)) {
                     highest_fit_od = i-1;
                     break;
                 }
             }
 
-            uint8_t size_od = (64-__builtin_clz(length))-(1+12);
+            uint8_t size_od = (64-__builtin_clzll(length))-(1+12);
             /* Cap at order 18 */
             if (size_od > 18) size_od = 18;
 
             /* Choose suitable order based on alignment and size constraints (min) */
             uint8_t order = highest_fit_od;
             if (order > size_od) order = size_od;
-
+ 
             pmm_top_level_zone(addr, order);
 
             uint64_t block_length = PAGE_4K<<order;
+
             length -= block_length;
             addr += block_length; 
         }

@@ -17,7 +17,7 @@
  * 1GB is order 18 (max supported order)
  *
  * This macro checks if given memory address is aligned to the given order block size */
-#define CHECK_ORDER_ALIGN(x, od) (((x)&~((PAGE_4K<<(od))-1))==(x))
+#define CHECK_ORDER_ALIGN(x, od) (((x)&~(((uint64_t)PAGE_4K<<(od))-1))==(x))
 
 void pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint64_t bottom, uint64_t top);
 void* pmm_allocate_page();
