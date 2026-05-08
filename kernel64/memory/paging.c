@@ -5,6 +5,55 @@ volatile void* PAGING_PML4 = NULL;
 void* (*paging_allocate_page)() = NULL;
 void (*paging_free_page)(void*) = NULL;
 
+
+/* Initialize map to unmapped by default, (P bit 0) */
+static void paging_initialize_map(volatile uint8_t* map) {
+    for (uint32_t i=0; i<MAP_SIZE; i++) {
+        map[i] = 0;
+    }
+}
+
+/* Generalised function used to write address to pt, pd, pdpt, pml4
+ *
+ * pd and pdpt support pagesize bit which lets you define a contigious chunk of 2MB or 1GB 
+ * in physical memory as a page. You write the physical memory address using SET_PAGESIZE and
+ * the appropriate mask for them, otherwise pass NOSET_PAGESIZE, and NO_PAGE_MASK
+ *
+ * Flag configuration is minimal and default for now TODO */
+static void paging_write_map_entry(volatile uint8_t* map, uint16_t index, uint64_t addr, uint8_t pagesize, uint64_t pagesize_mask) {
+    uint64_t a = addr&(((uint64_t)1<<M)-1);
+
+    uint32_t flag_data = 0x003;
+    if (pagesize) {
+        /* Interpret physical address as single 2MB/1GB page (only for PD/PDTE) */
+        flag_data |= 1 << 7;
+        a &= pagesize_mask;
+    } else a &= ~0xFFF;
+
+    a |= flag_data;
+
+    uint64_t* ptr = (uint64_t*)&map[index*8];
+    *ptr = a;
+}
+
+/* Read address in entry at index in map, and get pagesize info */
+static uint64_t paging_read_map_entry(volatile uint8_t* map, uint16_t index, uint8_t* pagesize) { 
+    uint64_t* ptr = (uint64_t*)&map[index*8];
+    uint64_t a = ptr[0];
+
+    *pagesize = a >> 7 & 1;
+    /* Remove flag bits */
+    a &= ~0xFFF;
+
+    /* Address is M bits long */
+    a &= ((uint64_t)1<<M)-1;
+    return a;
+}
+
+static bool paging_check_map_entry_present(volatile uint8_t* map, uint16_t index) {
+    return (bool)(map[index*8] & 1);
+}
+
 /* Initialize allocator, this is generalized to handle anything from basic
  * virtual memory at boot to full kernel management */
 void paging_initialize_allocator(void* (*allocate_page)(), void (*free_page)(void*)) {
@@ -34,54 +83,6 @@ void paging_reload_pml4(void(*reload)(volatile void* pml4)) {
     if (PAGING_PML4 == NULL) return;
 
     reload(PAGING_PML4);
-}
-
-/* Initialize map to unmapped by default, (P bit 0) */
-void paging_initialize_map(volatile uint8_t* map) {
-    for (uint32_t i=0; i<MAP_SIZE; i++) {
-        map[i] = 0;
-    }
-}
-
-/* Generalised function used to write address to pt, pd, pdpt, pml4
- *
- * pd and pdpt support pagesize bit which lets you define a contigious chunk of 2MB or 1GB 
- * in physical memory as a page. You write the physical memory address using SET_PAGESIZE and
- * the appropriate mask for them, otherwise pass NOSET_PAGESIZE, and NO_PAGE_MASK
- *
- * Flag configuration is minimal and default for now TODO */
-void paging_write_map_entry(volatile uint8_t* map, uint16_t index, uint64_t addr, uint8_t pagesize, uint64_t pagesize_mask) {
-    uint64_t a = addr&(((uint64_t)1<<M)-1);
-
-    uint32_t flag_data = 0x003;
-    if (pagesize) {
-        /* Interpret physical address as single 2MB/1GB page (only for PD/PDTE) */
-        flag_data |= 1 << 7;
-        a &= pagesize_mask;
-    } else a &= ~0xFFF;
-
-    a |= flag_data;
-
-    uint64_t* ptr = (uint64_t*)&map[index*8];
-    *ptr = a;
-}
-
-/* Read address in entry at index in map, and get pagesize info */
-uint64_t paging_read_map_entry(volatile uint8_t* map, uint16_t index, uint8_t* pagesize) { 
-    uint64_t* ptr = (uint64_t*)&map[index*8];
-    uint64_t a = ptr[0];
-
-    *pagesize = a >> 7 & 1;
-    /* Remove flag bits */
-    a &= ~0xFFF;
-
-    /* Address is M bits long */
-    a &= ((uint64_t)1<<M)-1;
-    return a;
-}
-
-bool paging_check_map_entry_present(volatile uint8_t* map, uint16_t index) {
-    return (bool)(map[index*8] & 1);
 }
 
 

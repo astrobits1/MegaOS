@@ -5,7 +5,6 @@
 
 /* Kernel specific bootinfo structures */
 
-
 enum MEMORY_MAP_ENTRY_TYPE {
     MEMORY_MAP_ENTRY_USABLE,
     MEMORY_MAP_ENTRY_USABLE_ACPI,
