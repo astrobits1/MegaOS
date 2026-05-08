@@ -6,11 +6,11 @@
   <b>TesseractOS</b> is a 64 bit OS being developed by me as a personal hobby project to learn about OS design of
   modern kernels like Linux and NT. I base off many design decisions on their internals mainly to explore
   how they scale to real systems but also diverge when I feel its necessary or look at new ideas. Currently its
-  targetting x86_64.
+  targeting x86_64.
 
   As a core design philosophy, the focus is more on building it bottom-up, subsystems first and features second.
   Because I aim to to explore the design, workarounds and challenges faced by modern OSes on real hardware to accomplish
-  systemic goals as opposed to targetting features and milestones.
+  systemic goals as opposed to targeting features and milestones.
 
   As <i>handmade</i> implies, this project has no LLM generated code and this will be true as it grows, as this is a hobby
   project with the aim of understanding and implementing every aspect.
