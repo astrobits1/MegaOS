@@ -1,9 +1,9 @@
 #include <kernel64/state.h>
 #include <kernel64/cpu/gdt.h>
 #include <kernel64/cpu/idt.h>
-#include <common/memory/paging.h>
-#include <common/memory/bump.h>
-#include <common/memory/pmm.h>
+#include <kernel64/memory/paging.h>
+#include <kernel64/memory/bump.h>
+#include <kernel64/memory/pmm.h>
 #include <common/bootinfo.h>
 #include <common/drivers/vga/vga.h>
 

@@ -1,6 +1,6 @@
 #include <boot32/boot.h>
-#include <common/memory/paging.h>
-#include <common/memory/bump.h>
+#include <kernel64/memory/paging.h>
+#include <kernel64/memory/bump.h>
 #include <stddef.h>
 
 uint64_t BOTTOM = 0;

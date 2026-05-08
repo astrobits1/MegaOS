@@ -1,4 +1,4 @@
-#include <common/memory/paging.h>
+#include <kernel64/memory/paging.h>
 #include <common/drivers/vga/vga.h>
 
 volatile void* PAGING_PML4 = NULL;

@@ -1,8 +1,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <common/memory/bump.h>
-#include <common/memory/paging.h>
+#include <kernel64/memory/bump.h>
+#include <kernel64/memory/paging.h>
 #include <common/drivers/vga/vga.h>
 #include <boot32/boot.h>
 #include <boot32/gdt.h>

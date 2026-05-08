@@ -30,9 +30,10 @@ LDFLAGS_KERNEL64_POSTFIX = -lgcc
 #BOOT32_C_SRCS := $(wildcard boot32/*.c)
 #BOOT32_S_SRCS := $(wildcard boot32/*.s)
 
+BOOT32_BORROW_C_SRCS := kernel64/memory/bump.c kernel64/memory/paging.c
+
 BOOT32_C_SRCS := $(shell find boot32 -name "*.c")
 BOOT32_S_SRCS := $(shell find boot32 -name "*.s")
-
 
 # Kernel64 sources
 #KERNEL64_C_SRCS := $(wildcard kernel64/*.c)
@@ -54,6 +55,7 @@ COMMON_S_SRCS := $(shell find common -name "*.s")
 # =========================
 
 BOOT32_OBJS := \
+	$(patsubst kernel64/%.c, build/boot32/kernel64/%.o, $(BOOT32_BORROW_C_SRCS)) \
 	$(patsubst boot32/%.c, build/boot32/%.o, $(BOOT32_C_SRCS)) \
 	$(patsubst boot32/%.s, build/boot32/%.o, $(BOOT32_S_SRCS)) \
 	$(patsubst common/%.c, build/boot32/common/%.o, $(COMMON_C_SRCS)) \
@@ -84,6 +86,11 @@ build/kernel64.elf: $(KERNEL64_OBJS)
 # =========================
 # Generic compile rules
 # =========================
+
+# C files (boot32/kernel64) (borrowed)
+build/boot32/kernel64/%.o: kernel64/%.c
+	@mkdir -p $(dir $@)
+	$(CC32) $(CFLAGS_BOOT32) -c $< -o $@
 
 # C files (boot32)
 build/boot32/%.o: boot32/%.c

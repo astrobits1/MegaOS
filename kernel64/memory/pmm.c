@@ -1,5 +1,5 @@
-#include <common/memory/paging.h>
-#include <common/memory/pmm.h>
+#include <kernel64/memory/paging.h>
+#include <kernel64/memory/pmm.h>
 #include <common/bootinfo.h>
 #include <stddef.h>
 
@@ -85,11 +85,7 @@ int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_size) {
             continue;
         }
 
-        uint64_t addr, length;
-        if (!CHECK_PAGE_4K_ALIGN(entry.addr))
-            addr = PAGE_4K_ALIGN(entry.addr);
-        else
-            addr = entry.addr;
+        uint64_t length;
 
         if (!CHECK_PAGE_4K_ALIGN(entry.length))
             length = PAGE_4K_ALIGN_DOWN(entry.length);
