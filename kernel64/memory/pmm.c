@@ -20,7 +20,7 @@ uint32_t PMM_ZONE_COUNT = 0;
 uint8_t* free_lists[18];
 
 /* Initialize and mark top level zone */
-void pmm_top_level_zone(uint64_t addr, uint8_t order) {
+static void pmm_top_level_zone(uint64_t addr, uint8_t order) {
     vga_print("Top level: ");
     vga_print_uint_color(addr, 16, 16, VGA_COLOR_LIGHT_MAGENTA);
     vga_print(", Order: ");
@@ -35,7 +35,7 @@ static void pmm_page_meta_write(struct pmm_page_meta* list_base, uint64_t page_i
     meta->state = state;
 }
 
-int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_size) {
+static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_size) {
     /* Read memory map and allocate page list and zone list starting at
      * the base address, size has been precalculated and it is ensured that
      * the memory we are writing to is free and usable */
@@ -85,12 +85,17 @@ int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_size) {
             continue;
         }
 
-        uint64_t length;
+        uint64_t addr, length;
+        if (!CHECK_PAGE_4K_ALIGN(entry.addr))
+            addr = PAGE_4K_ALIGN(entry.addr);
+        else
+            addr = entry.addr;
 
         if (!CHECK_PAGE_4K_ALIGN(entry.length))
             length = PAGE_4K_ALIGN_DOWN(entry.length);
         else
             length = entry.length;
+
         zone_meta->page_count = ((length-1)>>12)+1;
         zone_meta->base = page_list_base;
         zone_meta->length = zone_meta->page_count*sizeof(struct pmm_page_meta);
@@ -110,7 +115,7 @@ int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_size) {
 }
 
 /* Calculate page list + zone list size */
-uint64_t pmm_get_list_size(uint32_t* _zone_count) {
+static uint64_t pmm_get_list_size(uint32_t* _zone_count) {
     uint64_t list_size = 0;
     uint32_t zone_count = 0;
     for (uint32_t i=0; i<PMM_MEMORY_MAP_COUNT; i++) {
@@ -144,7 +149,7 @@ uint64_t pmm_get_list_size(uint32_t* _zone_count) {
 }
 
 /* Load and initialize page list after reading usable zones */
-int pmm_initialize_zones() {
+static int pmm_initialize_zones() {
     uint32_t zone_count = 0;
     uint64_t list_size = pmm_get_list_size(&zone_count);
 
