@@ -14,7 +14,8 @@ struct bootinfo parse_multiboot2_info(void* multiboot2_info, struct memory_map_e
 
     /* Fields to read into from tags */
     struct bootinfo info;
-    struct blob kernel_elf = {NULL, NULL, 0};
+    struct blob kernel_elf = {0, 0, 0};
+    struct blob kernel_physical = {0, 0, 0};
     uint32_t memory_map_entry_count = 0;
 
     /* Start reading tags */
@@ -25,8 +26,8 @@ struct bootinfo parse_multiboot2_info(void* multiboot2_info, struct memory_map_e
             case MBI_TAG_MODULE: {
                 struct mbi_tag_module* module = (void*)addr;
                 
-                kernel_elf.start = (void*)module->mod_start;
-                kernel_elf.end = (void*)module->mod_end;
+                kernel_elf.start = module->mod_start;
+                kernel_elf.end = module->mod_end;
                 kernel_elf.size = module->mod_end-module->mod_start;
 
                 break;
@@ -85,8 +86,9 @@ struct bootinfo parse_multiboot2_info(void* multiboot2_info, struct memory_map_e
         vga_print_color("Did not find memory map in multiboot2 info\n", VGA_COLOR_RED);
         boot_panic();
         return info;
-    } else info.map_entries = mapentries;
-    
+    } else info.map_entries = (uint32_t)mapentries;
+   
+    info.kernel_physical = kernel_physical;
     return info;
 }
 

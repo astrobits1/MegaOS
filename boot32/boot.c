@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <common/memory/bump.h>
-#include <common/memory/vmm.h>
+#include <common/memory/paging.h>
 #include <common/drivers/vga/vga.h>
 #include <boot32/boot.h>
 #include <boot32/gdt.h>
@@ -41,14 +41,14 @@ void paging_initialize() {
      * All the page structures should be within identity mapped region
      * or modifying them will cause a page fault */
 
-    volatile void* pml4 = vmm_new_pml4();
-    vmm_set_pml4(pml4);
+    volatile void* pml4 = paging_new_pml4();
+    paging_set_pml4(pml4);
 
     /* Identity map first 4 MB that consists of boot kernel + allocation limit */
-    vmm_map_memory_2M(0, 0, 2); 
+    paging_map(0, 0, PAGE_2M, 2); 
 
     /* Load pml4 to CR3 */
-    vmm_reload_pml4(load_pml4);
+    paging_reload_pml4(load_pml4);
 
     /* Enable 64 bit paging, and compatibility mode 
      * kernel and surrounding space should be identity mapped */
@@ -100,19 +100,8 @@ void boot_main(void* mb2_bootinfo) {
     if (!CHECK_PAGE_4K_ALIGN(bottom))
         bottom = PAGE_4K_ALIGN(bottom);
 
-    vga_print_color("Found kernel64.elf\n", VGA_COLOR_LIGHT_GREEN);
-    vga_print_color("Memory Map\n", VGA_COLOR_LIGHT_GREEN);
-    for (uint32_t i=0; i<info.map_entry_count; i++) {
-        struct memory_map_entry* entry = &info.map_entries[i];
-        
-        vga_print("base: "); vga_print_uint(entry->addr>>32, 16, 8); 
-        vga_print_uint(entry->addr&0xFFFFFFFF, 16, 8);
-        vga_print(", size: "); vga_print_uint(entry->length>>32, 16, 8); 
-        vga_print_uint(entry->length&0xFFFFFFFF, 16, 8);
-        vga_print(", type: "); vga_print_uint(entry->type, 10, -1); vga_print("\n");
-    }
-    vga_print("\n");
-
+    vga_print_color("Found kernel64.elf\n", VGA_COLOR_LIGHT_GREEN); 
+    bootinfo_print_memory_map(&info);
     /* Initalize physical memory allocator, starting from bottom
      * (above the memory map allocation, at page boundary) */
     bump_initialize(bottom, top);
@@ -123,7 +112,7 @@ void boot_main(void* mb2_bootinfo) {
     vga_print_color("SSE enabled\n", VGA_COLOR_LIGHT_GREEN);
 
     /* Initialize VMM */
-    vmm_initialize_allocator(bump_allocate_page, bump_free_page);
+    paging_initialize_allocator(bump_allocate_page, bump_free_page);
     /* Initialise page maps, enable paging and enter x86_64 compatibility mode
      * 0-4MB region is identity mapped, which includes IDT, GDT (data segments)
      * as well all page allocations by the allocator
@@ -136,10 +125,10 @@ void boot_main(void* mb2_bootinfo) {
     /* Prepare kernel load by identity mapping 16 MB of memory starting at 4 MB */
     const uint8_t* kernel_physical_addr = (uint8_t*)0x00400000;
     const uint8_t initial_block_count = 8;
-    vmm_map_memory_2M((uint32_t)kernel_physical_addr, (uint32_t)kernel_physical_addr, initial_block_count);
+    paging_map((uint32_t)kernel_physical_addr, (uint32_t)kernel_physical_addr, PAGE_2M, initial_block_count);
 
     /* Load kernel ELF64 into identity mapped region and get entry point */ 
-    struct elf_metadata meta = load_elf64_exec_at(info.kernel_elf.start, info.kernel_elf.size, (uint8_t*)kernel_physical_addr);
+    struct elf_metadata meta = load_elf64_exec_at((void*)(uint32_t)info.kernel_elf.start, info.kernel_elf.size, (uint8_t*)kernel_physical_addr);
 
     vga_print("64 bit kernel loaded into identity mapped memory\n");
     vga_print("Virtual Address Start: ");
@@ -155,8 +144,13 @@ void boot_main(void* mb2_bootinfo) {
     vga_print("\n");
    
     /* Map kernel memory to its expected 64 bit paging */
-    vmm_map_memory_2M(meta.virtual_start, (uint32_t)kernel_physical_addr, initial_block_count);
+    paging_map(meta.virtual_start, (uint32_t)kernel_physical_addr, PAGE_2M, initial_block_count);
     vga_print_color("Kernel memory mapped to higher half 64 bit virtual address\n", VGA_COLOR_LIGHT_GREEN);
+
+    /* Load kernel physical location data in bootinfo */
+    info.kernel_physical.start = (uint32_t)kernel_physical_addr;
+    info.kernel_physical.end = (uint32_t)kernel_physical_addr+meta.memory_image_size-1;
+    info.kernel_physical.size = meta.memory_image_size;
 
     /* Make all entries 64 bit in GDT */
     vga_print_color("Setting up 64 bit GDT\n", VGA_COLOR_LIGHT_GREEN);

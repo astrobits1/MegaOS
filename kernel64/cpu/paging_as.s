@@ -13,4 +13,9 @@ load_pml4:
     mov %rdi, %cr3
     ret
 
-
+/* void* get_pml4() */
+.global get_pml4
+.type get_pml4, @function
+get_pml4:
+    mov %cr3, %rax
+    ret

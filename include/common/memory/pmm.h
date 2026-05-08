@@ -1,10 +1,9 @@
 #ifndef COMMON_PMM_H
 #define COMMON_PMM_H
 
-#include <common/memory/memcommons.h>
 #include <common/bootinfo.h>
 #include <stdint.h>
-
+#include <stdbool.h>
 
 /* 4KB is order 0 (fundamental page)
  * 8KB is order 1
@@ -14,7 +13,28 @@
  * This macro checks if given memory address is aligned to the given order block size */
 #define CHECK_ORDER_ALIGN(x, od) (((x)&~(((uint64_t)PAGE_4K<<(od))-1))==(x))
 
-void pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint64_t bottom, uint64_t top);
+enum PMM_PAGE_STATE {
+    PMM_PAGE_ALLOCATED,
+    PMM_PAGE_FREE,
+    PMM_PAGE_RESERVED
+};
+
+/* Metadata for one page (or block of some order) */
+struct pmm_page_meta {
+    uint8_t state;
+    uint8_t order;
+} __attribute__((packed));
+
+/* Metadata for one zone for the local page list */
+struct pmm_zone_meta {
+    uint64_t base;
+    uint64_t length;
+    uint64_t page_count;
+    bool usable;
+};
+
+int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint64_t bottom, uint64_t top);
 void* pmm_allocate_page();
+void pmm_free_page(void* page);
 
 #endif
