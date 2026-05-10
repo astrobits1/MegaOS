@@ -17,21 +17,39 @@ void kernel_setup(struct bootinfo* info) {
     gdt_initialise();
 
     /* Initialise 64 bit IDT and link exception handlers */
-    idt_initialise();
+    idt_initialise(); 
+
+    /* Initialize CPU level paging functionality in order to write to physical
+     * memory as we are currently in virtually mapped space */
+    paging_initialize_allocator(bump_allocate_page, bump_free_page, bump_get_physical);
+
+    /* Get the already loaded PML4 and load it in our paging manager */
+    volatile void* pml4 = get_pml4();
+    paging_set_pml4(pml4);
 
     /* Initialize linear allocator for allocation during PMM bootstrap 
      * Only 32KB is permitted as this should be enough for basic page table
      * allocation and writing */
     const uint64_t bump_alloc_size = 0x8000;
-    bump_initialize((uint64_t)_KERNEL_END, (uint64_t)_KERNEL_END+bump_alloc_size);
+    uint64_t bottom = info->kernel_physical.end;
+    uint64_t top = info->kernel_physical.end+bump_alloc_size;
+    uint64_t v_base = (uint64_t)_KERNEL_END;
 
-    /* Initialize CPU level paging functionality in order to write to physical
-     * memory as we are currently in virtually mapped space */
-    paging_initialize_allocator(bump_allocate_page, bump_free_page);
+    if (!CHECK_PAGE_4K_ALIGN(bottom))
+        bottom = PAGE_4K_ALIGN(bottom);
+    if (!CHECK_PAGE_4K_ALIGN(top))
+        top = PAGE_4K_ALIGN_DOWN(top);
+    if (!CHECK_PAGE_4K_ALIGN(v_base))
+        v_base = PAGE_4K_ALIGN(v_base);
 
-    /* Get the already loaded PML4 and load it in our paging manager */
-    volatile void* pml4 = get_pml4();
-    paging_set_pml4(pml4);
+    /* TODO Kernel must stage PML4 sub-structure in bump allocator
+     * to take ownership of them */
+
+    /* This maps the allocator region physical bottom to a virtual address of our choice 
+     * TODO
+     * This will cause a crash as it unmaps core kernel 2MB page, boot32 must only map till 
+     * kernel end */
+    bump_initialize(info->kernel_physical.end, info->kernel_physical.end+bump_alloc_size, (uint64_t)_KERNEL_END);
 
     /* Allocation of new pages should work fine and any new changes are 
      * appended to the already loaded PML4 */

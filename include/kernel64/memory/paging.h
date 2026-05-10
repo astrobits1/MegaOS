@@ -12,6 +12,13 @@ enum PAGE_SIZE {
     PAGE_1G = 0x40000000
 };
 
+enum PAGING_FREE_DEPTH {
+    /* Frees PT in PDE */
+    PAGING_FREE_PDE_DEPTH = 0,
+    /* Frees PD in PDPTE */
+    PAGING_FREE_PDPTE_DEPTH = 1
+};
+
 #define PAGE_4K_ALIGN(x) (((x)&~(PAGE_4K-1))+PAGE_4K)
 #define PAGE_4K_ALIGN_DOWN(x) ((x)&~(PAGE_4K-1))
 
@@ -30,7 +37,7 @@ enum PAGE_SIZE {
 #define NOSET_PAGESIZE 0
 
 /* Initialize page allocator */
-void paging_initialize_allocator(void* (*allocate_page)(), void (*free_page)(void*));
+void paging_initialize_allocator(void* (*allocate_page)(), void (*free_page)(void*), void* (*get_physical)(void*));
 
 /* Functions to work with PML4 (top level map entry) */
 volatile void* paging_new_pml4();
@@ -39,7 +46,8 @@ void paging_set_pml4(volatile void* pml4);
 /* Reload PML4 to CPU, which immediately takes action */
 void paging_reload_pml4(void (*reload)(volatile void* pml4));
 
-/* Functions to map physical to virtual */
+/* Functions to map/unmap physical to virtual */
 int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint8_t count);
+int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint8_t count);
 
 #endif

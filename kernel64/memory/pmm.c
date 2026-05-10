@@ -45,6 +45,7 @@ static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_
     PMM_PAGE_LIST_TOP = base+list_size;
     PMM_ZONE_COUNT = zone_count;
 
+    /*
     vga_print("Allocating lists now\n");
     vga_print("List Size Calculated: ");
     vga_print_uint(list_size, 10, -1);
@@ -56,7 +57,7 @@ static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_
     vga_print("Mapping physical to virtual identity starting at base,\nfor ");
     vga_print_uint(((list_size-1)>>12)+1, 10, -1);
     vga_print(" 4K pages\n");
-
+    */
     /* In order to access physical memory, we have to page it into an accessible
      * virtual range, as we are mapped and operating in virtual memory
      * For now, we can just identity map for easy translation TODO */
@@ -102,7 +103,7 @@ static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_
 
         /* For next zone, if any */
         base += sizeof(struct pmm_zone_meta);
-        page_list_base += zone_meta->base + zone_meta->length;
+        page_list_base += zone_meta->length;
 
         /* Write page entry list at corresponding offset
          * Initialize to free and order 0 for now */
@@ -110,7 +111,9 @@ static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_
             pmm_page_meta_write((struct pmm_page_meta*)zone_meta->base, page_meta_i, PMM_PAGE_FREE, 0);
         }
     }
-    
+   
+    if (paging_unmap(base, PAGE_4K, ((list_size-1)>>12)+1))
+        return 1;
     return 0;
 }
 

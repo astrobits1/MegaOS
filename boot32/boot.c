@@ -32,7 +32,7 @@ void boot_panic() {
 extern void enable_paging64();
 extern void load_pml4(volatile void* pml4);
 
-void paging_initialize() {
+void enable_paging() {
     /* Allocate page maps in physical memory, in a region that is outside .data
      * right at the end of the kernel 
      * They should be put at a page aligned physical address
@@ -44,7 +44,10 @@ void paging_initialize() {
     volatile void* pml4 = paging_new_pml4();
     paging_set_pml4(pml4);
 
-    /* Identity map first 4 MB that consists of boot kernel + allocation limit */
+    /* Identity map region from 0-(kernelend) to ensure a safe environment
+     * after enabling paging TODO
+     * Currently it maps full 2MB which will then cause a crash when remapped
+     * by bump allocator */
     paging_map(0, 0, PAGE_2M, 2); 
 
     /* Load pml4 to CR3 */
@@ -82,11 +85,7 @@ void boot_main(void* mb2_bootinfo) {
      * unimplemented handler for now, interrupts are disabled */
     idt_initialise();
 
-    /* Initialise linear page allocator to closest 4KB page aligned physical address 
-     * that doesnt overlap kernel
-     * After the kernel image 
-     *
-     * Identity map is set up until 4MB and we do not expect boot kernel to occupy 
+    /* Identity map is set up until 4MB and we do not expect boot kernel to occupy 
      * any more memory space beyond that point */
     uint32_t bottom = PAGE_4K_ALIGN((uint32_t)(_bootend));
     uint32_t top = 0x00400000;
@@ -101,26 +100,28 @@ void boot_main(void* mb2_bootinfo) {
         bottom = PAGE_4K_ALIGN(bottom);
 
     vga_print_color("Found kernel64.elf\n", VGA_COLOR_LIGHT_GREEN); 
-    bootinfo_print_memory_map(&info);
-    /* Initalize physical memory allocator, starting from bottom
-     * (above the memory map allocation, at page boundary) */
-    bump_initialize(bottom, top);
-    /* bump_allocate/free_page can now be used */
+    bootinfo_print_memory_map(&info); 
 
     /* Enable SSE instructions */
     enable_sse();
     vga_print_color("SSE enabled\n", VGA_COLOR_LIGHT_GREEN);
-
-    /* Initialize VMM */
-    paging_initialize_allocator(bump_allocate_page, bump_free_page);
+    
     /* Initialise page maps, enable paging and enter x86_64 compatibility mode
-     * 0-4MB region is identity mapped, which includes IDT, GDT (data segments)
-     * as well all page allocations by the allocator
+     * 0-(kernel end) region is identity mapped, which includes IDT, GDT (data segments)
      */
-    paging_initialize();
+    paging_initialize_allocator(bump_allocate_page, bump_free_page, bump_get_physical); 
 
+    enable_paging();
     /* x86_64 compatibility mode has been entered, and our IDT is essentially invalid
      * until we enter long mode and set it up again */
+
+    /* Initalize physical memory allocator, starting from bottom
+     * (above the memory map allocation, at page boundary)
+     * This sets up an identity map from (kernelend)-4MB, which 
+     * is what all page allocations are confined to */
+    bump_initialize(bottom, top, bottom);
+    /* bump_allocate/free_page can now be used,
+     * which means paging API can be used */
 
     /* Prepare kernel load by identity mapping 16 MB of memory starting at 4 MB */
     const uint8_t* kernel_physical_addr = (uint8_t*)0x00400000;
@@ -146,6 +147,8 @@ void boot_main(void* mb2_bootinfo) {
     /* Map kernel memory to its expected 64 bit paging */
     paging_map(meta.virtual_start, (uint32_t)kernel_physical_addr, PAGE_2M, initial_block_count);
     vga_print_color("Kernel memory mapped to higher half 64 bit virtual address\n", VGA_COLOR_LIGHT_GREEN);
+    /* Unmap temporary identity map */
+    paging_unmap((uint32_t)kernel_physical_addr, PAGE_2M, initial_block_count); 
 
     /* Load kernel physical location data in bootinfo */
     info.kernel_physical.start = (uint32_t)kernel_physical_addr;
