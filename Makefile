@@ -9,21 +9,21 @@ AS64 = x86_64-elf-as
 # =========================
 # Flags
 # =========================
-CFLAGS_COMMON = -Iinclude -Iinclude/common -O2 -ffreestanding -Wall -Wextra
+CFLAGS_COMMON = -Iinclude -O2 -ffreestanding -Wall -Wextra
 CFLAGS_BOOT32 = $(CFLAGS_COMMON) -mno-sse -mno-sse2 -mno-mmx -msoft-float -fno-builtin
-CFLAGS_KERNEL64 = $(CFLAGS_COMMON) -mno-red-zone -mcmodel=kernel
+CFLAGS_KERNEL64 = $(CFLAGS_COMMON) -Iinclude/common -mno-red-zone -mcmodel=kernel
 
 # Separate flags for special libraries
-LIBFS_CFLAGS = $(CFLAGS_KERNEL64)
-LIBK_CFLAGS = $(CFLAGS_KERNEL64)
+CFLAGS_LIBFS = $(CFLAGS_COMMON) -Iinclude/common -mno-red-zone
+CFLAGS_LIBK = $(CFLAGS_KERNEL64)
 
-ASFLAGS_COMMON = -Iinclude -Iinclude/common
+ASFLAGS_COMMON = -Iinclude
 ASFLAGS_BOOT32 = $(ASFLAGS_COMMON)
-ASFLAGS_KERNEL64 = $(ASFLAGS_COMMON)
+ASFLAGS_KERNEL64 = $(ASFLAGS_COMMON) -Iinclude/common
 
 # Separate ASM flags for special libraries
-LIBFS_ASFLAGS = $(ASFLAGS_KERNEL64)
-LIBK_ASFLAGS = $(ASFLAGS_KERNEL64)
+ASFLAGS_LIBFS = $(ASFLAGS_COMMON) -Iinclude/common
+ASFLAGS_LIBK = $(ASFLAGS_KERNEL64)
 
 LDFLAGS_BOOT32 = -T boot32/linker.ld -ffreestanding -nostdlib
 LDFLAGS_KERNEL64 = -T kernel64/linker.ld -ffreestanding -mno-red-zone -nostdlib
@@ -31,8 +31,8 @@ LDFLAGS_BOOT32_POSTFIX = -lgcc
 LDFLAGS_KERNEL64_POSTFIX = -lgcc
 
 # Separate linker flags for special libraries
-LIBFS_LDFLAGS = rcs
-LIBK_LDFLAGS = rcs
+LDFLAGS_LIBFS = rcs
+LDFLAGS_LIBK = rcs
 
 # =========================
 # Source discovery
@@ -140,11 +140,11 @@ build/kernel64.elf: $(KERNEL64_OBJS) $(LIBFS_ARCHIVE) $(LIBK_ARCHIVE)
 
 $(LIBFS_ARCHIVE): $(LIBFS_OBJS)
 	@mkdir -p $(dir $@)
-	ar $(LIBFS_LDFLAGS) $@ $^
+	ar $(LDFLAGS_LIBFS) $@ $^
 
 $(LIBK_ARCHIVE): $(LIBK_OBJS)
 	@mkdir -p $(dir $@)
-	ar $(LIBK_LDFLAGS) $@ $^
+	ar $(LDFLAGS_LIBK) $@ $^
 
 # =========================
 # Generic compile rules
@@ -201,11 +201,11 @@ build/kernel64/common/%.o: common/%.s
 
 build/libfs/%.o: common/libfs/%.c
 	@mkdir -p $(dir $@)
-	$(CC64) $(LIBFS_CFLAGS) -c $< -o $@
+	$(CC64) $(CFLAGS_LIBFS) -c $< -o $@
 
 build/libfs/%.o: common/libfs/%.s
 	@mkdir -p $(dir $@)
-	$(AS64) $(LIBFS_ASFLAGS) -c $< -o $@
+	$(AS64) $(ASFLAGS_LIBFS) -c $< -o $@
 
 # =========================
 # libk special build rules
@@ -213,11 +213,11 @@ build/libfs/%.o: common/libfs/%.s
 
 build/libk/%.o: kernel64/libk/%.c
 	@mkdir -p $(dir $@)
-	$(CC64) $(LIBK_CFLAGS) -c $< -o $@
+	$(CC64) $(CFLAGS_LIBK) -c $< -o $@
 
 build/libk/%.o: kernel64/libk/%.s
 	@mkdir -p $(dir $@)
-	$(AS64) $(LIBK_ASFLAGS) -c $< -o $@
+	$(AS64) $(ASFLAGS_LIBK) -c $< -o $@
 
 # =========================
 # Clean
