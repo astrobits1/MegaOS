@@ -19,15 +19,23 @@ enum PAGING_FREE_DEPTH {
     PAGING_FREE_PDPTE_DEPTH = 1
 };
 
+/* Aligns an address by rounding up to 4K boundary */
 #define PAGE_4K_ALIGN(x) (((x)&~(PAGE_4K-1))+PAGE_4K)
+/* Aligns an address by rounding it down to 4K boundary */
 #define PAGE_4K_ALIGN_DOWN(x) ((x)&~(PAGE_4K-1))
 
+/* Check if address is aligned to 4K/2M/1G pages */
 #define CHECK_PAGE_4K_ALIGN(x) (((x)&~(PAGE_4K-1))==(x))
 #define CHECK_PAGE_2M_ALIGN(x) (((x)&~(PAGE_2M-1))==(x))
 #define CHECK_PAGE_1G_ALIGN(x) (((x)&~(PAGE_1G-1))==(x))
 
+/* How many 4K pages are there in 'x' 2M/1G pages? */
 #define PAGE_COUNT_4K_TO_2M(x) (512*(x))
 #define PAGE_COUNT_4K_TO_1G(x) (512*512*(x))
+
+/* What are the minimum number of 4K pages required to contain
+ * a chunk of size 'x' */
+#define PAGE_COUNT_4K_CONTAINING_LEN(x) (((x)+0xFFF)>>12)
 
 #define MAP_SIZE PAGE_4K
 #define MAP_ENTRY_COUNT 512

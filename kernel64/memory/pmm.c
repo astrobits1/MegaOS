@@ -5,19 +5,22 @@
 
 #include <common/drivers/vga/vga.h>
 
-struct memory_map_entry* PMM_MEMORY_MAP = NULL;
-uint32_t PMM_MEMORY_MAP_COUNT = 0;
-uint64_t PMM_BOTTOM = 0;
-uint64_t PMM_TOP = 0;
+struct pmm_pvt {
+    struct memory_map_entry* memory_map;
+    uint32_t memory_map_count;
+    uint64_t bottom;
+    uint64_t top;
 
-uint64_t PMM_PAGE_LIST_TOP = 0;
-uint64_t PMM_PAGE_LIST_BOTTOM = 0;
+    uint64_t page_list_top;
+    uint64_t page_list_bottom;
 
-uint64_t PMM_ZONE_LIST_BOTTOM = 0;
-uint32_t PMM_ZONE_COUNT = 0;
+    uint64_t zone_list_bottom;
+    uint32_t zone_count;
+    /* Free list head pointer for every order */
+    uint8_t* free_lists[18];
+};
 
-/* Free list head pointer for every order */
-uint8_t* free_lists[18];
+struct pmm_pvt pmm_state;
 
 /* Initialize and mark top level zone */
 static void pmm_top_level_zone(uint64_t addr, uint8_t order) {
@@ -35,25 +38,52 @@ static void pmm_page_meta_write(struct pmm_page_meta* list_base, uint64_t page_i
     meta->state = state;
 }
 
-static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_size) {
+/* Raw read from metadata array */
+static inline struct pmm_page_meta* pmm_page_meta_read(struct pmm_page_meta* list_base, uint64_t page_index) {
+    return &list_base[page_index];
+}
+
+/* Print metadata */
+static void pmm_page_meta_print(struct pmm_page_meta* meta) {
+    vga_print("State: ");
+    switch (meta->state) {
+        case PMM_PAGE_ALLOCATED:
+            vga_print_color("ALLOCATED", VGA_COLOR_LIGHT_MAGENTA);
+            break;
+        case PMM_PAGE_FREE:
+            vga_print_color("FREE", VGA_COLOR_LIGHT_MAGENTA);
+            break;
+        case PMM_PAGE_RESERVED:
+            vga_print_color("RESERVED", VGA_COLOR_LIGHT_MAGENTA);
+            break;
+        default:
+            vga_print_color("UNKNOWN", VGA_COLOR_LIGHT_RED);
+            break;
+    }
+    vga_print(" | Order: ");
+    vga_print_uint_color(meta->order, 10, -1, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print("\n");
+}
+
+static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint64_t list_size) {
     /* Read memory map and allocate page list and zone list starting at
      * the base address, size has been precalculated and it is ensured that
      * the memory we are writing to is free and usable */
     
-    PMM_ZONE_LIST_BOTTOM = base;
-    PMM_PAGE_LIST_BOTTOM = sizeof(struct pmm_zone_meta)*zone_count;
-    PMM_PAGE_LIST_TOP = base+list_size;
-    PMM_ZONE_COUNT = zone_count; 
+    pmm_state.zone_list_bottom = zone_list_base;
+    pmm_state.page_list_bottom = sizeof(struct pmm_zone_meta)*zone_count;
+    pmm_state.page_list_top = zone_list_base+list_size;
+    pmm_state.zone_count = zone_count; 
     
     /* In order to access physical memory, we have to page it into an accessible
      * virtual range, as we are mapped and operating in virtual memory
      * For now, we can just identity map for easy translation TODO */
-    if (paging_map(base, base, PAGE_4K, ((list_size-1)>>12)+1))
+    if (paging_map(zone_list_base, zone_list_base, PAGE_4K, PAGE_COUNT_4K_CONTAINING_LEN(list_size)))
         return 1;
 
-    uint64_t page_list_base = PMM_PAGE_LIST_BOTTOM;
-    for (uint32_t i=0; i<PMM_MEMORY_MAP_COUNT; i++) {
-        struct memory_map_entry entry = PMM_MEMORY_MAP[i];
+    uint64_t page_list_base = pmm_state.page_list_bottom;
+    for (uint32_t i=0; i<pmm_state.memory_map_count; i++) {
+        struct memory_map_entry entry = pmm_state.memory_map[i];
         bool usable = true;
 
         if (entry.type != MEMORY_MAP_ENTRY_USABLE &&\
@@ -62,45 +92,51 @@ static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_
 
         /* A zone is any usable RAM region
          * Write zone list entry */
-        struct pmm_zone_meta* zone_meta = (struct pmm_zone_meta*)base; 
+        struct pmm_zone_meta* zone_meta = (struct pmm_zone_meta*)zone_list_base; 
         zone_meta->usable = usable;
 
         if (!usable) {
-            zone_meta->base = 0;
-            zone_meta->length = 0;
+            zone_meta->page_list_base = NULL;
+            zone_meta->page_list_length = 0;
             zone_meta->page_count = 0;
-            base += sizeof(struct pmm_zone_meta);
+            zone_list_base += sizeof(struct pmm_zone_meta);
             continue;
         }
 
-        uint64_t addr, length;
+        uint64_t zone_base_addr, zone_length;
         if (!CHECK_PAGE_4K_ALIGN(entry.addr))
-            addr = PAGE_4K_ALIGN(entry.addr);
+            zone_base_addr = PAGE_4K_ALIGN(entry.addr);
         else
-            addr = entry.addr;
+            zone_base_addr = entry.addr;
 
         if (!CHECK_PAGE_4K_ALIGN(entry.length))
-            length = PAGE_4K_ALIGN_DOWN(entry.length);
+            zone_length = PAGE_4K_ALIGN_DOWN(entry.length);
         else
-            length = entry.length;
+            zone_length = entry.length;
 
-        zone_meta->page_count = ((length-1)>>12)+1;
-        zone_meta->base = page_list_base;
-        zone_meta->length = zone_meta->page_count*sizeof(struct pmm_page_meta);
+        zone_meta->page_count = PAGE_COUNT_4K_CONTAINING_LEN(zone_length);
+        zone_meta->page_list_base = (struct pmm_page_meta*)page_list_base;
+        zone_meta->page_list_length = zone_meta->page_count*sizeof(struct pmm_page_meta);
 
         /* For next zone, if any */
-        base += sizeof(struct pmm_zone_meta);
-        page_list_base += zone_meta->length;
+        zone_list_base += sizeof(struct pmm_zone_meta);
+        page_list_base += zone_meta->page_list_length;
 
         /* Write page entry list at corresponding offset
          * Initialize to free and order 0 for now */
         for (uint64_t page_meta_i=0; page_meta_i<zone_meta->page_count; page_meta_i++) {
-            pmm_page_meta_write((struct pmm_page_meta*)zone_meta->base, page_meta_i, PMM_PAGE_FREE, 0);
+            enum PMM_PAGE_STATE meta_state;
+
+            if (zone_base_addr == pmm_state.zone_list_bottom && page_meta_i < PAGE_COUNT_4K_CONTAINING_LEN(list_size)) {
+                meta_state = PMM_PAGE_RESERVED;
+            } else {
+                meta_state = PMM_PAGE_FREE;
+            }
+
+            pmm_page_meta_write(zone_meta->page_list_base, page_meta_i, meta_state, 0);
         }
     }
    
-    if (paging_unmap(base, PAGE_4K, ((list_size-1)>>12)+1))
-        return 1;
     return 0;
 }
 
@@ -108,8 +144,8 @@ static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_
 static uint64_t pmm_get_list_size(uint32_t* _zone_count) {
     uint64_t list_size = 0;
     uint32_t zone_count = 0;
-    for (uint32_t i=0; i<PMM_MEMORY_MAP_COUNT; i++) {
-        struct memory_map_entry entry = PMM_MEMORY_MAP[i];
+    for (uint32_t i=0; i<pmm_state.memory_map_count; i++) {
+        struct memory_map_entry entry = pmm_state.memory_map[i];
         if (entry.type != MEMORY_MAP_ENTRY_USABLE &&\
             entry.type != MEMORY_MAP_ENTRY_USABLE_ACPI)
             continue;
@@ -122,7 +158,7 @@ static uint64_t pmm_get_list_size(uint32_t* _zone_count) {
         if (!CHECK_PAGE_4K_ALIGN(length))
             length = PAGE_4K_ALIGN_DOWN(length);
 
-        uint64_t max_local_index = (length-1)>>12;
+        uint64_t max_local_index = PAGE_COUNT_4K_CONTAINING_LEN(length)-1;
         uint64_t local_list_size = (max_local_index+1)*sizeof(struct pmm_page_meta);
         uint64_t local_size = sizeof(struct pmm_zone_meta) + local_list_size;
 
@@ -145,9 +181,9 @@ static int pmm_initialize_zones() {
 
     bool list_allocated = false;
 
-    for (uint32_t i=0; i<PMM_MEMORY_MAP_COUNT; i++) {
-        struct memory_map_entry entry = PMM_MEMORY_MAP[i];
-        if (entry.addr >= PMM_TOP) break;
+    for (uint32_t i=0; i<pmm_state.memory_map_count; i++) {
+        struct memory_map_entry entry = pmm_state.memory_map[i];
+        if (entry.addr >= pmm_state.top) break;
         if (entry.type != MEMORY_MAP_ENTRY_USABLE &&\
             entry.type != MEMORY_MAP_ENTRY_USABLE_ACPI)
             continue;
@@ -166,16 +202,16 @@ static int pmm_initialize_zones() {
         if (!CHECK_PAGE_4K_ALIGN(length))
             length = PAGE_4K_ALIGN_DOWN(length);
 
-        if (addr + length - 1 < PMM_BOTTOM)
+        if (addr + length - 1 < pmm_state.bottom)
             continue;
 
-        if (addr < PMM_BOTTOM) {
-            length = addr+length-PMM_BOTTOM;
-            addr = PMM_BOTTOM;
+        if (addr < pmm_state.bottom) {
+            length = addr+length-pmm_state.bottom;
+            addr = pmm_state.bottom;
         }
 
-        if (addr + length - 1 >= PMM_TOP) 
-            length -= addr+length - PMM_TOP;
+        if (addr + length - 1 >= pmm_state.top) 
+            length -= addr+length - pmm_state.top;
 
         /* Handle the case of allocating page list inside
          * the free ram zone somewhere, we cut the zone early
@@ -187,7 +223,7 @@ static int pmm_initialize_zones() {
             /* Error occured during allocation */
             if (s) 
                 return s;
-            addr = PMM_PAGE_LIST_TOP;
+            addr = pmm_state.page_list_top;
             length -= list_size;
             list_allocated = true;
         }
@@ -234,18 +270,18 @@ static int pmm_initialize_zones() {
 /* Get memory map in format specified in bootinfo.h,
  * get base physical address below which we dont touch memory */
 int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint64_t bottom, uint64_t top) {
-    PMM_MEMORY_MAP = entries;
-    PMM_MEMORY_MAP_COUNT = entry_count;
-    PMM_BOTTOM = bottom;
-    PMM_TOP = top;
+    pmm_state.memory_map = entries;
+    pmm_state.memory_map_count = entry_count;
+    pmm_state.bottom = bottom;
+    pmm_state.top = top;
 
-    if (!CHECK_PAGE_4K_ALIGN(PMM_BOTTOM))
-        PMM_BOTTOM = PAGE_4K_ALIGN(PMM_BOTTOM);
-    if (!CHECK_PAGE_4K_ALIGN(PMM_TOP))
-        PMM_TOP = PAGE_4K_ALIGN_DOWN(PMM_TOP);
+    if (!CHECK_PAGE_4K_ALIGN(pmm_state.bottom))
+        pmm_state.bottom = PAGE_4K_ALIGN(pmm_state.bottom);
+    if (!CHECK_PAGE_4K_ALIGN(pmm_state.top))
+        pmm_state.top = PAGE_4K_ALIGN_DOWN(pmm_state.top);
 
     for (int i=0; i<18; i++) {
-        free_lists[i] = NULL;
+        pmm_state.free_lists[i] = NULL;
     }
 
     int s = pmm_initialize_zones();
@@ -255,9 +291,9 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint6
     vga_print("[");vga_print_color("Physical Memory Manager",VGA_COLOR_LIGHT_GREEN);vga_print("] ");
     vga_print("Initialized\n");
     vga_print("    Bottom: ");
-    vga_print_uint_color(PMM_BOTTOM, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print_uint_color(pmm_state.bottom, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
     vga_print(" | Top: ");
-    vga_print_uint_color(PMM_TOP, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print_uint_color(pmm_state.top, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
     vga_print("\n");
 
     return 0;
@@ -265,7 +301,7 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint6
 
 /* Allocate a 4KB page from physical memory, return NULL if not possible */
 void* pmm_allocate_page() {
-    if (PMM_MEMORY_MAP == NULL) return NULL;
+    if (pmm_state.memory_map == NULL) return NULL;
 
     return NULL;
 }

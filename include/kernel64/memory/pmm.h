@@ -27,8 +27,8 @@ struct pmm_page_meta {
 
 /* Metadata for one zone for the local page list */
 struct pmm_zone_meta {
-    uint64_t base;
-    uint64_t length;
+    struct pmm_page_meta* page_list_base;
+    uint64_t page_list_length;
     uint64_t page_count;
     bool usable;
 };
