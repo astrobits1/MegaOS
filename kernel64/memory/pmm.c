@@ -103,16 +103,10 @@ static struct pmm_page_meta* pmm_page_meta_linear_lookup_read(uint64_t p_addr) {
 }
 
 static int pmm_page_meta_linear_look_write(uint64_t p_addr, uint8_t state, uint8_t order) {
-    struct pmm_zone_meta* zone_meta = pmm_zone_meta_linear_lookup(p_addr);
-    /* Check for zone validity */
-    if (zone_meta == NULL) 
-        return 1;
-
-    /* Within zone, find page index */
-    uint64_t page_index = (p_addr-zone_meta->zone_p_base)>>12;
-
     /* Lookup page metadata and write to it */
-    struct pmm_page_meta* page_meta = pmm_page_meta_read(zone_meta->page_list_base, page_index);
+    struct pmm_page_meta* page_meta = pmm_page_meta_linear_lookup_read(p_addr);
+    if (page_meta == NULL)
+        return 1;
     page_meta->order = order;
     page_meta->state = state;
 
