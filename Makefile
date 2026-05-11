@@ -11,18 +11,18 @@ AS64 = x86_64-elf-as
 # =========================
 CFLAGS_COMMON = -Iinclude -O2 -ffreestanding -Wall -Wextra
 CFLAGS_BOOT32 = $(CFLAGS_COMMON) -mno-sse -mno-sse2 -mno-mmx -msoft-float -fno-builtin
-CFLAGS_KERNEL64 = $(CFLAGS_COMMON) -Iinclude/common -mno-red-zone -mcmodel=kernel
+CFLAGS_KERNEL64 = $(CFLAGS_COMMON) -mno-red-zone -mcmodel=kernel
 
 # Separate flags for special libraries
-CFLAGS_LIBFS = $(CFLAGS_COMMON) -Iinclude/common -mno-red-zone
+CFLAGS_LIBFS = $(CFLAGS_COMMON) -mno-red-zone
 CFLAGS_LIBK = $(CFLAGS_KERNEL64)
 
 ASFLAGS_COMMON = -Iinclude
 ASFLAGS_BOOT32 = $(ASFLAGS_COMMON)
-ASFLAGS_KERNEL64 = $(ASFLAGS_COMMON) -Iinclude/common
+ASFLAGS_KERNEL64 = $(ASFLAGS_COMMON)
 
 # Separate ASM flags for special libraries
-ASFLAGS_LIBFS = $(ASFLAGS_COMMON) -Iinclude/common
+ASFLAGS_LIBFS = $(ASFLAGS_COMMON)
 ASFLAGS_LIBK = $(ASFLAGS_KERNEL64)
 
 LDFLAGS_BOOT32 = -T boot32/linker.ld -ffreestanding -nostdlib
