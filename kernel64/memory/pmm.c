@@ -15,7 +15,7 @@ struct pmm_pvt {
     uint64_t page_list_bottom;
 
     uint64_t zone_list_bottom;
-    uint32_t zone_count;
+    uint32_t zone_usable_count;
     /* Free list head pointer for every order */
     uint8_t* free_lists[18];
 };
@@ -31,16 +31,16 @@ static void pmm_top_level_zone(uint64_t addr, uint8_t order) {
     vga_print("\n");
 }
 
-/* Raw write to page metadata, no guards or checks */
-static void pmm_page_meta_write(struct pmm_page_meta* list_base, uint64_t page_index, uint8_t state, uint8_t order) {
-    struct pmm_page_meta* meta = &list_base[page_index];
-    meta->order = order;
-    meta->state = state;
-}
-
 /* Raw read from metadata array */
 static inline struct pmm_page_meta* pmm_page_meta_read(struct pmm_page_meta* list_base, uint64_t page_index) {
     return &list_base[page_index];
+}
+
+/* Raw write to page metadata, no guards or checks */
+static void pmm_page_meta_write(struct pmm_page_meta* list_base, uint64_t page_index, uint8_t state, uint8_t order) {
+    struct pmm_page_meta* meta = pmm_page_meta_read(list_base, page_index);
+    meta->order = order;
+    meta->state = state;
 }
 
 /* Print metadata */
@@ -65,6 +65,60 @@ static void pmm_page_meta_print(struct pmm_page_meta* meta) {
     vga_print("\n");
 }
 
+/* Given a physical page address, look up its zone if its usable
+ * otherwise return NULL */
+static struct pmm_zone_meta* pmm_zone_meta_linear_lookup(uint64_t p_addr) {
+    for (uint32_t i=0; i<pmm_state.memory_map_count; i++) {
+        struct memory_map_entry entry = pmm_state.memory_map[i];
+
+        if (p_addr >= entry.addr && p_addr < entry.addr+entry.length) {
+            /* Get corresponding zone metadata once memory map region
+             * has been identified */
+            struct pmm_zone_meta* base = (void*)pmm_state.zone_list_bottom;
+            struct pmm_zone_meta* meta = &base[i];
+
+            if (!meta->usable) 
+                return NULL;
+
+            return meta;
+        }
+    }
+
+    /* It is unmapped */
+    return NULL;
+}
+
+static struct pmm_page_meta* pmm_page_meta_linear_lookup_read(uint64_t p_addr) {
+    struct pmm_zone_meta* zone_meta = pmm_zone_meta_linear_lookup(p_addr);
+    /* Check for zone validity */
+    if (zone_meta == NULL) 
+        return NULL;
+
+    /* Within zone, find page index */
+    uint64_t page_index = (p_addr-zone_meta->zone_p_base)>>12;
+
+    /* Lookup page metadata and return it */
+    struct pmm_page_meta* page_meta = pmm_page_meta_read(zone_meta->page_list_base, page_index);
+    return page_meta;
+}
+
+static int pmm_page_meta_linear_look_write(uint64_t p_addr, uint8_t state, uint8_t order) {
+    struct pmm_zone_meta* zone_meta = pmm_zone_meta_linear_lookup(p_addr);
+    /* Check for zone validity */
+    if (zone_meta == NULL) 
+        return 1;
+
+    /* Within zone, find page index */
+    uint64_t page_index = (p_addr-zone_meta->zone_p_base)>>12;
+
+    /* Lookup page metadata and write to it */
+    struct pmm_page_meta* page_meta = pmm_page_meta_read(zone_meta->page_list_base, page_index);
+    page_meta->order = order;
+    page_meta->state = state;
+
+    return 0;
+}
+
 static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint64_t list_size) {
     /* Read memory map and allocate page list and zone list starting at
      * the base address, size has been precalculated and it is ensured that
@@ -73,7 +127,7 @@ static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint
     pmm_state.zone_list_bottom = zone_list_base;
     pmm_state.page_list_bottom = sizeof(struct pmm_zone_meta)*zone_count;
     pmm_state.page_list_top = zone_list_base+list_size;
-    pmm_state.zone_count = zone_count; 
+    pmm_state.zone_usable_count = zone_count; 
     
     /* In order to access physical memory, we have to page it into an accessible
      * virtual range, as we are mapped and operating in virtual memory
@@ -93,7 +147,20 @@ static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint
         /* A zone is any usable RAM region
          * Write zone list entry */
         struct pmm_zone_meta* zone_meta = (struct pmm_zone_meta*)zone_list_base; 
+        uint64_t zone_base_addr, zone_length;
+
+        if (!CHECK_PAGE_4K_ALIGN(entry.length))
+            zone_length = PAGE_4K_ALIGN_DOWN(entry.length);
+        else
+            zone_length = entry.length;
+
+        if (!CHECK_PAGE_4K_ALIGN(entry.addr))
+            zone_base_addr = PAGE_4K_ALIGN_DOWN(entry.addr);
+        else
+            zone_base_addr = entry.addr;
+
         zone_meta->usable = usable;
+        zone_meta->zone_p_base = zone_base_addr;
 
         if (!usable) {
             zone_meta->page_list_base = NULL;
@@ -102,17 +169,6 @@ static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint
             zone_list_base += sizeof(struct pmm_zone_meta);
             continue;
         }
-
-        uint64_t zone_base_addr, zone_length;
-        if (!CHECK_PAGE_4K_ALIGN(entry.addr))
-            zone_base_addr = PAGE_4K_ALIGN(entry.addr);
-        else
-            zone_base_addr = entry.addr;
-
-        if (!CHECK_PAGE_4K_ALIGN(entry.length))
-            zone_length = PAGE_4K_ALIGN_DOWN(entry.length);
-        else
-            zone_length = entry.length;
 
         zone_meta->page_count = PAGE_COUNT_4K_CONTAINING_LEN(zone_length);
         zone_meta->page_list_base = (struct pmm_page_meta*)page_list_base;
@@ -125,18 +181,25 @@ static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint
         /* Write page entry list at corresponding offset
          * Initialize to free and order 0 for now */
         for (uint64_t page_meta_i=0; page_meta_i<zone_meta->page_count; page_meta_i++) {
-            enum PMM_PAGE_STATE meta_state;
-
-            if (zone_base_addr == pmm_state.zone_list_bottom && page_meta_i < PAGE_COUNT_4K_CONTAINING_LEN(list_size)) {
-                meta_state = PMM_PAGE_RESERVED;
-            } else {
-                meta_state = PMM_PAGE_FREE;
-            }
-
-            pmm_page_meta_write(zone_meta->page_list_base, page_meta_i, meta_state, 0);
+            pmm_page_meta_write(zone_meta->page_list_base, page_meta_i, PMM_PAGE_FREE, 0);
         }
     }
-   
+ 
+    /* Zone and page lists have been written and initialized,
+     * we can now mark the pages occupied by the lists themselves as RESERVED
+     *
+     * Giving virtual address of bottom to physical address parameter is fine for
+     * now as we have identity mapped here TODO */
+    struct pmm_zone_meta* reserved_zone_meta = pmm_zone_meta_linear_lookup(\
+            pmm_state.zone_list_bottom);
+    uint64_t base_page_index = PAGE_COUNT_4K_CONTAINING_LEN( \
+            pmm_state.zone_list_bottom-reserved_zone_meta->zone_p_base);
+
+    for (uint64_t i=0; i<PAGE_COUNT_4K_CONTAINING_LEN(list_size); i++) {
+        pmm_page_meta_write(reserved_zone_meta->page_list_base, \
+                base_page_index+i, PMM_PAGE_RESERVED, 0);
+    }
+
     return 0;
 }
 
