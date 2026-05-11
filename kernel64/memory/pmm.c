@@ -43,21 +43,8 @@ static int pmm_allocate_lists(uint64_t base, uint32_t zone_count, uint64_t list_
     PMM_ZONE_LIST_BOTTOM = base;
     PMM_PAGE_LIST_BOTTOM = sizeof(struct pmm_zone_meta)*zone_count;
     PMM_PAGE_LIST_TOP = base+list_size;
-    PMM_ZONE_COUNT = zone_count;
-
-    /*
-    vga_print("Allocating lists now\n");
-    vga_print("List Size Calculated: ");
-    vga_print_uint(list_size, 10, -1);
-    vga_print("\nZone Count: ");
-    vga_print_uint(zone_count, 10, -1);
-    vga_print("\nAllocating at: ");
-    vga_print_uint(base, 16, 12);
-    vga_print("\n");
-    vga_print("Mapping physical to virtual identity starting at base,\nfor ");
-    vga_print_uint(((list_size-1)>>12)+1, 10, -1);
-    vga_print(" 4K pages\n");
-    */
+    PMM_ZONE_COUNT = zone_count; 
+    
     /* In order to access physical memory, we have to page it into an accessible
      * virtual range, as we are mapped and operating in virtual memory
      * For now, we can just identity map for easy translation TODO */
@@ -202,7 +189,6 @@ static int pmm_initialize_zones() {
                 return s;
             addr = PMM_PAGE_LIST_TOP;
             length -= list_size;
-            vga_print("Successfully allocated lists\n");
             list_allocated = true;
         }
                 
@@ -229,7 +215,7 @@ static int pmm_initialize_zones() {
             uint8_t order = highest_fit_od;
             if (order > size_od) order = size_od;
  
-            //pmm_top_level_zone(addr, order);
+            pmm_top_level_zone(addr, order);
 
             uint64_t block_length = PAGE_4K<<order;
 
@@ -258,10 +244,6 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint6
     if (!CHECK_PAGE_4K_ALIGN(PMM_TOP))
         PMM_TOP = PAGE_4K_ALIGN_DOWN(PMM_TOP);
 
-    vga_print("PMM Bottom: "); vga_print_uint_color(PMM_BOTTOM, 16, 8, VGA_COLOR_LIGHT_MAGENTA);
-    vga_print("\nPMM Top: "); vga_print_uint_color(PMM_TOP, 16, 8, VGA_COLOR_LIGHT_MAGENTA);
-    vga_print("\n");
-
     for (int i=0; i<18; i++) {
         free_lists[i] = NULL;
     }
@@ -269,7 +251,15 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint6
     int s = pmm_initialize_zones();
     if (s)
         return s;
-    
+   
+    vga_print("[");vga_print_color("Physical Memory Manager",VGA_COLOR_LIGHT_GREEN);vga_print("] ");
+    vga_print("Initialized\n");
+    vga_print("    Bottom: ");
+    vga_print_uint_color(PMM_BOTTOM, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print(" | Top: ");
+    vga_print_uint_color(PMM_TOP, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print("\n");
+
     return 0;
 }
 

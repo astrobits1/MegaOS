@@ -2,6 +2,69 @@
 #include <common/drivers/vga/vga.h>
 #include <boot32/boot.h>
 
+/* Assert for ELF64 validity */
+static int assert_elf(uint8_t* data, uint32_t size) {
+    if (size < sizeof(struct elf_ehdr)) {
+        vga_print_color("ELF not big enough\n", VGA_COLOR_RED);
+
+        return 1;
+    }
+
+    struct elf_ehdr* header = (struct elf_ehdr*)data;
+    elft_char* ident = (elft_char*)&header->e_ident;
+
+    if ((ident[0] | ident[1]<<8 | ident[2]<<16 | ident[3]<<24) != 0x464C457F) {
+        vga_print_color("ELF header checksum failed\n", VGA_COLOR_RED);
+        return 2;
+    }
+
+    /* 64 bit, executable */
+    if ((ident[4] | header->e_type << 8) != 0x0202) {
+        vga_print_color("ELF must be a 64 bit executable\n", VGA_COLOR_RED);
+        return 3;
+    }
+
+    return 0;
+}
+
+/* Find bottom and top virtual pointer of ELF image had it been loaded to memory */
+static void elf_get_memory_image_bounds(uint8_t* data, uint64_t* v_start, uint64_t* v_end) {
+    struct elf_ehdr* header = (struct elf_ehdr*)data;
+    elft_off pht_offset = header->e_phoff;
+    elft_half pht_entry_size = header->e_phentsize;
+    elft_half pht_entry_count = header->e_phnum;
+
+    uint64_t virtual_start = UINT64_MAX;
+    uint64_t virtual_end = 0;
+
+    for (elft_half i=0; i<pht_entry_count; i++) {
+        struct elf_phdr* entry = (struct elf_phdr*)&data[pht_offset+pht_entry_size*i];
+
+        /* Skip if not loadable */
+        if (entry->p_type != 1) continue;
+        
+        if (virtual_end == 0 || entry->p_vaddr > virtual_end) 
+            virtual_end = entry->p_vaddr+entry->p_memsz-1;
+
+        if (virtual_start == UINT64_MAX || entry->p_vaddr < virtual_start) 
+            virtual_start = entry->p_vaddr;
+    }
+
+    *v_start = virtual_start;
+    *v_end = virtual_end;
+}
+
+/* Important to get image size beforehand to know how much to map */
+uint32_t elf_get_memory_image_size(uint8_t* data, uint32_t size) {
+    if (assert_elf(data, size)) return 0;
+
+    uint64_t virtual_start;
+    uint64_t virtual_end;
+    elf_get_memory_image_bounds(data, &virtual_start, &virtual_end);
+
+    return (uint32_t)(virtual_end-virtual_start);
+}
+
 /* Input: Raw 64 bit ELF64 data, address to load to  */
 /* Output: struct containing metadata */
 
@@ -23,52 +86,18 @@
 struct elf_metadata load_elf64_exec_at(uint8_t* data, uint32_t size, uint8_t* address) {
     struct elf_metadata meta = {0, 0, 0};
 
-    if (size < sizeof(struct elf_ehdr)) {
-        vga_print_color("ELF not big enough\n", VGA_COLOR_RED);
-        boot_panic();
-
-        return meta;
-    }
+    if (assert_elf(data, size)) return meta;
 
     struct elf_ehdr* header = (struct elf_ehdr*)data;
-    elft_char* ident = (elft_char*)&header->e_ident;
-
-
-    if ((ident[0] | ident[1]<<8 | ident[2]<<16 | ident[3]<<24) != 0x464C457F) {
-        vga_print_color("ELF header checksum failed\n", VGA_COLOR_RED);
-        boot_panic();
-        return meta;
-    }
-
-    /* 64 bit, executable */
-    if ((ident[4] | header->e_type << 8) != 0x0202) {
-        vga_print_color("ELF must be a 64 bit executable\n", VGA_COLOR_RED);
-        boot_panic();
-        return meta;
-    }
-
     elft_off pht_offset = header->e_phoff;
     elft_half pht_entry_size = header->e_phentsize;
     elft_half pht_entry_count = header->e_phnum;
 
-    uint64_t virtual_start = UINT64_MAX;
-    uint64_t virtual_end = 0;
-
     /* Find top and bottom level virtual pointer, this is then patched at the start 
      * of the address we are given and offsets are calculated */
-    for (elft_half i=0; i<pht_entry_count; i++) {
-        struct elf_phdr* entry = (struct elf_phdr*)&data[pht_offset+pht_entry_size*i];
-
-        /* Skip if not loadable */
-        if (entry->p_type != 1) continue;
-        
-        if (virtual_end == 0 || entry->p_vaddr > virtual_end) 
-            virtual_end = entry->p_vaddr+entry->p_memsz-1;
-
-        if (virtual_start == UINT64_MAX || entry->p_vaddr < virtual_start) 
-            virtual_start = entry->p_vaddr;
-    }
-    
+    uint64_t virtual_start;
+    uint64_t virtual_end;
+    elf_get_memory_image_bounds(data, &virtual_start, &virtual_end); 
 
     for (elft_half i=0; i<pht_entry_count; i++) {
         struct elf_phdr* entry = (struct elf_phdr*)&data[pht_offset+pht_entry_size*i];

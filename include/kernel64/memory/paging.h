@@ -26,6 +26,9 @@ enum PAGING_FREE_DEPTH {
 #define CHECK_PAGE_2M_ALIGN(x) (((x)&~(PAGE_2M-1))==(x))
 #define CHECK_PAGE_1G_ALIGN(x) (((x)&~(PAGE_1G-1))==(x))
 
+#define PAGE_COUNT_4K_TO_2M(x) (512*(x))
+#define PAGE_COUNT_4K_TO_1G(x) (512*512*(x))
+
 #define MAP_SIZE PAGE_4K
 #define MAP_ENTRY_COUNT 512
 
@@ -47,7 +50,7 @@ void paging_set_pml4(volatile void* pml4);
 void paging_reload_pml4(void (*reload)(volatile void* pml4));
 
 /* Functions to map/unmap physical to virtual */
-int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint8_t count);
-int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint8_t count);
+int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint32_t count);
+int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint32_t count);
 
 #endif

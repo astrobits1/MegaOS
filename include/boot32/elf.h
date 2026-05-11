@@ -53,7 +53,7 @@ struct elf_metadata {
     uint32_t memory_image_size;        /* Total size spanning in memory starting from virtual_start */
 };
 
-
+uint32_t elf_get_memory_image_size(uint8_t* data, uint32_t size);
 struct elf_metadata load_elf64_exec_at(uint8_t* data, uint32_t size, uint8_t* address);
 
 #endif

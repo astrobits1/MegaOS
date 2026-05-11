@@ -33,9 +33,11 @@ static void paging_write_map_entry(volatile uint8_t* map, uint16_t index, uint64
     a |= flag_data;
  
     uint64_t* ptr = (uint64_t*)&map[index*8];
+    /*
     vga_print("Writing to: ");
     vga_print_uint((uintptr_t)ptr, 16, 16);
     vga_print("\n");
+    */
     *ptr = a;
 }
 
@@ -119,15 +121,10 @@ void paging_reload_pml4(void(*reload)(volatile void* pml4)) {
  * count represents no. of blocks starting from physical and mapped to virtual 1:1
  *
  * Virtual and Physical address must be page aligned to respective PAGE_SIZE or UND*/
-int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint8_t count) {
+int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint32_t count) {
     /* Decode virtual address into PML4, PDPT, PD, PT indices
      * PT/PD and their entries may or may not be used based on size
-     * If maps at those indices dont exist then create them */
-    vga_print("I was asked to map p_addr: "); vga_print_uint(p_addr, 16, -1);
-    vga_print(" to v_addr: "); vga_print_uint(v_addr, 16, -1);
-    vga_print(", pagesize: "); vga_print_uint(size, 10, -1);
-    vga_print(", count: "); vga_print_uint(count, 10, -1);
-    vga_print("\n");
+     * If maps at those indices dont exist then create them */ 
 
     uint16_t pte = v_addr >> 12 & 0x1FF;
     uint16_t pde = v_addr >> 21 & 0x1FF;
@@ -138,12 +135,8 @@ int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint8_t c
     volatile void* pd = NULL;
     volatile void* pdpt = NULL;
    
-    for (uint8_t i=0; i<count; i++) {
-        /* PML4E decoding */
-        vga_print("PTE: "); vga_print_uint(pte, 10, -1);
-        vga_print(", PDE: "); vga_print_uint(pde, 10, -1); 
-        vga_print("\n");
-
+    for (uint32_t i=0; i<count; i++) {
+        /* PML4E decoding */ 
         if (!paging_check_map_entry_present(PAGING_PML4, pml4e)) {
             volatile void* map = paging_allocate_page();
             if (map == NULL) 
@@ -243,16 +236,12 @@ int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint8_t c
 
             paging_write_map_entry(pd, pde, (uintptr_t)paging_get_physical((void*)map), NOSET_PAGESIZE, NO_PAGE_MASK);
             pt = map; 
-        } 
-        vga_print("pt addr: ");
-        vga_print_uint((uintptr_t)pt, 16, 16);
-        vga_print("\n");
-
-        vga_print("About to write 4K page\n"); 
+        }
+ 
         /* PTE write (For 4K pages) */
         paging_write_map_entry(pt, pte, p_addr, NOSET_PAGESIZE, NO_PAGE_MASK); 
 
-        vga_print("1\n");
+        //vga_print("1\n");
         if ((p_addr + PAGE_4K) < p_addr) {
             vga_print_color("Physical address overflow while mapping\n", VGA_COLOR_RED);
             return 2;
@@ -281,13 +270,12 @@ pdpte_check:
         }
     }
 
-    vga_print("Done writing\n");
     return 0;
 }
 
 /* Unmaps 'count' number of PAGE_SIZE pages. 
  * Any underlying map structures which are unlinked are freed */
-int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint8_t count) {
+int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint32_t count) {
     /* Decode virtual address into PML4, PDPT, PD, PT indices
      * PT/PD and their entries may or may not be used based on size */
     uint16_t pte = v_addr >> 12 & 0x1FF;
@@ -299,7 +287,7 @@ int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint8_t count) {
     volatile void* pd = NULL;
     volatile void* pdpt = NULL;
     
-    for (uint8_t i=0; i<count; i++) {
+    for (uint32_t i=0; i<count; i++) {
         /* PML4E decoding */
         if (!paging_check_map_entry_present(PAGING_PML4, pml4e))
             return 1;
