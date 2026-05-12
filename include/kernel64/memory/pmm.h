@@ -34,8 +34,12 @@ struct pmm_zone_meta {
     bool usable;
 };
 
-int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint64_t bottom, uint64_t top);
+int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintptr_t bottom, uintptr_t top, uint64_t mirror_base);
+
 void* pmm_allocate_page();
 void pmm_free_page(void* page);
+
+uintptr_t pmm_p_ptr(void* v_ptr);
+void* pmm_v_ptr(uintptr_t p_ptr);
 
 #endif

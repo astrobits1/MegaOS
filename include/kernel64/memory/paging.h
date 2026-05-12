@@ -33,6 +33,11 @@ enum PAGING_FREE_DEPTH {
 #define PAGE_COUNT_4K_TO_2M(x) (512*(x))
 #define PAGE_COUNT_4K_TO_1G(x) (512*512*(x))
 
+/* How many 4K/2M/1G pages are there in zone of 'x' bytes */
+#define PAGE_COUNT_4K_IN_LEN(x) ((x)>>12)
+#define PAGE_COUNT_2M_IN_LEN(x) ((x)>>21)
+#define PAGE_COUNT_1G_IN_LEN(x) ((x)>>30)
+
 /* What are the minimum number of 4K pages required to contain
  * a chunk of size 'x' */
 #define PAGE_COUNT_4K_CONTAINING_LEN(x) (((x)+0xFFF)>>12)
@@ -48,8 +53,8 @@ enum PAGING_FREE_DEPTH {
 #define NOSET_PAGESIZE 0
 
 /* Initialize page allocator */
-void paging_initialize_allocator(void* (*allocate_page)(), void (*free_page)(void*), void* (*get_physical)(void*));
-
+void paging_initialize_allocator(void* (*allocate_page)(), void (*free_page)(void*), \
+        uintptr_t (*get_physical)(void*), void* (*get_virtual)(uintptr_t));
 /* Functions to work with PML4 (top level map entry) */
 volatile void* paging_new_pml4();
 void paging_free_pml4(volatile void* pml4);
@@ -60,5 +65,6 @@ void paging_reload_pml4(void (*reload)(volatile void* pml4));
 /* Functions to map/unmap physical to virtual */
 int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint32_t count);
 int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint32_t count);
+int paging_set_map_best_fit(uint64_t v_addr, uint64_t p_addr, uint64_t length, enum PAGE_SIZE max_page_size, bool map);
 
 #endif

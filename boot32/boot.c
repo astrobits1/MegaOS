@@ -108,7 +108,7 @@ void boot_main(void* mb2_bootinfo) {
     /* bump_allocate/free_page can now be used */
 
     /* Initialize allocator for paging */
-    paging_initialize_allocator(bump_allocate_page, bump_free_page, bump_get_physical); 
+    paging_initialize_allocator(bump_allocate_page, bump_free_page, bump_p_ptr, bump_v_ptr); 
     /* Paging API can be used before even enabling paging,
      * because of the presence of identity map by default */
 

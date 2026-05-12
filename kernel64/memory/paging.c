@@ -4,7 +4,8 @@
 volatile void* PAGING_PML4 = NULL;
 void* (*paging_allocate_page)() = NULL;
 void (*paging_free_page)(void*) = NULL;
-void* (*paging_get_physical)(void*) = NULL;
+uintptr_t (*paging_p_ptr)(void*) = NULL;
+void* (*paging_v_ptr)(uintptr_t) = NULL;
 
 /* Initialize map to unmapped by default, (P bit 0) */
 static void paging_initialize_map(volatile uint8_t* map) {
@@ -20,7 +21,7 @@ static void paging_initialize_map(volatile uint8_t* map) {
  * the appropriate mask for them, otherwise pass NOSET_PAGESIZE, and NO_PAGE_MASK
  *
  * Flag configuration is minimal and default for now TODO */
-static void paging_write_map_entry(volatile uint8_t* map, uint16_t index, uint64_t addr, uint8_t pagesize, uint64_t pagesize_mask) {
+static void paging_write_map_entry(volatile uint8_t* map, uint16_t index, uintptr_t addr, uint8_t pagesize, uint64_t pagesize_mask) {
     uint64_t a = addr&(((uint64_t)1<<M)-1);
 
     uint32_t flag_data = 0x003;
@@ -33,16 +34,11 @@ static void paging_write_map_entry(volatile uint8_t* map, uint16_t index, uint64
     a |= flag_data;
  
     uint64_t* ptr = (uint64_t*)&map[index*8];
-    /*
-    vga_print("Writing to: ");
-    vga_print_uint((uintptr_t)ptr, 16, 16);
-    vga_print("\n");
-    */
     *ptr = a;
 }
 
 /* Read address in entry at index in map, and get pagesize info */
-static uint64_t paging_read_map_entry(volatile uint8_t* map, uint16_t index, uint8_t* pagesize) { 
+static uintptr_t paging_read_map_entry(volatile uint8_t* map, uint16_t index, uint8_t* pagesize) { 
     uint64_t* ptr = (uint64_t*)&map[index*8];
     uint64_t a = ptr[0];
 
@@ -52,7 +48,7 @@ static uint64_t paging_read_map_entry(volatile uint8_t* map, uint16_t index, uin
 
     /* Address is M bits long */
     a &= ((uint64_t)1<<M)-1;
-    return a;
+    return (uintptr_t)a;
 }
 
 /* Clear entry by setting present bit (and overall entry) to 0 */
@@ -74,7 +70,7 @@ static void paging_free_map_recursive(volatile uint8_t* map, int depth) {
         if (!paging_check_map_entry_present(map, i)) continue;
 
         uint8_t PS;
-        volatile void* addr = (volatile void*)(uintptr_t)paging_read_map_entry(map, i, &PS);
+        volatile void* addr = (volatile void*)paging_v_ptr(paging_read_map_entry(map, i, &PS));
         if (PS == 1) continue;
 
         /* We have a nested map(s) which need to be freed */
@@ -87,10 +83,11 @@ static void paging_free_map_recursive(volatile uint8_t* map, int depth) {
 
 /* Initialize allocator, this is generalized to handle anything from basic
  * virtual memory at boot to full kernel management */
-void paging_initialize_allocator(void* (*allocate_page)(), void (*free_page)(void*), void* (*get_physical)(void*)) {
+void paging_initialize_allocator(void* (*allocate_page)(), void (*free_page)(void*), uintptr_t (*get_physical)(void*), void* (*get_virtual)(uintptr_t)) {
     paging_allocate_page = allocate_page;
     paging_free_page = free_page;
-    paging_get_physical = get_physical;
+    paging_p_ptr = get_physical;
+    paging_v_ptr = get_virtual;
 }
 
 volatile void* paging_new_pml4() {
@@ -143,19 +140,19 @@ int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint32_t 
                 return 9;
             paging_initialize_map(map);
 
-            paging_write_map_entry(PAGING_PML4, pml4e, (uintptr_t)paging_get_physical((void*)map), NOSET_PAGESIZE, NO_PAGE_MASK);
+            paging_write_map_entry(PAGING_PML4, pml4e, paging_p_ptr((void*)map), NOSET_PAGESIZE, NO_PAGE_MASK);
             pdpt = map;
             /* No free required as we just created a new one */
         } else {
             uint8_t PS;
-            pdpt = (volatile void*)(uintptr_t)paging_read_map_entry(PAGING_PML4, pml4e, &PS);
+            pdpt = (volatile void*)paging_v_ptr(paging_read_map_entry(PAGING_PML4, pml4e, &PS));
         }
 
         /* PDPTE Write (For 1G pages) */
         if (size == PAGE_1G) {
             uint8_t prevPS;
-            volatile void* prevMap = (volatile void*)(uintptr_t)paging_read_map_entry(\
-                                        pdpt, pdpte, &prevPS);
+            volatile void* prevMap = (volatile void*)paging_v_ptr(paging_read_map_entry(\
+                                        pdpt, pdpte, &prevPS));
 
             paging_write_map_entry(pdpt, pdpte, p_addr, SET_PAGESIZE, PDPT_1G_PAGE_MASK);
 
@@ -180,7 +177,7 @@ int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint32_t 
         bool found = false;
         if (paging_check_map_entry_present(pdpt, pdpte)) {
             uint8_t PS;
-            pd = (volatile void*)(uintptr_t)paging_read_map_entry(pdpt, pdpte, &PS);
+            pd = (volatile void*)paging_v_ptr(paging_read_map_entry(pdpt, pdpte, &PS));
 
             if (PS == 0) found = true;
         }
@@ -191,17 +188,16 @@ int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint32_t 
                 return 9;
             paging_initialize_map(map);
 
-            paging_write_map_entry(pdpt, pdpte, (uintptr_t)paging_get_physical((void*)map), NOSET_PAGESIZE, NO_PAGE_MASK);
+            paging_write_map_entry(pdpt, pdpte, paging_p_ptr((void*)map), NOSET_PAGESIZE, NO_PAGE_MASK);
             pd = map;
         }
 
         /* PDE Write (For 2M pages) */
         if (size == PAGE_2M) {
             uint8_t prevPS;
-            volatile void* prevMap = (volatile void*)(uintptr_t)paging_read_map_entry(\
-                                        pd, pde, &prevPS);
+            volatile void* prevMap = (volatile void*)paging_v_ptr(paging_read_map_entry(\
+                                        pd, pde, &prevPS));
             paging_write_map_entry(pd, pde, p_addr, SET_PAGESIZE, PDE_2M_PAGE_MASK);
-
             if (prevMap != NULL && prevPS == 0) {
                 /* A map exists here that has been unlinked after overwrite,
                  * free it recursively */
@@ -223,7 +219,7 @@ int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint32_t 
         found = false;
         if (paging_check_map_entry_present(pd, pde)) {
             uint8_t PS;
-            pt = (volatile void*)(uintptr_t)paging_read_map_entry(pd, pde, &PS);
+            pt = (volatile void*)paging_v_ptr(paging_read_map_entry(pd, pde, &PS));
 
             if (PS == 0) found = true;
         }
@@ -234,7 +230,7 @@ int paging_map(uint64_t v_addr, uintptr_t p_addr, enum PAGE_SIZE size, uint32_t 
                 return 9;
             paging_initialize_map(map);
 
-            paging_write_map_entry(pd, pde, (uintptr_t)paging_get_physical((void*)map), NOSET_PAGESIZE, NO_PAGE_MASK);
+            paging_write_map_entry(pd, pde, paging_p_ptr((void*)map), NOSET_PAGESIZE, NO_PAGE_MASK);
             pt = map; 
         }
  
@@ -293,12 +289,12 @@ int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint32_t count) {
             return 1;
 
         uint8_t PS;
-        pdpt = (volatile void*)(uintptr_t)paging_read_map_entry(PAGING_PML4, pml4e, &PS);
+        pdpt = (volatile void*)paging_v_ptr(paging_read_map_entry(PAGING_PML4, pml4e, &PS));
 
         if (!paging_check_map_entry_present(pdpt, pdpte))
             return 2;
 
-        pd = (volatile void*)(uintptr_t)paging_read_map_entry(pdpt, pdpte, &PS);
+        pd = (volatile void*)paging_v_ptr(paging_read_map_entry(pdpt, pdpte, &PS));
         if (size == PAGE_1G) {
             if (PS == 0) return 9;
             /* Clear entry */
@@ -310,7 +306,7 @@ int paging_unmap(uint64_t v_addr, enum PAGE_SIZE size, uint32_t count) {
         if (!paging_check_map_entry_present(pd, pde))
             return 3;
 
-        pt = (volatile void*)(uintptr_t)paging_read_map_entry(pd, pde, &PS);
+        pt = (volatile void*)paging_v_ptr(paging_read_map_entry(pd, pde, &PS));
         if (size == PAGE_2M) {
             if (PS == 0) return 8;
             /* Clear entry */
@@ -344,3 +340,44 @@ pdpte_check:
 
     return 0;
 }
+
+/* Does best-fit physical to virtual address map/unmap to minimize total mapped physical
+ * page count by using huge pages, as permitted by 'max_page_size'. 'v_addr', 'p_addr' 
+ * and 'length' must be 4K page aligned at least */
+int paging_set_map_best_fit(uint64_t v_addr, uint64_t p_addr, uint64_t length, enum PAGE_SIZE max_page_size, bool map) {
+    if (length == 0) return 2;
+    /* 4K page alignment check */
+    if (!CHECK_PAGE_4K_ALIGN(v_addr) || !CHECK_PAGE_4K_ALIGN(p_addr) || !CHECK_PAGE_4K_ALIGN(length))
+        return 3;
+
+    while (length > 0) {
+        /* Go to the max page size to use to skip higher ones */
+        enum PAGE_SIZE highest_size;
+
+        if (max_page_size == PAGE_1G && \
+                CHECK_PAGE_1G_ALIGN(v_addr) && CHECK_PAGE_1G_ALIGN(p_addr) && length >= PAGE_1G)
+            highest_size = PAGE_1G;
+        else if (max_page_size >= PAGE_2M && \
+                CHECK_PAGE_2M_ALIGN(v_addr) && CHECK_PAGE_2M_ALIGN(p_addr) && length >= PAGE_2M)
+            highest_size = PAGE_2M;
+        else
+            highest_size = PAGE_4K;
+        
+        int s;
+        if (map)
+            s = paging_map(v_addr, p_addr, highest_size, 1);
+        else
+            s = paging_unmap(v_addr, highest_size, 1);
+
+        if (s)
+            return 1;
+ 
+        v_addr += highest_size;
+        p_addr += highest_size;
+        length -= highest_size;
+    }
+
+    return 0;
+}
+
+

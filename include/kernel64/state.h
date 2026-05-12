@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#define STATE_V_PMM_BASE 0xFFFFE00000000000
+#define STATE_PMM_MAX_P_ADDR 0x00000FFFFFFFFFFF
+
 extern char _KERNEL_BEGIN[];
 extern char _KERNEL_END[];
 

@@ -5,16 +5,41 @@
 
 #include <common/drivers/vga/vga.h>
 
+/* Important conventions:
+ *
+ * Physical addresses are always unsigned integers specified by uintptr_t
+ * and additionally have prefix p_ before name
+ *
+ * Virtual addresses should preferably be used and stored only as pointers
+ * with no prefix, and when converting to integer, use uint64_t
+ *
+ * Physical addresses must use 0 as 'NULL' and virtual addresses must use NULL,
+ * interconverting them should yield the other
+ *
+ * Physical addresses are what we reason with in the algorithm,
+ * while virtual addresses are how we communicate with other subsystems, internally,
+ * or for reads/writes. 
+ *
+ * Essentially virtual addressing here is just the physical address range
+ * mirrored into a virtual range with a known base, and offsets are preserved.
+ * Use pmm_v_ptr/pmm_p_ptr to convert between them
+ *
+ * Internally functions can expect either based on whichever is convenient */
+
 struct pmm_pvt {
     struct memory_map_entry* memory_map;
     uint32_t memory_map_count;
-    uint64_t bottom;
-    uint64_t top;
+    uintptr_t p_bottom;
+    uintptr_t p_top;
 
-    uint64_t page_list_top;
-    uint64_t page_list_bottom;
+    /* Virtual address base pointer where usable PMM owned RAM is mirrored 
+     * with physical offsets */
+    uint64_t mirror_base;
 
-    uint64_t zone_list_bottom;
+    struct pmm_page_meta* page_list_top;
+    struct pmm_page_meta* page_list_bottom;
+
+    struct pmm_zone_meta* zone_list_bottom;
     uint32_t zone_usable_count;
     /* Free list head pointer for every order */
     uint8_t* free_lists[18];
@@ -22,13 +47,15 @@ struct pmm_pvt {
 
 struct pmm_pvt pmm_state;
 
-/* Initialize and mark top level zone */
-static void pmm_top_level_zone(uint64_t addr, uint8_t order) {
+/* Initialize and mark top level block */
+static void pmm_top_level_block(uint64_t addr, uint8_t order) {
+    /*
     vga_print("Top level: ");
     vga_print_uint_color(addr, 16, 16, VGA_COLOR_LIGHT_MAGENTA);
     vga_print(", Order: ");
     vga_print_uint_color(order, 10, -1, VGA_COLOR_LIGHT_MAGENTA);
     vga_print("\n");
+    */
 }
 
 /* Raw read from metadata array */
@@ -67,14 +94,14 @@ static void pmm_page_meta_print(struct pmm_page_meta* meta) {
 
 /* Given a physical page address, look up its zone if its usable
  * otherwise return NULL */
-static struct pmm_zone_meta* pmm_zone_meta_linear_lookup(uint64_t p_addr) {
+static struct pmm_zone_meta* pmm_zone_meta_linear_lookup(uintptr_t p_addr) {
     for (uint32_t i=0; i<pmm_state.memory_map_count; i++) {
         struct memory_map_entry entry = pmm_state.memory_map[i];
 
         if (p_addr >= entry.addr && p_addr < entry.addr+entry.length) {
             /* Get corresponding zone metadata once memory map region
              * has been identified */
-            struct pmm_zone_meta* base = (void*)pmm_state.zone_list_bottom;
+            struct pmm_zone_meta* base = pmm_state.zone_list_bottom;
             struct pmm_zone_meta* meta = &base[i];
 
             if (!meta->usable) 
@@ -88,7 +115,7 @@ static struct pmm_zone_meta* pmm_zone_meta_linear_lookup(uint64_t p_addr) {
     return NULL;
 }
 
-static struct pmm_page_meta* pmm_page_meta_linear_lookup_read(uint64_t p_addr) {
+static struct pmm_page_meta* pmm_page_meta_linear_lookup_read(uintptr_t p_addr) {
     struct pmm_zone_meta* zone_meta = pmm_zone_meta_linear_lookup(p_addr);
     /* Check for zone validity */
     if (zone_meta == NULL) 
@@ -102,7 +129,7 @@ static struct pmm_page_meta* pmm_page_meta_linear_lookup_read(uint64_t p_addr) {
     return page_meta;
 }
 
-static int pmm_page_meta_linear_look_write(uint64_t p_addr, uint8_t state, uint8_t order) {
+static int pmm_page_meta_linear_lookup_write(uintptr_t p_addr, uint8_t state, uint8_t order) {
     /* Lookup page metadata and write to it */
     struct pmm_page_meta* page_meta = pmm_page_meta_linear_lookup_read(p_addr);
     if (page_meta == NULL)
@@ -113,23 +140,27 @@ static int pmm_page_meta_linear_look_write(uint64_t p_addr, uint8_t state, uint8
     return 0;
 }
 
-static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint64_t list_size) {
+static int pmm_allocate_lists(uintptr_t p_zone_list_base, uint32_t zone_count, uint64_t list_size) {
     /* Read memory map and allocate page list and zone list starting at
      * the base address, size has been precalculated and it is ensured that
      * the memory we are writing to is free and usable */
-    
-    pmm_state.zone_list_bottom = zone_list_base;
-    pmm_state.page_list_bottom = sizeof(struct pmm_zone_meta)*zone_count;
-    pmm_state.page_list_top = zone_list_base+list_size;
-    pmm_state.zone_usable_count = zone_count; 
-    
+   
     /* In order to access physical memory, we have to page it into an accessible
      * virtual range, as we are mapped and operating in virtual memory
-     * For now, we can just identity map for easy translation TODO */
-    if (paging_map(zone_list_base, zone_list_base, PAGE_4K, PAGE_COUNT_4K_CONTAINING_LEN(list_size)))
-        return 1;
+     * PMM has to have set a mirror map at least for the zone we are allocating this
+     * page list in 
+     *
+     * Any pointers we use for internal use are always virtual addresses 
+     * we can directly access and write. We can convert back and forth between
+     * virtual and physical because of the mirroring scheme */
 
-    uint64_t page_list_base = pmm_state.page_list_bottom;
+
+    uintptr_t p_page_list_base = p_zone_list_base+sizeof(struct pmm_zone_meta)*pmm_state.memory_map_count;
+    pmm_state.zone_list_bottom = pmm_v_ptr(p_zone_list_base);
+    pmm_state.page_list_bottom = pmm_v_ptr(p_page_list_base);
+    pmm_state.page_list_top = pmm_v_ptr(p_zone_list_base+list_size);
+    pmm_state.zone_usable_count = zone_count; 
+    
     for (uint32_t i=0; i<pmm_state.memory_map_count; i++) {
         struct memory_map_entry entry = pmm_state.memory_map[i];
         bool usable = true;
@@ -140,8 +171,9 @@ static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint
 
         /* A zone is any usable RAM region
          * Write zone list entry */
-        struct pmm_zone_meta* zone_meta = (struct pmm_zone_meta*)zone_list_base; 
-        uint64_t zone_base_addr, zone_length;
+        struct pmm_zone_meta* zone_meta = pmm_v_ptr(p_zone_list_base); 
+        uintptr_t zone_base_addr;
+        uint64_t zone_length;
 
         if (!CHECK_PAGE_4K_ALIGN(entry.length))
             zone_length = PAGE_4K_ALIGN_DOWN(entry.length);
@@ -160,17 +192,17 @@ static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint
             zone_meta->page_list_base = NULL;
             zone_meta->page_list_length = 0;
             zone_meta->page_count = 0;
-            zone_list_base += sizeof(struct pmm_zone_meta);
+            p_zone_list_base += sizeof(struct pmm_zone_meta);
             continue;
         }
 
         zone_meta->page_count = PAGE_COUNT_4K_CONTAINING_LEN(zone_length);
-        zone_meta->page_list_base = (struct pmm_page_meta*)page_list_base;
+        zone_meta->page_list_base = pmm_v_ptr(p_page_list_base);
         zone_meta->page_list_length = zone_meta->page_count*sizeof(struct pmm_page_meta);
 
         /* For next zone, if any */
-        zone_list_base += sizeof(struct pmm_zone_meta);
-        page_list_base += zone_meta->page_list_length;
+        p_zone_list_base += sizeof(struct pmm_zone_meta);
+        p_page_list_base += zone_meta->page_list_length;
 
         /* Write page entry list at corresponding offset
          * Initialize to free and order 0 for now */
@@ -180,14 +212,11 @@ static int pmm_allocate_lists(uint64_t zone_list_base, uint32_t zone_count, uint
     }
  
     /* Zone and page lists have been written and initialized,
-     * we can now mark the pages occupied by the lists themselves as RESERVED
-     *
-     * Giving virtual address of bottom to physical address parameter is fine for
-     * now as we have identity mapped here TODO */
+     * we can now mark the pages occupied by the lists themselves as RESERVED */ 
     struct pmm_zone_meta* reserved_zone_meta = pmm_zone_meta_linear_lookup(\
-            pmm_state.zone_list_bottom);
+            pmm_p_ptr(pmm_state.zone_list_bottom));
     uint64_t base_page_index = PAGE_COUNT_4K_CONTAINING_LEN( \
-            pmm_state.zone_list_bottom-reserved_zone_meta->zone_p_base);
+            pmm_p_ptr(pmm_state.zone_list_bottom)-reserved_zone_meta->zone_p_base);
 
     for (uint64_t i=0; i<PAGE_COUNT_4K_CONTAINING_LEN(list_size); i++) {
         pmm_page_meta_write(reserved_zone_meta->page_list_base, \
@@ -207,11 +236,11 @@ static uint64_t pmm_get_list_size(uint32_t* _zone_count) {
             entry.type != MEMORY_MAP_ENTRY_USABLE_ACPI)
             continue;
 
-        uint64_t addr = entry.addr;
+        uintptr_t p_addr = entry.addr;
         uint64_t length = entry.length;
 
-        if (!CHECK_PAGE_4K_ALIGN(addr))
-            addr = PAGE_4K_ALIGN(addr);
+        if (!CHECK_PAGE_4K_ALIGN(p_addr))
+            p_addr = PAGE_4K_ALIGN(p_addr);
         if (!CHECK_PAGE_4K_ALIGN(length))
             length = PAGE_4K_ALIGN_DOWN(length);
 
@@ -240,47 +269,55 @@ static int pmm_initialize_zones() {
 
     for (uint32_t i=0; i<pmm_state.memory_map_count; i++) {
         struct memory_map_entry entry = pmm_state.memory_map[i];
-        if (entry.addr >= pmm_state.top) break;
+        if (entry.addr >= pmm_state.p_top) break;
         if (entry.type != MEMORY_MAP_ENTRY_USABLE &&\
             entry.type != MEMORY_MAP_ENTRY_USABLE_ACPI)
             continue;
 
-        uint64_t addr = entry.addr;
+        uintptr_t p_addr = entry.addr;
         uint64_t length = entry.length;
 
         /* Make sure page alignment is there */
-        if (!CHECK_PAGE_4K_ALIGN(addr)) {
-            uint64_t end = addr+length;
-            addr = PAGE_4K_ALIGN(addr);
-            length = end-addr;
+        if (!CHECK_PAGE_4K_ALIGN(p_addr)) {
+            uint64_t end = p_addr+length;
+            p_addr = PAGE_4K_ALIGN(p_addr);
+            length = end-p_addr;
         }
         /* There may be some wastage near the end of the mapping
          * if length is not page aligned, but will always be lesser than 4KB */
         if (!CHECK_PAGE_4K_ALIGN(length))
             length = PAGE_4K_ALIGN_DOWN(length);
 
-        if (addr + length - 1 < pmm_state.bottom)
+        if (p_addr + length - 1 < pmm_state.p_bottom)
             continue;
 
-        if (addr < pmm_state.bottom) {
-            length = addr+length-pmm_state.bottom;
-            addr = pmm_state.bottom;
+        if (p_addr < pmm_state.p_bottom) {
+            length = p_addr+length-pmm_state.p_bottom;
+            p_addr = pmm_state.p_bottom;
         }
 
-        if (addr + length - 1 >= pmm_state.top) 
-            length -= addr+length - pmm_state.top;
+        if (p_addr + length - 1 >= pmm_state.p_top) 
+            length -= p_addr+length - pmm_state.p_top;
+
+        /* We have accounted for bottom/top trimming, and this is the right
+         * time to set virtual memory mirror for usable physical zone */
+        int s = paging_set_map_best_fit(pmm_state.mirror_base+p_addr, p_addr, length, PAGE_1G, true);
+        if (s) {
+            vga_print_uint(s, 10, -1);
+            vga_print("\n");
+            return 11;
+        }
 
         /* Handle the case of allocating page list inside
-         * the free ram zone somewhere, we cut the zone early
-         * and resume by jumping back to the loop after skipping
-         * the region */
+         * this zone, as early as possible, if it is large enough
+         * to contain it. We skip over it for zone init */
         if (!list_allocated && length >= list_size) {
-            int s = pmm_allocate_lists(addr, zone_count, list_size);
+            int s = pmm_allocate_lists(p_addr, zone_count, list_size);
 
             /* Error occured during allocation */
             if (s) 
                 return s;
-            addr = pmm_state.page_list_top;
+            p_addr = pmm_p_ptr(pmm_state.page_list_top);
             length -= list_size;
             list_allocated = true;
         }
@@ -294,7 +331,7 @@ static int pmm_initialize_zones() {
 
             uint8_t highest_fit_od=18;
             for (int i=1; i<=18; i++) {
-                if (!CHECK_ORDER_ALIGN(addr, i)) {
+                if (!CHECK_ORDER_ALIGN(p_addr, i)) {
                     highest_fit_od = i-1;
                     break;
                 }
@@ -308,12 +345,12 @@ static int pmm_initialize_zones() {
             uint8_t order = highest_fit_od;
             if (order > size_od) order = size_od;
  
-            pmm_top_level_zone(addr, order);
+            pmm_top_level_block(p_addr, order);
 
             uint64_t block_length = PAGE_4K<<order;
 
             length -= block_length;
-            addr += block_length; 
+            p_addr += block_length; 
         }
     }
 
@@ -326,16 +363,17 @@ static int pmm_initialize_zones() {
 
 /* Get memory map in format specified in bootinfo.h,
  * get base physical address below which we dont touch memory */
-int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint64_t bottom, uint64_t top) {
+int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintptr_t bottom, uintptr_t top, uint64_t mirror_base) {
     pmm_state.memory_map = entries;
     pmm_state.memory_map_count = entry_count;
-    pmm_state.bottom = bottom;
-    pmm_state.top = top;
+    pmm_state.p_bottom = bottom;
+    pmm_state.p_top = top;
+    pmm_state.mirror_base = mirror_base;
 
-    if (!CHECK_PAGE_4K_ALIGN(pmm_state.bottom))
-        pmm_state.bottom = PAGE_4K_ALIGN(pmm_state.bottom);
-    if (!CHECK_PAGE_4K_ALIGN(pmm_state.top))
-        pmm_state.top = PAGE_4K_ALIGN_DOWN(pmm_state.top);
+    if (!CHECK_PAGE_4K_ALIGN(pmm_state.p_bottom))
+        pmm_state.p_bottom = PAGE_4K_ALIGN(pmm_state.p_bottom);
+    if (!CHECK_PAGE_4K_ALIGN(pmm_state.p_top))
+        pmm_state.p_top = PAGE_4K_ALIGN_DOWN(pmm_state.p_top);
 
     for (int i=0; i<18; i++) {
         pmm_state.free_lists[i] = NULL;
@@ -348,9 +386,9 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uint6
     vga_print("[");vga_print_color("Physical Memory Manager",VGA_COLOR_LIGHT_GREEN);vga_print("] ");
     vga_print("Initialized\n");
     vga_print("    Bottom: ");
-    vga_print_uint_color(pmm_state.bottom, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print_uint_color(pmm_state.p_bottom, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
     vga_print(" | Top: ");
-    vga_print_uint_color(pmm_state.top, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
+    vga_print_uint_color(pmm_state.p_top, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
     vga_print("\n");
 
     return 0;
@@ -361,4 +399,14 @@ void* pmm_allocate_page() {
     if (pmm_state.memory_map == NULL) return NULL;
 
     return NULL;
+}
+
+uintptr_t pmm_p_ptr(void* v_ptr) {
+    if (v_ptr == NULL) return 0;
+    return (~pmm_state.mirror_base)&(uint64_t)v_ptr;
+}
+
+void* pmm_v_ptr(uintptr_t p_ptr) {
+    if (p_ptr == 0) return NULL;
+    return (void*)(pmm_state.mirror_base|(uint64_t)p_ptr);
 }

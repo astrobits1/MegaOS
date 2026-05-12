@@ -34,7 +34,12 @@ void kernel_setup(struct bootinfo* info) {
         v_base = PAGE_4K_ALIGN(v_base);
 
     /* TODO Kernel must stage PML4 sub-structure in bump allocator
-     * to take ownership of them */
+     * to take ownership of them 
+     *
+     * IMP
+     * We cannot free any map allocated by boot32, as it is out of allocation
+     * area and address translations will fail if it is freed and reallocated.
+     * So we cant overwrite any mapping set up by boot32, in the current PML4 */
 
     /* This expects a map of the allocator region physical bottom to a virtual address 
      * of our choice which is the kernel virtual end in this case.
@@ -45,7 +50,7 @@ void kernel_setup(struct bootinfo* info) {
     /* bump allocator can be supplied to paging API now */
 
     /* Initialize allocator for paging  */
-    paging_initialize_allocator(bump_allocate_page, bump_free_page, bump_get_physical);
+    paging_initialize_allocator(bump_allocate_page, bump_free_page, bump_p_ptr, bump_v_ptr);
     /* Paging API can be used now */
 
     /* Get the already loaded PML4 and load it in our paging manager */
@@ -57,7 +62,7 @@ void kernel_setup(struct bootinfo* info) {
     /* Starting from the end of the kernel, map the entire possible memory map
      * Kernel and low memory is intentionally left out from the PMM as a safety measure */
     int s = pmm_initialize((void*)info->map_entries, info->map_entry_count, \
-            top+1, UINT64_MAX);
+            top+1, STATE_PMM_MAX_P_ADDR, STATE_V_PMM_BASE);
     if (s > 0) {
         vga_print_color("Fatal PMM error during initialization\n", VGA_COLOR_RED);
         goto panic;
