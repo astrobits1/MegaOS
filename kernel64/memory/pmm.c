@@ -42,7 +42,7 @@ struct pmm_pvt {
     struct pmm_zone_meta* zone_list_bottom;
     uint32_t zone_usable_count;
     /* Free list head pointer for every order */
-    uint8_t* free_lists[18];
+    uint8_t* free_lists[19];
 };
 
 struct pmm_pvt pmm_state;
@@ -375,7 +375,7 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintp
     if (!CHECK_PAGE_4K_ALIGN(pmm_state.p_top))
         pmm_state.p_top = PAGE_4K_ALIGN_DOWN(pmm_state.p_top);
 
-    for (int i=0; i<18; i++) {
+    for (int i=0; i<19; i++) {
         pmm_state.free_lists[i] = NULL;
     }
 
