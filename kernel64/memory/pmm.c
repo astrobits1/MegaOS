@@ -42,21 +42,10 @@ struct pmm_pvt {
     struct pmm_zone_meta* zone_list_bottom;
     uint32_t zone_usable_count;
     /* Free list head pointer for every order */
-    uint8_t* free_lists[19];
+    void* free_lists[19];
 };
 
 struct pmm_pvt pmm_state;
-
-/* Initialize and mark top level block */
-static void pmm_top_level_block(uint64_t addr, uint8_t order) {
-    /*
-    vga_print("Top level: ");
-    vga_print_uint_color(addr, 16, 16, VGA_COLOR_LIGHT_MAGENTA);
-    vga_print(", Order: ");
-    vga_print_uint_color(order, 10, -1, VGA_COLOR_LIGHT_MAGENTA);
-    vga_print("\n");
-    */
-}
 
 /* Raw read from metadata array */
 static inline struct pmm_page_meta* pmm_page_meta_read(struct pmm_page_meta* list_base, uint64_t page_index) {
@@ -138,6 +127,12 @@ static int pmm_page_meta_linear_lookup_write(uintptr_t p_addr, uint8_t state, ui
     page_meta->state = state;
 
     return 0;
+}
+
+static void pmm_block_freelist_insert(void* block, uint8_t order) {
+    void* next = pmm_state.free_lists[order];
+    *(uint64_t*)block = (uint64_t)next;
+    pmm_state.free_lists[order] = block;
 }
 
 static int pmm_allocate_lists(uintptr_t p_zone_list_base, uint32_t zone_count, uint64_t list_size) {
@@ -345,7 +340,7 @@ static int pmm_initialize_zones() {
             uint8_t order = highest_fit_od;
             if (order > size_od) order = size_od;
  
-            pmm_top_level_block(p_addr, order);
+            pmm_block_freelist_insert(pmm_v_ptr(p_addr), order);
 
             uint64_t block_length = PAGE_4K<<order;
 
