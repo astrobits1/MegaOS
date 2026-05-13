@@ -67,6 +67,8 @@ void kernel_setup(struct bootinfo* info) {
         vga_print_color("Fatal PMM error during initialization\n", VGA_COLOR_RED);
         goto panic;
     }
+    
+    /* PMM is initialized */
 
 panic:
     kernel_panic();

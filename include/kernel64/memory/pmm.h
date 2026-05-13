@@ -36,6 +36,8 @@ struct pmm_zone_meta {
 
 int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintptr_t bottom, uintptr_t top, uint64_t mirror_base);
 
+void* pmm_allocate_block(uint8_t order);
+void pmm_free_block(void* block);
 void* pmm_allocate_page();
 void pmm_free_page(void* page);
 

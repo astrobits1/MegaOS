@@ -43,6 +43,13 @@ struct pmm_pvt {
     uint32_t zone_usable_count;
     /* Free list head pointer for every order */
     void* free_lists[19];
+
+    /* Memory occupancy trackers */
+    uint64_t page_count_free;
+    uint64_t page_count_allocated;
+    uint64_t page_count_reserved;
+    uint64_t page_count_protected;
+    uint64_t page_count_total;
 };
 
 struct pmm_pvt pmm_state;
@@ -81,6 +88,13 @@ static void pmm_page_meta_print(struct pmm_page_meta* meta) {
     vga_print("\n");
 }
 
+/* Page meta/Zone meta linear lookups are expensive and mainly only exist for bootstrap
+ * when memory is being set up and setting up hash tables and other strategies is impractical.
+ * 
+ * In general, full physical address lookups should only be done in case of wildcard addresses. 
+ * Once that is done, for any derived address read/writes, the base can be used with offsets 
+ * based on order values and lookup becomes cheap */
+
 /* Given a physical page address, look up its zone if its usable
  * otherwise return NULL */
 static struct pmm_zone_meta* pmm_zone_meta_linear_lookup(uintptr_t p_addr) {
@@ -104,7 +118,7 @@ static struct pmm_zone_meta* pmm_zone_meta_linear_lookup(uintptr_t p_addr) {
     return NULL;
 }
 
-static struct pmm_page_meta* pmm_page_meta_linear_lookup_read(uintptr_t p_addr) {
+static struct pmm_page_meta* pmm_page_meta_linear_lookup(uintptr_t p_addr) {
     struct pmm_zone_meta* zone_meta = pmm_zone_meta_linear_lookup(p_addr);
     /* Check for zone validity */
     if (zone_meta == NULL) 
@@ -120,7 +134,7 @@ static struct pmm_page_meta* pmm_page_meta_linear_lookup_read(uintptr_t p_addr) 
 
 static int pmm_page_meta_linear_lookup_write(uintptr_t p_addr, uint8_t state, uint8_t order) {
     /* Lookup page metadata and write to it */
-    struct pmm_page_meta* page_meta = pmm_page_meta_linear_lookup_read(p_addr);
+    struct pmm_page_meta* page_meta = pmm_page_meta_linear_lookup(p_addr);
     if (page_meta == NULL)
         return 1;
     page_meta->order = order;
@@ -133,6 +147,66 @@ static void pmm_block_freelist_insert(void* block, uint8_t order) {
     void* next = pmm_state.free_lists[order];
     *(uint64_t*)block = (uint64_t)next;
     pmm_state.free_lists[order] = block;
+}
+
+static inline void* pmm_block_freelist_read_next(void* block) {
+    return (void*)(*(uint64_t*)block);
+}
+
+/* Assumes atleast 1 element */
+static void* pmm_block_freelist_pop(uint8_t order) {
+    void* head = pmm_state.free_lists[order];
+    void* next = pmm_block_freelist_read_next(head);
+    pmm_state.free_lists[order] = next;
+
+    return head;
+}
+
+/* split and split_recursive are only for free blocks in freelist that have been popped off
+ * block_meta is page metadata address of block, which acts as a base for derived
+ * relative addresses */
+static void pmm_block_split(void* block, uint8_t block_order, struct pmm_page_meta* block_meta) {
+    /* b0 address is same as block */
+    void* b1 = (void*)((uint64_t)block+(PAGE_4K<<(block_order-1)));
+
+    /* Only insert b1 in free list, b0 left for the caller
+     * to decide what to do with, to optimize further splits */
+    pmm_block_freelist_insert(b1, block_order-1);
+    /* Update metadata for b0 and b1 */
+    pmm_page_meta_write(block_meta, 0, PMM_PAGE_FREE, block_order-1);
+    pmm_page_meta_write(block_meta, 1<<(block_order-1), PMM_PAGE_FREE, block_order-1);
+}
+
+/* Recursively split a free block of higher order till we obtain a block of desired lower order
+ * The blocks are split recursively on the left, when we reach the desired order we just stop
+ * The address given for the main block will match one of the final lower order blocks.
+ * 
+ * Every other split block is inserted into the freelist except the leftmost block.
+ * Metadata initialization is done for all blocks
+ *
+ * 'block_meta' is the page metadata address for initial block given
+ * */
+static void pmm_block_split_recursive(void* block, uint8_t block_order, struct pmm_page_meta* block_meta, uint8_t target_order) {
+    while (block_order > target_order) {
+        pmm_block_split(block, block_order, block_meta);
+        block_order--;
+    }
+}
+
+static void pmm_print_memory() {
+    vga_print_color("Memory: ", VGA_COLOR_LIGHT_BLUE);
+    vga_print_color("Allocated: ", VGA_COLOR_LIGHT_MAGENTA);
+    vga_print_uint_color(pmm_state.page_count_allocated<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print(" Bytes | ");
+    vga_print_color("Free: ", VGA_COLOR_LIGHT_MAGENTA);
+    vga_print_uint_color(pmm_state.page_count_free<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print(" Bytes | ");
+    vga_print_color("Reserved: ", VGA_COLOR_LIGHT_MAGENTA);
+    vga_print_uint_color(pmm_state.page_count_reserved<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print(" Bytes | ");
+    vga_print_color("Protected: ", VGA_COLOR_LIGHT_MAGENTA);
+    vga_print_uint_color(pmm_state.page_count_protected<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print(" Bytes\n");
 }
 
 static int pmm_allocate_lists(uintptr_t p_zone_list_base, uint32_t zone_count, uint64_t list_size) {
@@ -201,6 +275,7 @@ static int pmm_allocate_lists(uintptr_t p_zone_list_base, uint32_t zone_count, u
 
         /* Write page entry list at corresponding offset
          * Initialize to free and order 0 for now */
+        pmm_state.page_count_total += zone_meta->page_count;
         for (uint64_t page_meta_i=0; page_meta_i<zone_meta->page_count; page_meta_i++) {
             pmm_page_meta_write(zone_meta->page_list_base, page_meta_i, PMM_PAGE_FREE, 0);
         }
@@ -213,7 +288,8 @@ static int pmm_allocate_lists(uintptr_t p_zone_list_base, uint32_t zone_count, u
     uint64_t base_page_index = PAGE_COUNT_4K_CONTAINING_LEN( \
             pmm_p_ptr(pmm_state.zone_list_bottom)-reserved_zone_meta->zone_p_base);
 
-    for (uint64_t i=0; i<PAGE_COUNT_4K_CONTAINING_LEN(list_size); i++) {
+    pmm_state.page_count_reserved = PAGE_COUNT_4K_CONTAINING_LEN(list_size);
+    for (uint64_t i=0; i<pmm_state.page_count_reserved; i++) {
         pmm_page_meta_write(reserved_zone_meta->page_list_base, \
                 base_page_index+i, PMM_PAGE_RESERVED, 0);
     }
@@ -298,8 +374,6 @@ static int pmm_initialize_zones() {
          * time to set virtual memory mirror for usable physical zone */
         int s = paging_set_map_best_fit(pmm_state.mirror_base+p_addr, p_addr, length, PAGE_1G, true);
         if (s) {
-            vga_print_uint(s, 10, -1);
-            vga_print("\n");
             return 11;
         }
 
@@ -339,8 +413,9 @@ static int pmm_initialize_zones() {
             /* Choose suitable order based on alignment and size constraints (min) */
             uint8_t order = highest_fit_od;
             if (order > size_od) order = size_od;
- 
+
             pmm_block_freelist_insert(pmm_v_ptr(p_addr), order);
+            pmm_state.page_count_free += (PAGE_4K<<order)>>12;
 
             uint64_t block_length = PAGE_4K<<order;
 
@@ -353,6 +428,22 @@ static int pmm_initialize_zones() {
     if (!list_allocated)
         return 2;
 
+    /* Free, Reserved and Total pages have been calculated, find Protected pages (unstaged) */
+    pmm_state.page_count_protected = pmm_state.page_count_total-(pmm_state.page_count_free+pmm_state.page_count_reserved);
+
+    /* Traverse every free top level block in every freelist to mark their metadata
+     * with their order.
+     * We cannot do this while initializing because allocation of metadata is not
+     * certain while filling freelist for all zones */
+    for (int i=0; i<19; i++) {
+        void* next = pmm_state.free_lists[i];
+
+        while (next != NULL) {
+            pmm_page_meta_linear_lookup_write(pmm_p_ptr(next), PMM_PAGE_FREE, i);
+            next = pmm_block_freelist_read_next(next);
+        }
+    }
+
     return 0;
 }
 
@@ -364,6 +455,12 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintp
     pmm_state.p_bottom = bottom;
     pmm_state.p_top = top;
     pmm_state.mirror_base = mirror_base;
+
+    pmm_state.page_count_allocated = 0;
+    pmm_state.page_count_free = 0;
+    pmm_state.page_count_reserved = 0;
+    pmm_state.page_count_protected = 0;
+    pmm_state.page_count_total = 0;
 
     if (!CHECK_PAGE_4K_ALIGN(pmm_state.p_bottom))
         pmm_state.p_bottom = PAGE_4K_ALIGN(pmm_state.p_bottom);
@@ -389,11 +486,74 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintp
     return 0;
 }
 
+/* Allocate a block of order 0-18 from physical memory, return NULL if not possible */ 
+void* pmm_allocate_block(uint8_t order) {
+    uint64_t page_count = PAGE_COUNT_4K_IN_LEN(PAGE_4K<<order);
+
+    /* Check freelist of order for available block */
+    if (pmm_state.free_lists[order] != NULL) {
+        void* block = pmm_block_freelist_pop(order);
+        pmm_page_meta_linear_lookup_write(pmm_p_ptr(block), PMM_PAGE_ALLOCATED, order);
+        pmm_state.page_count_allocated += page_count;
+        pmm_state.page_count_free -= page_count;
+
+        /*
+        vga_print("\nAllocated ");
+        vga_print_uint_color(page_count<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
+        vga_print(" Bytes, Address: ");
+        vga_print_uint_color((uint64_t)block, 16, -1, VGA_COLOR_LIGHT_GREEN);
+        vga_print("\n");
+
+        pmm_print_memory();
+        */
+        return block;
+    }
+
+    /* No blocks are available of the requested size in the freelist,
+     * we now try to split higher orders if possible */
+    void* block = NULL;
+    uint8_t higher_order;
+
+    for (int i=order; i<19; i++) {
+        void* b = pmm_state.free_lists[i];
+        if (b != NULL) {
+            /* If block is found, it is popped off the freelist */
+            block = pmm_block_freelist_pop(i);
+            higher_order = i;
+            break;
+        }
+    }
+
+    /* Not enough free memory to fullfill request */
+    if (block == NULL)
+        return NULL;
+
+    struct pmm_page_meta* block_meta = pmm_page_meta_linear_lookup(pmm_p_ptr(block));
+    /* Closest higher order block has been found and popped
+     * split recursively till we reach desired order.
+     * 'block' will contain final block */ 
+    pmm_block_split_recursive(block, higher_order, block_meta, order);
+    /* Mark block as allocated */
+    pmm_page_meta_write(block_meta, 0, PMM_PAGE_ALLOCATED, order);
+    
+    pmm_state.page_count_allocated += page_count;
+    pmm_state.page_count_free -= page_count;
+
+    /*
+    vga_print("\nAllocated ");
+    vga_print_uint_color(page_count<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print(" Bytes, Address: ");
+    vga_print_uint_color((uint64_t)block, 16, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print("\n");
+
+    pmm_print_memory();
+    */
+    return block;
+}
+
 /* Allocate a 4KB page from physical memory, return NULL if not possible */
 void* pmm_allocate_page() {
-    if (pmm_state.memory_map == NULL) return NULL;
-
-    return NULL;
+    return pmm_allocate_block(0);
 }
 
 uintptr_t pmm_p_ptr(void* v_ptr) {
