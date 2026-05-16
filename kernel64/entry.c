@@ -69,7 +69,8 @@ void kernel_setup(struct bootinfo* info) {
     }
     
     /* PMM is initialized */
-
+    void* block = pmm_allocate_block(0);
+    pmm_free_block(block);
 panic:
     kernel_panic();
 }

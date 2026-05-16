@@ -23,6 +23,7 @@ enum PMM_PAGE_STATE {
 struct pmm_page_meta {
     uint8_t state;
     uint8_t order;
+    uint8_t ancestor_order;
 } __attribute__((packed));
 
 /* Metadata for one zone for the local page list */
@@ -38,8 +39,14 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintp
 
 void* pmm_allocate_block(uint8_t order);
 void pmm_free_block(void* block);
-void* pmm_allocate_page();
-void pmm_free_page(void* page);
+
+/* Wrappers for handling the case of a page, for the paging API */
+inline void* pmm_allocate_page() {
+    return pmm_allocate_block(0);
+}
+inline void pmm_free_page(void* page) {
+    pmm_free_block(page);
+}
 
 uintptr_t pmm_p_ptr(void* v_ptr);
 void* pmm_v_ptr(uintptr_t p_ptr);

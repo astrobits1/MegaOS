@@ -67,6 +67,7 @@ static void pmm_page_meta_write(struct pmm_page_meta* list_base, uint64_t page_i
 }
 
 /* Print metadata */
+__attribute__((unused))
 static void pmm_page_meta_print(struct pmm_page_meta* meta) {
     vga_print("State: ");
     switch (meta->state) {
@@ -162,6 +163,29 @@ static void* pmm_block_freelist_pop(uint8_t order) {
     return head;
 }
 
+/* Removes an element from freelist */
+static void pmm_block_freelist_remove(void* block, uint8_t order) {
+    void* prev = NULL;
+    void* next = pmm_state.free_lists[order];
+
+    if (next == block) {
+        pmm_block_freelist_pop(order);
+        return;
+    }
+
+    prev = next;
+    next = pmm_block_freelist_read_next(next);
+
+    while (next != NULL) {
+        if (next == block) {
+            *(uint64_t*)prev = (uint64_t)pmm_block_freelist_read_next(next);
+            return;
+        }
+        prev = next;
+        next = pmm_block_freelist_read_next(next);
+    }
+}
+
 /* split and split_recursive are only for free blocks in freelist that have been popped off
  * block_meta is page metadata address of block, which acts as a base for derived
  * relative addresses */
@@ -193,6 +217,68 @@ static void pmm_block_split_recursive(void* block, uint8_t block_order, struct p
     }
 }
 
+/* Free block by merging recursively as long as buddy is free */
+static void pmm_block_merge_free_recursive(uintptr_t p_block, uint8_t block_order, struct pmm_page_meta* block_meta) {
+    if (block_order < block_meta->ancestor_order) {
+        /* Buddy lookup */
+        uintptr_t p_buddy = p_block^(PAGE_4K<<block_order);
+        int64_t offset;
+
+        if (p_block > p_buddy) {
+            offset = -PAGE_COUNT_4K_IN_LEN(p_block-p_buddy);
+        } else {
+            offset = PAGE_COUNT_4K_IN_LEN(p_buddy-p_block);
+        }
+
+        struct pmm_page_meta* buddy_meta = &block_meta[offset];
+
+        if (buddy_meta->state == PMM_PAGE_FREE) {
+            /* If buddy is free, then merge
+             * Metadata isnt updated, the buddy is just removed from freelist */
+            pmm_block_freelist_remove(pmm_v_ptr(p_buddy), block_order);
+
+            /* When we recurse for merge, the address and metadata address for
+             * the combined block is going to be the leftmost block of the
+             * two buddies */
+            uintptr_t p_left;
+            struct pmm_page_meta* left_meta;
+
+            if (p_block > p_buddy) {
+                p_left = p_buddy;
+                left_meta = buddy_meta;
+            } else {
+                p_left = p_block;
+                left_meta = block_meta;
+            }
+
+            /* Check for merges upwards recursively till max order */
+            return pmm_block_merge_free_recursive(p_left, block_order+1, left_meta);
+        } else {
+            /* Otherwise conclude and add block to freelist */
+            pmm_page_meta_write(block_meta, 0, PMM_PAGE_FREE, block_order);
+            pmm_block_freelist_insert(pmm_v_ptr(p_block), block_order);
+        }
+    } else {
+        /* Max order reached, just free it and return */
+        pmm_page_meta_write(block_meta, 0, PMM_PAGE_FREE, block_order);
+        pmm_block_freelist_insert(pmm_v_ptr(p_block), block_order);
+    }
+}
+
+/* Marks ancestor_order property in page_metadata for every page in block
+ * to the given value. ancestor_order is a constant property of the page address
+ * and will not change after initialization. 
+ *
+ * It is used to store max top level block order so it can return to initial 
+ * top level block when completely merged */
+static void pmm_block_set_ancestor_order(struct pmm_page_meta* block_meta, uint8_t order) {
+    for (uint64_t page_i=0; page_i<(uint64_t)(PAGE_4K<<order)>>12; page_i++) {
+        struct pmm_page_meta* meta = &block_meta[page_i];
+        meta->ancestor_order = order;
+    }
+}
+
+__attribute__((unused))
 static void pmm_print_memory() {
     vga_print_color("Memory: ", VGA_COLOR_LIGHT_BLUE);
     vga_print_color("Allocated: ", VGA_COLOR_LIGHT_MAGENTA);
@@ -290,8 +376,10 @@ static int pmm_allocate_lists(uintptr_t p_zone_list_base, uint32_t zone_count, u
 
     pmm_state.page_count_reserved = PAGE_COUNT_4K_CONTAINING_LEN(list_size);
     for (uint64_t i=0; i<pmm_state.page_count_reserved; i++) {
-        pmm_page_meta_write(reserved_zone_meta->page_list_base, \
-                base_page_index+i, PMM_PAGE_RESERVED, 0);
+        struct pmm_page_meta* meta = &reserved_zone_meta->page_list_base[base_page_index+i];
+        meta->order = 0;
+        meta->state = PMM_PAGE_RESERVED;
+        meta->ancestor_order = 0;
     }
 
     return 0;
@@ -414,7 +502,9 @@ static int pmm_initialize_zones() {
             uint8_t order = highest_fit_od;
             if (order > size_od) order = size_od;
 
-            pmm_block_freelist_insert(pmm_v_ptr(p_addr), order);
+            void* addr = pmm_v_ptr(p_addr);
+ 
+            pmm_block_freelist_insert(addr, order);
             pmm_state.page_count_free += (PAGE_4K<<order)>>12;
 
             uint64_t block_length = PAGE_4K<<order;
@@ -439,7 +529,15 @@ static int pmm_initialize_zones() {
         void* next = pmm_state.free_lists[i];
 
         while (next != NULL) {
-            pmm_page_meta_linear_lookup_write(pmm_p_ptr(next), PMM_PAGE_FREE, i);
+            struct pmm_page_meta* meta = pmm_page_meta_linear_lookup(pmm_p_ptr(next));
+            pmm_page_meta_write(meta, 0, PMM_PAGE_FREE, i);
+
+            /* For every page in top level block, set ancestor order
+             * of every page metadata entry to the top level order.
+             * This ensures that any combination of split and merge
+             * will eventually return to this top level block
+             * when maximally free */
+            pmm_block_set_ancestor_order(meta, i);
             next = pmm_block_freelist_read_next(next);
         }
     }
@@ -482,36 +580,27 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintp
     vga_print(" | Top: ");
     vga_print_uint_color(pmm_state.p_top, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
     vga_print("\n");
-
+    pmm_print_memory();
     return 0;
 }
 
 /* Allocate a block of order 0-18 from physical memory, return NULL if not possible */ 
 void* pmm_allocate_block(uint8_t order) {
     uint64_t page_count = PAGE_COUNT_4K_IN_LEN(PAGE_4K<<order);
+    void* block = NULL;
 
     /* Check freelist of order for available block */
     if (pmm_state.free_lists[order] != NULL) {
-        void* block = pmm_block_freelist_pop(order);
+        block = pmm_block_freelist_pop(order);
         pmm_page_meta_linear_lookup_write(pmm_p_ptr(block), PMM_PAGE_ALLOCATED, order);
         pmm_state.page_count_allocated += page_count;
         pmm_state.page_count_free -= page_count;
 
-        /*
-        vga_print("\nAllocated ");
-        vga_print_uint_color(page_count<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
-        vga_print(" Bytes, Address: ");
-        vga_print_uint_color((uint64_t)block, 16, -1, VGA_COLOR_LIGHT_GREEN);
-        vga_print("\n");
-
-        pmm_print_memory();
-        */
-        return block;
+        goto allocated;
     }
 
     /* No blocks are available of the requested size in the freelist,
      * we now try to split higher orders if possible */
-    void* block = NULL;
     uint8_t higher_order;
 
     for (int i=order; i<19; i++) {
@@ -539,7 +628,7 @@ void* pmm_allocate_block(uint8_t order) {
     pmm_state.page_count_allocated += page_count;
     pmm_state.page_count_free -= page_count;
 
-    /*
+allocated:    
     vga_print("\nAllocated ");
     vga_print_uint_color(page_count<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
     vga_print(" Bytes, Address: ");
@@ -547,13 +636,36 @@ void* pmm_allocate_block(uint8_t order) {
     vga_print("\n");
 
     pmm_print_memory();
-    */
+    
     return block;
 }
 
-/* Allocate a 4KB page from physical memory, return NULL if not possible */
-void* pmm_allocate_page() {
-    return pmm_allocate_block(0);
+void pmm_free_block(void* block) {
+    uintptr_t p_block = pmm_p_ptr(block);
+    struct pmm_page_meta* block_meta = pmm_page_meta_linear_lookup(p_block);
+
+    /* False free protection for protected and reserved regions,
+     * also for already free blocks. However this doesnt protect against everything.
+     * Calling free on allocated block part of bigger allocated block is essentially UND */
+    if (block_meta == NULL) return;
+    if (block_meta->state != PMM_PAGE_ALLOCATED) return;
+
+    uint8_t order = block_meta->order;
+    uint64_t page_count = (PAGE_4K<<order)>>12;
+
+    /* Free and merge recursively upward */
+    pmm_block_merge_free_recursive(p_block, order, block_meta);
+
+    pmm_state.page_count_free += page_count;
+    pmm_state.page_count_allocated -= page_count;
+
+    vga_print("\nFreed ");
+    vga_print_uint_color(page_count<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print(" Bytes, Address: ");
+    vga_print_uint_color((uint64_t)block, 16, -1, VGA_COLOR_LIGHT_GREEN);
+    vga_print("\n");
+
+    pmm_print_memory();
 }
 
 uintptr_t pmm_p_ptr(void* v_ptr) {
