@@ -29,6 +29,8 @@ are some of the things I've worked with:<br>
   - A bump allocator is used primitively while bootstrapping the PMM
   - The PMM is designed to be a buddy allocator with native huge page support (upto order 18 or 1GB pages)
   - Page metadata lists are allocated per usable RAM zone and segmented to handle sparse physical memory.
+  - Physical usable RAM zones are mirrored to virtual address with base 0xFFFFE... and owned by PMM
+  - Pages are allocated implicitly by the paging subsystem and refcounts are tracked using hash table (open addressing linear probing, and multiplicative hash)
 
 * <b>ISRs</b>
   - The kernel initializes all x86_64 ISRs and exceptions which are stubbed to display any errors on panic.
@@ -39,7 +41,7 @@ are some of the things I've worked with:<br>
 ### Next steps
 Some of the things I look forward to having soon:
 
-- Kernel and minimal libc
+- Kernel libk and minimal libc
 - Minimal driver API and interrupt binding
 - Keyboard and disk drivers
 - A shell
