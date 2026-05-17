@@ -25,6 +25,10 @@ are some of the things I've worked with:<br>
   - Grub loads <b>boot32</b> in 32 bit protected mode which then sets up primitives, GDT, IDT and long mode paging.
     It includes an ELF64 parser which loads the kernel64 image (passed as multiboot2 module) in long mode into higher half virtual memory.
 
+| |
+:---:
+<img src="assets/boot.png" width="55%"/> <br> Boot32.efi logging |
+
 * <b>Memory Management (WIP) </b>
   - A bump allocator is used primitively while bootstrapping the PMM
   - The PMM is designed to be a buddy allocator with native huge page support (upto order 18 or 1GB pages)
@@ -33,7 +37,7 @@ are some of the things I've worked with:<br>
   - Pages are allocated implicitly by the paging subsystem and refcounts are tracked using hash table (open addressing linear probing, and multiplicative hash)
 
 | | |
-:-------------------------:|:-------------------------:
+:---:|:---:
 <img src="assets/mem4.png" width="90%"/> Parsing memory map | <img src="assets/mem3.png" width="100%"/> Top level best-fit buddy allocation
 <img src="assets/mem2.png" width="90%"/> Allocation logging and tracking | <img src="assets/mem1.png" width="100%"> Freelist logging
 
