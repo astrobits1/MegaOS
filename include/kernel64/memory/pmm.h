@@ -51,4 +51,7 @@ inline void pmm_free_page(void* page) {
 uintptr_t pmm_p_ptr(void* v_ptr);
 void* pmm_v_ptr(uintptr_t p_ptr);
 
+void pmm_print_memory();
+void pmm_print_freelists();
+
 #endif

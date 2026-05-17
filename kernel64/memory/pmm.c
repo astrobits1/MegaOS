@@ -279,7 +279,7 @@ static void pmm_block_set_ancestor_order(struct pmm_page_meta* block_meta, uint8
 }
 
 __attribute__((unused))
-static void pmm_print_memory() {
+void pmm_print_memory() {
     vga_print_color("Memory: ", VGA_COLOR_LIGHT_BLUE);
     vga_print_color("Allocated: ", VGA_COLOR_LIGHT_MAGENTA);
     vga_print_uint_color(pmm_state.page_count_allocated<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
@@ -293,6 +293,29 @@ static void pmm_print_memory() {
     vga_print_color("Protected: ", VGA_COLOR_LIGHT_MAGENTA);
     vga_print_uint_color(pmm_state.page_count_protected<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
     vga_print(" Bytes\n");
+}
+
+__attribute__((unused))
+void pmm_print_freelists() {
+    vga_print_color("Freelists: \n", VGA_COLOR_LIGHT_BLUE);
+    for (int i=0; i<19; i++) {
+        void* head = pmm_state.free_lists[i];
+        if (head != NULL) {
+            vga_print("OD "); vga_print_uint_color(i, 10, -1, VGA_COLOR_LIGHT_GREEN);
+            vga_print(": ");
+            while (head != NULL) {
+
+                vga_print_uint_color((uint64_t)head, 16, 12, VGA_COLOR_LIGHT_BROWN);
+                head = pmm_block_freelist_read_next(head);
+
+                if (head == NULL) {
+                    vga_print("\n");
+                    break;
+                } else
+                    vga_print(" -> ");
+            }
+        }
+    }
 }
 
 static int pmm_allocate_lists(uintptr_t p_zone_list_base, uint32_t zone_count, uint64_t list_size) {
@@ -581,6 +604,7 @@ int pmm_initialize(struct memory_map_entry* entries, uint32_t entry_count, uintp
     vga_print_uint_color(pmm_state.p_top, 16, -1, VGA_COLOR_LIGHT_MAGENTA);
     vga_print("\n");
     pmm_print_memory();
+    pmm_print_freelists();
     return 0;
 }
 
@@ -628,7 +652,8 @@ void* pmm_allocate_block(uint8_t order) {
     pmm_state.page_count_allocated += page_count;
     pmm_state.page_count_free -= page_count;
 
-allocated:    
+allocated:
+    /*
     vga_print("\nAllocated ");
     vga_print_uint_color(page_count<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
     vga_print(" Bytes, Address: ");
@@ -636,7 +661,7 @@ allocated:
     vga_print("\n");
 
     pmm_print_memory();
-    
+    */
     return block;
 }
 
@@ -659,13 +684,15 @@ void pmm_free_block(void* block) {
     pmm_state.page_count_free += page_count;
     pmm_state.page_count_allocated -= page_count;
 
+    /*
     vga_print("\nFreed ");
     vga_print_uint_color(page_count<<12, 10, -1, VGA_COLOR_LIGHT_GREEN);
     vga_print(" Bytes, Address: ");
     vga_print_uint_color((uint64_t)block, 16, -1, VGA_COLOR_LIGHT_GREEN);
     vga_print("\n");
-
+    
     pmm_print_memory();
+    */
 }
 
 uintptr_t pmm_p_ptr(void* v_ptr) {
