@@ -1,5 +1,6 @@
 #include <kernel64/memory/paging.h>
 #include <common/drivers/vga/vga.h>
+#include <libk/hashtb.h>
 
 volatile void* PAGING_PML4 = NULL;
 void* (*paging_allocate_page)() = NULL;

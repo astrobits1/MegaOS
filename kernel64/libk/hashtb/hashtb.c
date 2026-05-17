@@ -24,13 +24,12 @@ static void hashtb_bucket_set_state(struct bucket* b, enum HASHTB_BUCKET_STATE s
 
 static void hashtb_bucket_set_key(struct bucket* b, uint64_t key) {
     b->key &= ~((1ULL<<52)-1);
-    b->key |= key & (1ULL<<52)-1;
+    b->key |= key&((1ULL<<52)-1);
 }
 
 static inline void hashtb_bucket_set_value(struct bucket* b, uint64_t value) {
     b->value = value;
 }
-
 
 /* Initialize all entries to NULL */
 static void hashtb_initialize_bucket_list(struct hashtb* tb) {
