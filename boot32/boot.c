@@ -92,7 +92,7 @@ void boot_main(void* mb2_bootinfo) {
         bottom = PAGE_4K_ALIGN(bottom);
 
     vga_print_color("Found kernel64.elf\n", VGA_COLOR_LIGHT_GREEN); 
-    bootinfo_print_memory_map(&info); 
+    //bootinfo_print_memory_map(&info); 
 
     /* Enable SSE instructions */
     enable_sse();
