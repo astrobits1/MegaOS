@@ -32,6 +32,11 @@ are some of the things I've worked with:<br>
   - Physical usable RAM zones are mirrored to virtual address with base 0xFFFFE... and owned by PMM
   - Pages are allocated implicitly by the paging subsystem and refcounts are tracked using hash table (open addressing linear probing, and multiplicative hash)
 
+| | |
+:-------------------------:|:-------------------------:
+<img src="assets/mem4.png" width="90%"/> Parsing memory map | <img src="assets/mem3.png" width="100%"/> Top level best-fit buddy allocation
+<img src="assets/mem2.png" width="90%"/> Allocation logging and tracking | <img src="assets/mem1.png" width="100%"> Freelist logging
+
 * <b>ISRs</b>
   - The kernel initializes all x86_64 ISRs and exceptions which are stubbed to display any errors on panic.
 
